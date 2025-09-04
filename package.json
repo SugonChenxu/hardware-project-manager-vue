@@ -1,0 +1,23 @@
+{
+  "name": "star-gantt-simple",
+  "version": "1.0.0",
+  "description": "专业甘特图项目管理系统",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "element-plus": "^2.4.4",
+    "dhtmlx-gantt": "^8.0.6",
+    "dayjs": "^1.11.10"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.2",
+    "vite": "^5.0.10",
+    "unplugin-auto-import": "^0.17.2",
+    "unplugin-vue-components": "^0.25.2"
+  }
+} 

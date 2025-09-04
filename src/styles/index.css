@@ -1,0 +1,146 @@
+/* 基础样式重置 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 全局变量 */
+:root {
+  --color-primary: #409eff;
+  --color-success: #67c23a;
+  --color-warning: #e6a23c;
+  --color-danger: #f56c6c;
+  --color-info: #909399;
+  
+  --text-color-primary: #303133;
+  --text-color-regular: #606266;
+  --text-color-secondary: #909399;
+  --text-color-placeholder: #a8abb2;
+  
+  --border-color: #dcdfe6;
+  --bg-color: #ffffff;
+  --bg-color-light: #f5f7fa;
+}
+
+/* 暗黑模式 */
+.dark {
+  --text-color-primary: #e5eaf3;
+  --text-color-regular: #cfd3dc;
+  --text-color-secondary: #a3a6ad;
+  --text-color-placeholder: #8d9095;
+  
+  --border-color: #4c4d4f;
+  --bg-color: #1d1e1f;
+  --bg-color-light: #141414;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* 甘特图样式优化 */
+.gantt_container {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 甘特图网格样式 */
+.gantt_grid_scale,
+.gantt_task_scale {
+  background: var(--bg-color-light) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-color-primary) !important;
+}
+
+.gantt_scale_line {
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.gantt_grid_data .gantt_row {
+  border-bottom: 1px solid var(--border-color) !important;
+  background: var(--bg-color) !important;
+}
+
+.gantt_grid_data .gantt_row:nth-child(odd) {
+  background: var(--bg-color-light) !important;
+}
+
+.gantt_grid_data .gantt_row.gantt_selected {
+  background: rgba(64, 158, 255, 0.1) !important;
+}
+
+/* 任务条样式 */
+.gantt_task_line {
+  border-radius: 4px !important;
+  background: var(--color-primary) !important;
+}
+
+.gantt_task_line.gantt_project {
+  background: var(--color-success) !important;
+}
+
+.gantt_task_line.gantt_milestone {
+  background: var(--color-warning) !important;
+}
+
+.gantt_task_progress {
+  border-radius: 4px !important;
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 任务文本 */
+.gantt_task_text {
+  color: white !important;
+  font-weight: 500 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 依赖关系线 */
+.gantt_link_arrow,
+.gantt_link_line {
+  stroke: var(--color-primary) !important;
+  stroke-width: 2 !important;
+}
+
+/* 时间刻度文字 */
+.gantt_scale_cell {
+  color: var(--text-color-primary) !important;
+}
+
+/* 网格文字 */
+.gantt_tree_content,
+.gantt_cell {
+  color: var(--text-color-primary) !important;
+}
+
+/* 滚动条样式 */
+.gantt_layout_content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.gantt_layout_content::-webkit-scrollbar-track {
+  background: var(--bg-color-light);
+}
+
+.gantt_layout_content::-webkit-scrollbar-thumb {
+  background: var(--color-info);
+  border-radius: 4px;
+}
+
+.gantt_layout_content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .gantt_grid {
+    min-width: 200px !important;
+  }
+} 
