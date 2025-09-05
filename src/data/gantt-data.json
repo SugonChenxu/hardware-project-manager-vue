@@ -1,0 +1,643 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "text": "专项",
+      "start_date": "2025-05-12",
+      "duration": 100,
+      "progress": 0.04,
+      "type": "project",
+      "parent": 0,
+      "status": "in_progress",
+      "owner": "",
+      "stakeholder": "",
+      "description": "主要专项任务"
+    },
+    {
+      "id": 2,
+      "text": "机内码、条码单号、票据扫描、数据公用",
+      "start_date": "2025-05-12",
+      "duration": 59,
+      "progress": 0.1,
+      "type": "task",
+      "parent": 1,
+      "status": "in_progress",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 3,
+      "text": "需求沟通",
+      "start_date": "2025-05-12",
+      "duration": 1,
+      "progress": 0.7,
+      "type": "task",
+      "parent": 2,
+      "status": "completed",
+      "owner": "陈少文",
+      "stakeholder": "",
+      "description": "沟通完成"
+    },
+    {
+      "id": 4,
+      "text": "需求设计",
+      "start_date": "2025-05-13",
+      "duration": 5,
+      "progress": 0.9,
+      "type": "task",
+      "parent": 2,
+      "status": "completed",
+      "owner": "陈少文",
+      "stakeholder": "",
+      "description": "需求设计"
+    },
+    {
+      "id": 5,
+      "text": "需求宣贯",
+      "start_date": "2025-05-27",
+      "duration": 1,
+      "progress": 0,
+      "type": "task",
+      "parent": 2,
+      "status": "planned",
+      "owner": "陈少文",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 6,
+      "text": "技术方案设计",
+      "start_date": "2025-05-28",
+      "duration": 7,
+      "progress": 0,
+      "type": "task",
+      "parent": 2,
+      "status": "planned",
+      "owner": "李玉宝",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 7,
+      "text": "需求开发",
+      "start_date": "2025-06-06",
+      "duration": 12,
+      "progress": 0,
+      "type": "task",
+      "parent": 2,
+      "status": "planned",
+      "owner": "李玉宝",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 8,
+      "text": "测试",
+      "start_date": "2025-06-24",
+      "duration": 16,
+      "progress": 0,
+      "type": "task",
+      "parent": 2,
+      "status": "planned",
+      "owner": "罗辉",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 9,
+      "text": "用户测试",
+      "start_date": "2025-07-16",
+      "duration": 12,
+      "progress": 0,
+      "type": "task",
+      "parent": 2,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 10,
+      "text": "打印方案专项",
+      "start_date": "2025-06-13",
+      "duration": 76,
+      "progress": 0,
+      "type": "project",
+      "parent": 1,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": "打印方案专项"
+    },
+    {
+      "id": 11,
+      "text": "需求沟通",
+      "start_date": "2025-06-13",
+      "duration": 27,
+      "progress": 0,
+      "type": "task",
+      "parent": 10,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 12,
+      "text": "需求设计",
+      "start_date": "2025-07-21",
+      "duration": 31,
+      "progress": 0,
+      "type": "task",
+      "parent": 10,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 13,
+      "text": "需求宣贯",
+      "start_date": "2025-09-01",
+      "duration": 1,
+      "progress": 0,
+      "type": "task",
+      "parent": 10,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 14,
+      "text": "技术方案设计",
+      "start_date": "2025-09-02",
+      "duration": 4,
+      "progress": 0,
+      "type": "task",
+      "parent": 10,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 15,
+      "text": "需求开发",
+      "start_date": "2025-09-08",
+      "duration": 10,
+      "progress": 0,
+      "type": "task",
+      "parent": 10,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 16,
+      "text": "测试",
+      "start_date": "2025-09-22",
+      "duration": 5,
+      "progress": 0,
+      "type": "task",
+      "parent": 10,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 17,
+      "text": "人库",
+      "start_date": "2025-06-13",
+      "duration": 49,
+      "progress": 0,
+      "type": "project",
+      "parent": 1,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": "人库项目"
+    },
+    {
+      "id": 18,
+      "text": "需求沟通",
+      "start_date": "2025-06-13",
+      "duration": 1,
+      "progress": 0,
+      "type": "task",
+      "parent": 17,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 19,
+      "text": "需求设计",
+      "start_date": "2025-06-16",
+      "duration": 25,
+      "progress": 0,
+      "type": "task",
+      "parent": 17,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 20,
+      "text": "需求宣贯",
+      "start_date": "2025-07-21",
+      "duration": 1,
+      "progress": 0,
+      "type": "task",
+      "parent": 17,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 21,
+      "text": "技术方案设计",
+      "start_date": "2025-07-22",
+      "duration": 3,
+      "progress": 0,
+      "type": "task",
+      "parent": 17,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 22,
+      "text": "需求开发",
+      "start_date": "2025-07-25",
+      "duration": 16,
+      "progress": 0,
+      "type": "task",
+      "parent": 17,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 23,
+      "text": "测试",
+      "start_date": "2025-08-18",
+      "duration": 3,
+      "progress": 0,
+      "type": "task",
+      "parent": 17,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 24,
+      "text": "出库",
+      "start_date": "2025-07-07",
+      "duration": 50,
+      "progress": 0,
+      "type": "project",
+      "parent": 1,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": "出库项目"
+    },
+    {
+      "id": 25,
+      "text": "需求沟通",
+      "start_date": "2025-07-07",
+      "duration": 1,
+      "progress": 0,
+      "type": "task",
+      "parent": 24,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 26,
+      "text": "需求设计",
+      "start_date": "2025-07-08",
+      "duration": 24,
+      "progress": 0,
+      "type": "task",
+      "parent": 24,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 27,
+      "text": "需求宣贯",
+      "start_date": "2025-08-11",
+      "duration": 1,
+      "progress": 0,
+      "type": "task",
+      "parent": 24,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 28,
+      "text": "技术方案设计",
+      "start_date": "2025-08-12",
+      "duration": 4,
+      "progress": 0,
+      "type": "task",
+      "parent": 24,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 29,
+      "text": "需求开发",
+      "start_date": "2025-08-18",
+      "duration": 15,
+      "progress": 0,
+      "type": "task",
+      "parent": 24,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 30,
+      "text": "测试",
+      "start_date": "2025-09-08",
+      "duration": 5,
+      "progress": 0,
+      "type": "task",
+      "parent": 24,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 31,
+      "text": "运输",
+      "start_date": "2025-07-15",
+      "duration": 67,
+      "progress": 0,
+      "type": "project",
+      "parent": 1,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": "运输项目"
+    },
+    {
+      "id": 32,
+      "text": "需求沟通",
+      "start_date": "2025-07-15",
+      "duration": 1,
+      "progress": 0,
+      "type": "task",
+      "parent": 31,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 33,
+      "text": "需求设计",
+      "start_date": "2025-07-16",
+      "duration": 34,
+      "progress": 0,
+      "type": "task",
+      "parent": 31,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 34,
+      "text": "需求宣贯",
+      "start_date": "2025-09-01",
+      "duration": 1,
+      "progress": 0,
+      "type": "task",
+      "parent": 31,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 35,
+      "text": "技术方案设计",
+      "start_date": "2025-09-02",
+      "duration": 3,
+      "progress": 0,
+      "type": "task",
+      "parent": 31,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 36,
+      "text": "需求开发",
+      "start_date": "2025-09-05",
+      "duration": 11,
+      "progress": 0,
+      "type": "task",
+      "parent": 31,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    },
+    {
+      "id": 37,
+      "text": "测试",
+      "start_date": "2025-10-08",
+      "duration": 6,
+      "progress": 0,
+      "type": "task",
+      "parent": 31,
+      "status": "planned",
+      "owner": "",
+      "stakeholder": "",
+      "description": ""
+    }
+  ],
+  "links": [
+    {
+      "id": 1,
+      "source": 3,
+      "target": 4,
+      "type": "0"
+    },
+    {
+      "id": 2,
+      "source": 4,
+      "target": 5,
+      "type": "0"
+    },
+    {
+      "id": 3,
+      "source": 5,
+      "target": 6,
+      "type": "0"
+    },
+    {
+      "id": 4,
+      "source": 6,
+      "target": 7,
+      "type": "0"
+    },
+    {
+      "id": 5,
+      "source": 7,
+      "target": 8,
+      "type": "0"
+    },
+    {
+      "id": 6,
+      "source": 8,
+      "target": 9,
+      "type": "0"
+    },
+    {
+      "id": 7,
+      "source": 11,
+      "target": 12,
+      "type": "0"
+    },
+    {
+      "id": 8,
+      "source": 12,
+      "target": 13,
+      "type": "0"
+    },
+    {
+      "id": 9,
+      "source": 13,
+      "target": 14,
+      "type": "0"
+    },
+    {
+      "id": 10,
+      "source": 14,
+      "target": 15,
+      "type": "0"
+    },
+    {
+      "id": 11,
+      "source": 15,
+      "target": 16,
+      "type": "0"
+    },
+    {
+      "id": 12,
+      "source": 18,
+      "target": 19,
+      "type": "0"
+    },
+    {
+      "id": 13,
+      "source": 19,
+      "target": 20,
+      "type": "0"
+    },
+    {
+      "id": 14,
+      "source": 20,
+      "target": 21,
+      "type": "0"
+    },
+    {
+      "id": 15,
+      "source": 21,
+      "target": 22,
+      "type": "0"
+    },
+    {
+      "id": 16,
+      "source": 22,
+      "target": 23,
+      "type": "0"
+    },
+    {
+      "id": 17,
+      "source": 25,
+      "target": 26,
+      "type": "0"
+    },
+    {
+      "id": 18,
+      "source": 26,
+      "target": 27,
+      "type": "0"
+    },
+    {
+      "id": 19,
+      "source": 27,
+      "target": 28,
+      "type": "0"
+    },
+    {
+      "id": 20,
+      "source": 28,
+      "target": 29,
+      "type": "0"
+    },
+    {
+      "id": 21,
+      "source": 29,
+      "target": 30,
+      "type": "0"
+    },
+    {
+      "id": 22,
+      "source": 32,
+      "target": 33,
+      "type": "0"
+    },
+    {
+      "id": 23,
+      "source": 33,
+      "target": 34,
+      "type": "0"
+    },
+    {
+      "id": 24,
+      "source": 34,
+      "target": 35,
+      "type": "0"
+    },
+    {
+      "id": 25,
+      "source": 35,
+      "target": 36,
+      "type": "0"
+    },
+    {
+      "id": 26,
+      "source": 36,
+      "target": 37,
+      "type": "0"
+    }
+  ]
+}
