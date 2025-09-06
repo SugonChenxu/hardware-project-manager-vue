@@ -367,7 +367,7 @@ const initGantt = () => {
       {
         name: "description",
         label: "任务描述",
-        width: 220,
+        width: 200,
         template: function(task) {
           return task.description || '<span style="color: #c0c4cc;">暂无描述</span>'
         }
@@ -766,7 +766,7 @@ const saveDataToBrowser = async () => {
 
 .gantt-container {
   flex: 1;
-  padding: 20px;
+  padding: 3px;
   overflow: hidden;
   height: calc(100vh - 120px); /* 减去顶部工具栏的高度 */
 }
@@ -777,44 +777,6 @@ const saveDataToBrowser = async () => {
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   overflow: auto; /* 允许滚动 */
-}
-
-/* 甘特图滚动优化 */
-:deep(.gantt_layout_cell) {
-  overflow: auto !important;
-}
-
-:deep(.gantt_data_area) {
-  overflow-y: auto !important;
-  overflow-x: auto !important;
-}
-
-:deep(.gantt_task_bg) {
-  overflow: visible !important;
-}
-
-/* 自定义滚动条样式 */
-:deep(.gantt_data_area)::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-
-:deep(.gantt_data_area)::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 6px;
-}
-
-:deep(.gantt_data_area)::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 6px;
-}
-
-:deep(.gantt_data_area)::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-:deep(.gantt_data_area)::-webkit-scrollbar-corner {
-  background: #f1f1f1;
 }
 
 /* 甘特图样式定制 */
