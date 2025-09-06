@@ -168,6 +168,110 @@
         <el-button type="primary" @click="createTask">创建任务</el-button>
       </template>
     </el-dialog>
+
+    <!-- 编辑任务对话框 -->
+    <el-dialog v-model="showEditDialog" title="编辑任务" width="800px">
+      <el-form :model="editTask" label-width="100px">
+        <el-form-item label="任务名称">
+          <el-input v-model="editTask.text" placeholder="请输入任务名称" />
+        </el-form-item>
+        
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="开始时间">
+              <el-date-picker
+                v-model="editTask.start_date"
+                type="date"
+                placeholder="选择开始时间"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="工期(天)">
+              <el-input-number
+                v-model="editTask.duration"
+                :min="1"
+                :max="365"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="完成进度">
+              <el-slider v-model="editTask.progress" :max="1" :step="0.1" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="任务类型">
+              <el-select v-model="editTask.type" style="width: 100%">
+                <el-option label="普通任务" value="task" />
+                <el-option label="项目组" value="project" />
+                <el-option label="里程碑" value="milestone" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="执行状态">
+              <el-select v-model="editTask.status" style="width: 100%">
+                <el-option label="计划阶段" value="planned" />
+                <el-option label="开发已完成" value="in_progress" />
+                <el-option label="已完成" value="completed" />
+                <el-option label="暂停" value="on_hold" />
+                <el-option label="已取消" value="cancelled" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="负责人">
+              <el-input v-model="editTask.owner" placeholder="请输入负责人" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="相关方">
+              <el-input v-model="editTask.stakeholder" placeholder="请输入相关方" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="父任务">
+              <el-select v-model="editTask.parent" placeholder="选择父任务（可选）" style="width: 100%">
+                <el-option label="无" :value="0" />
+                <el-option
+                  v-for="task in tasks.filter(t => t.id !== editTask.id)"
+                  :key="task.id"
+                  :label="task.text"
+                  :value="task.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-form-item label="任务描述">
+          <el-input
+            v-model="editTask.description"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入任务描述"
+          />
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="showEditDialog = false">取消</el-button>
+        <el-button type="primary" @click="updateTask">更新任务</el-button>
+        <el-button type="danger" @click="confirmDeleteTask">删除任务</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -192,6 +296,7 @@ const ganttContainer = ref()
 const fileInput = ref()
 const viewMode = ref('week')
 const showTaskDialog = ref(false)
+const showEditDialog = ref(false)  // 编辑对话框显示状态
 
 // 任务数据 - 从数据服务加载
 const tasks = ref([])
@@ -200,6 +305,21 @@ const loading = ref(true)
 
 // 新建任务表单数据
 const newTask = ref({
+  text: '',
+  start_date: new Date(),
+  duration: 3,
+  progress: 0,
+  type: 'task',
+  parent: 0,
+  status: 'planned',
+  owner: '',
+  stakeholder: '',
+  description: ''
+})
+
+// 编辑任务表单数据
+const editTask = ref({
+  id: null,
   text: '',
   start_date: new Date(),
   duration: 3,
@@ -263,6 +383,8 @@ const initGantt = () => {
   nextTick(() => {
     // 基础配置
     gantt.config.date_format = '%Y-%m-%d'
+    gantt.config.xml_date = '%Y-%m-%d'  // 添加XML日期格式
+    gantt.config.api_date = '%Y-%m-%d %H:%i:%s'  // 添加API日期格式
     gantt.config.autosize = false  // 关闭自动调整大小，使用固定高度
     gantt.config.row_height = 40
     gantt.config.task_height = 28
@@ -291,19 +413,19 @@ const initGantt = () => {
         label: "开始时间",
         width: 110,
         align: "center",
-        template: function(task) {
-          return gantt.date.date_to_str("%Y-%m-%d")(task.start_date)
-        }
+        // template: function(task) {
+        //   return gantt.date.date_to_str("%Y-%m-%d")(task.start_date)
+        // }
       },
       {
         name: "end_date",
         label: "完成时间",
         width: 110,
         align: "center",
-        template: function(task) {
-          const endDate = gantt.calculateEndDate(task.start_date, task.duration)
-          return gantt.date.date_to_str("%Y-%m-%d")(endDate)
-        }
+        // template: function(task) {
+        //   const endDate = gantt.calculateEndDate(task.start_date, task.duration)
+        //   return gantt.date.date_to_str("%Y-%m-%d")(endDate)
+        // }
       },
       {
         name: "duration",
@@ -388,6 +510,21 @@ const initGantt = () => {
     gantt.config.work_time = true            // 启用工作时间
     gantt.config.correct_work_time = true    // 调整工作时间
     
+    // 禁用内置编辑器
+    gantt.config.readonly = false            // 保持可编辑状态，但禁用内置编辑器
+    gantt.config.drag_links = false          // 禁用拖拽创建依赖
+    gantt.config.details_on_dblclick = false // 禁用双击打开详情
+    gantt.config.click_drag = {              // 配置点击拖拽行为
+      ignore: ".gantt_task_line, .gantt_task_link" // 忽略任务条和链接的拖拽
+    }
+    
+    // 禁用内置弹窗和编辑器
+    gantt.config.lightbox = {
+      sections: []  // 清空所有内置编辑器配置
+    }
+    gantt.config.quickinfo_buttons = []      // 清空快速信息按钮
+    gantt.config.tooltip = false             // 禁用工具提示
+    
     // 任务条颜色配置
     gantt.templates.task_class = function(start, end, task) {
       let css = ""
@@ -423,8 +560,15 @@ const initGantt = () => {
     // 事件监听
     gantt.attachEvent("onTaskClick", (id, e) => {
       const task = gantt.getTask(id)
-      ElMessage.info(`点击任务: ${task.text}`)
+      console.info(`点击任务: ${task.text}`)
       return true
+    })
+    
+    // 添加双击事件监听
+    gantt.attachEvent("onTaskDblClick", (id, e) => {
+      const task = gantt.getTask(id)
+      openEditDialog(task)
+      return false  // 阻止默认行为
     })
     
     gantt.attachEvent("onAfterTaskUpdate", (id, task) => {
@@ -545,6 +689,100 @@ const createTask = () => {
   
   gantt.addTask(task, newTask.value.parent)
   showTaskDialog.value = false
+}
+
+// 打开编辑任务对话框
+const openEditDialog = (task) => {
+  // 确保日期格式正确
+  let startDate
+  if (task.start_date) {
+    if (typeof task.start_date === 'string') {
+      startDate = new Date(task.start_date)
+    } else if (task.start_date instanceof Date) {
+      startDate = task.start_date
+    } else {
+      startDate = new Date()
+    }
+  } else {
+    startDate = new Date()
+  }
+  
+  editTask.value = {
+    id: task.id,
+    text: task.text || '',
+    start_date: startDate,
+    duration: task.duration || 1,
+    progress: task.progress || 0,
+    type: task.type || 'task',
+    parent: task.parent || 0,
+    status: task.status || 'planned',
+    owner: task.owner || '',
+    stakeholder: task.stakeholder || '',
+    description: task.description || ''
+  }
+  showEditDialog.value = true
+}
+
+// 更新任务
+const updateTask = () => {
+  if (!editTask.value.text) {
+    ElMessage.warning('请输入任务名称')
+    return
+  }
+  
+  const updatedTask = {
+    id: editTask.value.id,
+    text: editTask.value.text,
+    start_date: editTask.value.start_date,
+    duration: editTask.value.duration,
+    progress: editTask.value.progress,
+    type: editTask.value.type,
+    parent: editTask.value.parent,
+    status: editTask.value.status,
+    owner: editTask.value.owner,
+    stakeholder: editTask.value.stakeholder,
+    description: editTask.value.description
+  }
+  
+  try {
+    console.log('准备更新任务:', updatedTask)
+    
+    // 更新甘特图中的任务
+    gantt.updateTask(editTask.value.id, updatedTask)
+    
+    // 手动更新tasks数组中的数据
+    updateTaskInArray(updatedTask)
+    
+    showEditDialog.value = false
+    ElMessage.success('任务更新成功')
+    
+    // 强制重新渲染甘特图
+    setTimeout(() => {
+      gantt.render()
+    }, 100)
+  } catch (error) {
+    console.error('更新任务失败:', error)
+    ElMessage.error('更新任务失败: ' + error.message)
+  }
+}
+
+// 确认删除任务
+const confirmDeleteTask = () => {
+  ElMessageBox.confirm(
+    `确定要删除任务"${editTask.value.text}"吗？此操作不可撤销。`,
+    '删除确认',
+    {
+      confirmButtonText: '确定删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => {
+    gantt.deleteTask(editTask.value.id)
+    showEditDialog.value = false
+    ElMessage.success('任务删除成功')
+  }).catch(() => {
+    ElMessage.info('已取消删除')
+  })
 }
 
 // 展开全部
@@ -682,17 +920,30 @@ const handleCsvFile = (file) => {
   reader.readAsText(file)
 }
 
-// 工具函数
 const getNextId = () => {
   return generateNewTaskId(tasks.value)
 }
 
 const updateTaskInArray = (task) => {
   const index = tasks.value.findIndex(t => t.id == task.id)
+  console.log('更新任务数组:', { taskId: task.id, index, task })
+  
   if (index !== -1) {
-    tasks.value[index] = { ...task }
+    // 确保所有字段都被正确更新
+    tasks.value[index] = { 
+      ...tasks.value[index],  // 保留原有字段
+      ...task  // 覆盖更新的字段
+    }
+    
+    console.log('任务已更新:', tasks.value[index])
+    
     // 自动保存数据
     saveDataToBrowser()
+    
+    // 触发响应式更新
+    tasks.value = [...tasks.value]
+  } else {
+    console.error('未找到要更新的任务:', task.id)
   }
 }
 
