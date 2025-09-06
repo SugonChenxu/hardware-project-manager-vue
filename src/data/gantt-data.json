@@ -37,7 +37,8 @@
       "status": "completed",
       "owner": "陈少文",
       "stakeholder": "",
-      "description": "沟通完成"
+      "description": "沟通完成",
+      "predecessors": []
     },
     {
       "id": 4,
@@ -50,7 +51,8 @@
       "status": "completed",
       "owner": "陈少文",
       "stakeholder": "",
-      "description": "需求设计"
+      "description": "需求设计",
+      "predecessors": [3]
     },
     {
       "id": 5,
@@ -63,7 +65,8 @@
       "status": "planned",
       "owner": "陈少文",
       "stakeholder": "",
-      "description": ""
+      "description": "",
+      "predecessors": [4]
     },
     {
       "id": 6,
@@ -76,7 +79,8 @@
       "status": "planned",
       "owner": "李玉宝",
       "stakeholder": "",
-      "description": ""
+      "description": "",
+      "predecessors": [5]
     },
     {
       "id": 7,
@@ -89,7 +93,8 @@
       "status": "planned",
       "owner": "李玉宝",
       "stakeholder": "",
-      "description": ""
+      "description": "",
+      "predecessors": [6]
     },
     {
       "id": 8,
@@ -102,7 +107,8 @@
       "status": "planned",
       "owner": "罗辉",
       "stakeholder": "",
-      "description": ""
+      "description": "",
+      "predecessors": [7]
     },
     {
       "id": 9,
@@ -115,7 +121,8 @@
       "status": "planned",
       "owner": "",
       "stakeholder": "",
-      "description": ""
+      "description": "",
+      "predecessors": [8]
     },
     {
       "id": 10,

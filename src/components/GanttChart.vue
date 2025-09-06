@@ -153,6 +153,28 @@
           </el-col>
         </el-row>
         
+        <el-form-item label="前置任务">
+          <el-select 
+            v-model="newTask.predecessors" 
+            multiple 
+            placeholder="选择前置任务（可选）" 
+            style="width: 100%"
+          >
+            <el-option
+              v-for="task in availableTasksForPredecessors(newTask.id)"
+              :key="task.id"
+              :label="`${task.text} (ID: ${task.id})`"
+              :value="task.id"
+            />
+          </el-select>
+          <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+            选择的前置任务必须在此任务开始之前完成
+          </div>
+        </el-form-item>
+        
+        <el-row :gutter="16">
+        </el-row>
+        
         <el-form-item label="任务描述">
           <el-input
             v-model="newTask.description"
@@ -256,6 +278,28 @@
           </el-col>
         </el-row>
         
+        <el-form-item label="前置任务">
+          <el-select 
+            v-model="editTask.predecessors" 
+            multiple 
+            placeholder="选择前置任务（可选）" 
+            style="width: 100%"
+          >
+            <el-option
+              v-for="task in availableTasksForPredecessors(editTask.id)"
+              :key="task.id"
+              :label="`${task.text} (ID: ${task.id})`"
+              :value="task.id"
+            />
+          </el-select>
+          <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+            选择的前置任务必须在此任务开始之前完成
+          </div>
+        </el-form-item>
+        
+        <el-row :gutter="16">
+        </el-row>
+        
         <el-form-item label="任务描述">
           <el-input
             v-model="editTask.description"
@@ -314,7 +358,8 @@ const newTask = ref({
   status: 'planned',
   owner: '',
   stakeholder: '',
-  description: ''
+  description: '',
+  predecessors: []  // 前置任务列表
 })
 
 // 编辑任务表单数据
@@ -329,7 +374,8 @@ const editTask = ref({
   status: 'planned',
   owner: '',
   stakeholder: '',
-  description: ''
+  description: '',
+  predecessors: []  // 前置任务列表
 })
 
 // 生命周期钩子
@@ -386,8 +432,8 @@ const initGantt = () => {
     gantt.config.xml_date = '%Y-%m-%d'  // 添加XML日期格式
     gantt.config.api_date = '%Y-%m-%d %H:%i:%s'  // 添加API日期格式
     gantt.config.autosize = false  // 关闭自动调整大小，使用固定高度
-    gantt.config.row_height = 40
-    gantt.config.task_height = 28
+    gantt.config.row_height = 28
+    gantt.config.task_height = 20
     gantt.config.grid_width = 1100
     gantt.config.grid_resize = true
     gantt.config.drag_resize = true
@@ -484,6 +530,22 @@ const initGantt = () => {
         align: "center",
         template: function(task) {
           return task.stakeholder || '<span style="color: #c0c4cc;">-</span>'
+        }
+      },
+      {
+        name: "predecessors",
+        label: "前置任务",
+        width: 150,
+        align: "center",
+        template: function(task) {
+          if (task.predecessors && task.predecessors.length > 0) {
+            const predecessorNames = task.predecessors.map(predId => {
+              const predTask = gantt.getTask(predId)
+              return predTask ? predTask.text : `任务${predId}`
+            }).join(', ')
+            return `<span style="color: #409eff;">${predecessorNames}</span>`
+          }
+          return '<span style="color: #c0c4cc;">无</span>'
         }
       },
       {
@@ -637,9 +699,45 @@ const setTimeScale = (mode) => {
 
 // 加载数据
 const loadData = () => {
+  // 同步前置任务和链接
+  syncPredecessorsWithLinks()
+  
   gantt.parse({
     data: tasks.value,
     links: links.value
+  })
+}
+
+// 同步前置任务和链接
+const syncPredecessorsWithLinks = () => {
+  // 清空现有链接，重新根据前置任务生成
+  const newLinks = []
+  let linkId = 1
+  
+  tasks.value.forEach(task => {
+    if (task.predecessors && task.predecessors.length > 0) {
+      task.predecessors.forEach(predId => {
+        // 检查前置任务是否存在
+        const predTask = tasks.value.find(t => t.id === predId)
+        if (predTask) {
+          newLinks.push({
+            id: linkId++,
+            source: predId,
+            target: task.id,
+            type: "0"
+          })
+        }
+      })
+    }
+  })
+  
+  // 更新links数组
+  links.value = newLinks
+  
+  console.log('同步完成:', {
+    tasks: tasks.value.length,
+    links: links.value.length,
+    linksGenerated: newLinks.length
   })
 }
 
@@ -661,7 +759,8 @@ const addTask = () => {
     status: 'planned',
     owner: '',
     stakeholder: '',
-    description: ''
+    description: '',
+    predecessors: []
   }
   showTaskDialog.value = true
 }
@@ -684,10 +783,15 @@ const createTask = () => {
     status: newTask.value.status,
     owner: newTask.value.owner,
     stakeholder: newTask.value.stakeholder,
-    description: newTask.value.description
+    description: newTask.value.description,
+    predecessors: newTask.value.predecessors || []
   }
   
   gantt.addTask(task, newTask.value.parent)
+  
+  // 根据前置任务创建链接
+  createLinksFromPredecessors(task.id, task.predecessors)
+  
   showTaskDialog.value = false
 }
 
@@ -718,7 +822,8 @@ const openEditDialog = (task) => {
     status: task.status || 'planned',
     owner: task.owner || '',
     stakeholder: task.stakeholder || '',
-    description: task.description || ''
+    description: task.description || '',
+    predecessors: task.predecessors || []
   }
   showEditDialog.value = true
 }
@@ -741,14 +846,23 @@ const updateTask = () => {
     status: editTask.value.status,
     owner: editTask.value.owner,
     stakeholder: editTask.value.stakeholder,
-    description: editTask.value.description
+    description: editTask.value.description,
+    predecessors: editTask.value.predecessors || []
   }
   
   try {
     console.log('准备更新任务:', updatedTask)
     
+    // 获取原任务的前置任务列表
+    const originalTask = gantt.getTask(editTask.value.id)
+    const oldPredecessors = originalTask.predecessors || []
+    const newPredecessors = updatedTask.predecessors || []
+    
     // 更新甘特图中的任务
     gantt.updateTask(editTask.value.id, updatedTask)
+    
+    // 更新前置任务链接
+    updateTaskLinks(editTask.value.id, oldPredecessors, newPredecessors)
     
     // 手动更新tasks数组中的数据
     updateTaskInArray(updatedTask)
@@ -968,6 +1082,72 @@ const saveDataToBrowser = async () => {
     console.error('保存数据失败:', error)
   }
 }
+
+// 获取可选择的前置任务列表
+const availableTasksForPredecessors = (currentTaskId) => {
+  return tasks.value.filter(task => {
+    // 排除当前任务本身
+    if (task.id === currentTaskId) return false
+    
+    // 排除已经是当前任务子任务的任务（避免循环依赖）
+    if (task.parent === currentTaskId) return false
+    
+    // 排除项目类型的任务作为前置任务（项目通常是容器）
+    if (task.type === 'project') return false
+    
+    return true
+  })
+}
+
+// 根据前置任务创建链接
+const createLinksFromPredecessors = (taskId, predecessors) => {
+  if (!predecessors || predecessors.length === 0) return
+  
+  predecessors.forEach(predId => {
+    const linkId = getNextLinkId()
+    const link = {
+      id: linkId,
+      source: predId,
+      target: taskId,
+      type: "0"  // 完成-开始关系
+    }
+    
+    // 添加到links数组
+    links.value.push(link)
+    
+    // 添加到甘特图
+    gantt.addLink(link)
+  })
+}
+
+// 更新任务链接
+const updateTaskLinks = (taskId, oldPredecessors, newPredecessors) => {
+  // 删除旧的链接
+  oldPredecessors.forEach(predId => {
+    const linkToRemove = links.value.find(link => 
+      link.source === predId && link.target === taskId
+    )
+    if (linkToRemove) {
+      gantt.deleteLink(linkToRemove.id)
+      const linkIndex = links.value.findIndex(link => link.id === linkToRemove.id)
+      if (linkIndex !== -1) {
+        links.value.splice(linkIndex, 1)
+      }
+    }
+  })
+  
+  // 添加新的链接
+  const predecessorsToAdd = newPredecessors.filter(predId => 
+    !oldPredecessors.includes(predId)
+  )
+  createLinksFromPredecessors(taskId, predecessorsToAdd)
+}
+
+// 获取下一个链接ID
+const getNextLinkId = () => {
+  if (links.value.length === 0) return 1
+  return Math.max(...links.value.map(link => link.id)) + 1
+}
 </script>
 
 <style scoped>
@@ -1045,11 +1225,11 @@ const saveDataToBrowser = async () => {
 :deep(.gantt_cell) {
   border-right: 1px solid #e4e7ed;
   border-bottom: 1px solid #f0f0f0;
-  padding: 8px 6px;
+  padding: 4px 6px;
 }
 
 :deep(.gantt_row) {
-  min-height: 40px;
+  min-height: 28px;
 }
 
 :deep(.gantt_row:hover) {
