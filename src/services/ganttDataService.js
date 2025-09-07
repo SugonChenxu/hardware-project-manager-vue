@@ -15,8 +15,7 @@ export const loadGanttData = async (code = null) => {
   try {
     if (code) {
       // 从API加载项目数据
-      console.log('从API加载项目数据，code:', code)
-      const response = await getProject({ code })
+      const response = await getProject({ id:code })
       
       if (response && response.data) {
         const projectData = response.data
@@ -27,9 +26,9 @@ export const loadGanttData = async (code = null) => {
         
         if (projectData.ganttData) {
           try {
-            const ganttDataObj = typeof projectData.ganttData === 'string' 
-              ? JSON.parse(projectData.ganttData) 
-              : projectData.ganttData
+            const ganttDataObj = typeof projectData.content === 'string' 
+              ? JSON.parse(projectData.content) 
+              : projectData.content
             
             tasks = ganttDataObj.tasks || []
             links = ganttDataObj.links || []
@@ -91,7 +90,7 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
     }
     
     const projectData = {
-      ganttData: JSON.stringify(ganttDataObj),
+      content: JSON.stringify(ganttDataObj),
       updateTime: new Date().toISOString()
     }
     
@@ -100,7 +99,8 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
       Object.assign(projectData, {
         name: projectInfo.name,
         description: projectInfo.description,
-        status: projectInfo.status
+        status: projectInfo.status,
+        code: projectInfo.code
       })
     }
     
@@ -108,12 +108,9 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
     
     if (projectInfo && projectInfo.id) {
       // 更新现有项目
-      console.log('更新项目数据，ID:', projectInfo.id)
       projectData.id = projectInfo.id
       response = await updateProject(projectData)
     } else {
-      // 新增项目
-      console.log('新增项目数据')
       // 如果没有项目代码，生成一个
       if (!projectData.code) {
         projectData.code = `GANTT_${Date.now()}`
@@ -126,7 +123,6 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
     
     return response;
   } catch (error) {
-    // 重新抛出错误，保持错误信息完整
     console.error('保存甘特图数据到项目失败:', error)
     throw error
   }
