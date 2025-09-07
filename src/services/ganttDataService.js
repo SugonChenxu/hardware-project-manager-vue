@@ -24,7 +24,7 @@ export const loadGanttData = async (code = null) => {
         let tasks = []
         let links = []
         
-        if (projectData.ganttData) {
+        if (projectData.content) {
           try {
             const ganttDataObj = typeof projectData.content === 'string' 
               ? JSON.parse(projectData.content) 

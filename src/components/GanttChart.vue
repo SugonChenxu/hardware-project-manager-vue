@@ -7,7 +7,7 @@
           <el-icon class="title-icon">
             <Calendar />
           </el-icon>
-          {{ projectInfo && projectInfo.name ? projectInfo.name : '星甘-易用的在线项目进度管理平台' }}
+          {{ projectInfo && projectInfo.name ? projectInfo.name : '星甘-易用的在线进度管理平台' }}
         </h1>
         <div class="project-info">
           <el-tag type="success" size="large">{{ tasks.length }} 个任务</el-tag>
