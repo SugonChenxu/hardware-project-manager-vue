@@ -4,48 +4,152 @@
  */
 
 import ganttData from '../data/gantt-data.json'
+import { get as getProject, add as addProject, update as updateProject } from '../api/sysproject.js'
 
 /**
  * 加载甘特图数据
- * @returns {Promise<{tasks: Array, links: Array}>}
+ * @param {string} code - 项目代码，如果有则从API加载，否则加载默认数据
+ * @returns {Promise<{tasks: Array, links: Array, projectInfo?: Object}>}
  */
-export const loadGanttData = async () => {
+export const loadGanttData = async (code = null) => {
   try {
-    // 这里可以改为从API加载数据
-    // const response = await fetch('/api/gantt-data')
-    // const data = await response.json()
-    
-    // 目前从本地JSON文件加载
-    return {
-      tasks: ganttData.tasks,
-      links: ganttData.links
+    if (code) {
+      // 从API加载项目数据
+      console.log('从API加载项目数据，code:', code)
+      const response = await getProject({ code })
+      
+      if (response && response.data) {
+        const projectData = response.data
+        
+        // 解析项目数据中的甘特图数据
+        let tasks = []
+        let links = []
+        
+        if (projectData.ganttData) {
+          try {
+            const ganttDataObj = typeof projectData.ganttData === 'string' 
+              ? JSON.parse(projectData.ganttData) 
+              : projectData.ganttData
+            
+            tasks = ganttDataObj.tasks || []
+            links = ganttDataObj.links || []
+          } catch (error) {
+            console.error('解析甘特图数据失败:', error)
+          }
+        }
+        
+        return {
+          tasks,
+          links,
+          projectInfo: {
+            id: projectData.id,
+            code: projectData.code,
+            name: projectData.name,
+            description: projectData.description,
+            status: projectData.status,
+            createTime: projectData.createTime,
+            updateTime: projectData.updateTime
+          }
+        }
+      } else {
+        console.warn('未找到项目数据，使用默认数据')
+        return {
+          tasks: ganttData.tasks,
+          links: ganttData.links
+        }
+      }
+    } else {
+      // 从本地JSON文件加载默认数据
+      console.log('加载默认甘特图数据')
+      return {
+        tasks: ganttData.tasks,
+        links: ganttData.links
+      }
     }
   } catch (error) {
     console.error('加载甘特图数据失败:', error)
     return {
-      tasks: [],
-      links: []
+      tasks: ganttData.tasks || [],
+      links: ganttData.links || []
     }
   }
 }
 
 /**
- * 保存甘特图数据
+ * 保存甘特图数据到项目
+ * @param {Array} tasks - 任务数据
+ * @param {Array} links - 依赖关系数据
+ * @param {Object} projectInfo - 项目信息
+ * @returns {Promise<{success: boolean, data?: Object}>}
+ */
+export const saveGanttDataToProject = async (tasks, links, projectInfo = null) => {
+  try {
+    const ganttDataObj = {
+      tasks,
+      links,
+      lastUpdateTime: new Date().toISOString()
+    }
+    
+    const projectData = {
+      ganttData: JSON.stringify(ganttDataObj),
+      updateTime: new Date().toISOString()
+    }
+    
+    // 如果有项目信息，合并项目基本信息
+    if (projectInfo) {
+      Object.assign(projectData, {
+        name: projectInfo.name,
+        description: projectInfo.description,
+        status: projectInfo.status
+      })
+    }
+    
+    let response
+    
+    if (projectInfo && projectInfo.id) {
+      // 更新现有项目
+      console.log('更新项目数据，ID:', projectInfo.id)
+      projectData.id = projectInfo.id
+      response = await updateProject(projectData)
+    } else {
+      // 新增项目
+      console.log('新增项目数据')
+      // 如果没有项目代码，生成一个
+      if (!projectData.code) {
+        projectData.code = `GANTT_${Date.now()}`
+      }
+      if (!projectData.name) {
+        projectData.name = '新建甘特图项目'
+      }
+      response = await addProject(projectData)
+    }
+    
+    if (response && (response.success || response.data)) {
+      console.log('项目数据保存成功')
+      return {
+        success: true,
+        data: response.data
+      }
+    } else {
+      throw new Error('保存响应异常')
+    }
+  } catch (error) {
+    console.error('保存项目数据失败:', error)
+    return {
+      success: false,
+      error: error.message
+    }
+  }
+}
+
+/**
+ * 保存甘特图数据（兼容旧版本）
  * @param {Array} tasks - 任务数据
  * @param {Array} links - 依赖关系数据
  */
 export const saveGanttData = async (tasks, links) => {
   try {
-    // 这里可以改为保存到API
-    // const response = await fetch('/api/gantt-data', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify({ tasks, links })
-    // })
-    
-    console.log('甘特图数据已保存:', { tasks: tasks.length, links: links.length })
+    console.log('甘特图数据已保存到本地:', { tasks: tasks.length, links: links.length })
     return true
   } catch (error) {
     console.error('保存甘特图数据失败:', error)

@@ -4,20 +4,25 @@
   "description": "专业甘特图项目管理系统",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite --mode dev",
+    "build": "vite build --mode production",
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.4.0",
-    "element-plus": "^2.4.4",
+    "axios": "^1.11.0",
+    "dayjs": "^1.11.10",
     "dhtmlx-gantt": "^8.0.6",
-    "dayjs": "^1.11.10"
+    "element-plus": "^2.4.4",
+    "js-cookie": "^3.0.5",
+    "pinia": "^3.0.3",
+    "vue": "^3.4.0",
+    "vue-router": "^4.5.1",
+    "vuex": "^4.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.2",
-    "vite": "^5.0.10",
     "unplugin-auto-import": "^0.17.2",
-    "unplugin-vue-components": "^0.25.2"
+    "unplugin-vue-components": "^0.25.2",
+    "vite": "^5.0.10"
   }
-} 
+}

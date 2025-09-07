@@ -5,9 +5,12 @@
       <div class="toolbar-left">
         <h1 class="page-title">
           <el-icon class="title-icon"><Calendar /></el-icon>
-          星甘-易用的在线项目进度管理平台
+          {{ projectInfo && projectInfo.name ? projectInfo.name : '星甘-易用的在线项目进度管理平台' }}
         </h1>
-        <el-tag type="success" size="large">{{ tasks.length }} 个任务</el-tag>
+        <div class="project-info">
+          <el-tag type="success" size="large">{{ tasks.length }} 个任务</el-tag>
+          <el-tag v-if="projectInfo && projectInfo.code" type="info" size="large">{{ projectInfo.code }}</el-tag>
+        </div>
       </div>
       
       <div class="toolbar-right">
@@ -23,6 +26,11 @@
         <el-button type="primary" @click="addTask">
           <el-icon><Plus /></el-icon>
           新建任务
+        </el-button>
+        
+        <el-button type="success" @click="saveProject" :loading="saving">
+          <el-icon><Document /></el-icon>
+          保存项目
         </el-button>
         
         <el-button @click="expandAll">
@@ -324,11 +332,12 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { gantt } from 'dhtmlx-gantt'
 import dayjs from 'dayjs'
 import {
-  Calendar, Plus, Expand, Fold, FullScreen, Download, Upload
+  Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document
 } from '@element-plus/icons-vue'
 import { 
   loadGanttData, 
   saveGanttData, 
+  saveGanttDataToProject,
   exportToJson, 
   importFromJson, 
   generateNewTaskId,
@@ -341,11 +350,16 @@ const fileInput = ref()
 const viewMode = ref('week')
 const showTaskDialog = ref(false)
 const showEditDialog = ref(false)  // 编辑对话框显示状态
+const saving = ref(false) // 保存按钮加载状态
 
 // 任务数据 - 从数据服务加载
 const tasks = ref([])
 const links = ref([])
 const loading = ref(true)
+
+// 项目信息
+const projectInfo = ref(null)
+const urlParams = ref(null)
 
 // 新建任务表单数据
 const newTask = ref({
@@ -380,7 +394,12 @@ const editTask = ref({
 
 // 生命周期钩子
 onMounted(async () => {
-  await loadInitialData()
+  // 获取URL参数
+  const params = new URLSearchParams(window.location.search)
+  const code = params.get('code')
+  urlParams.value = { code }
+  
+  await loadInitialData(code)
   initGantt()
   
   // 监听窗口尺寸变化
@@ -405,17 +424,24 @@ const handleResize = () => {
 }
 
 // 加载初始数据
-const loadInitialData = async () => {
+const loadInitialData = async (code = null) => {
   try {
     loading.value = true
-    const data = await loadGanttData()
+    const data = await loadGanttData(code)
     tasks.value = data.tasks
     links.value = data.links
+    projectInfo.value = data.projectInfo || null
     
     console.log('甘特图数据加载成功:', {
       tasks: tasks.value.length,
-      links: links.value.length
+      links: links.value.length,
+      projectInfo: projectInfo.value
     })
+    
+    // 如果有项目信息，更新页面标题
+    if (projectInfo.value && projectInfo.value.name) {
+      document.title = `${projectInfo.value.name} - 星甘特图`
+    }
   } catch (error) {
     console.error('加载甘特图数据失败:', error)
     ElMessage.error('数据加载失败，请刷新页面重试')
@@ -1148,6 +1174,52 @@ const getNextLinkId = () => {
   if (links.value.length === 0) return 1
   return Math.max(...links.value.map(link => link.id)) + 1
 }
+
+// 保存项目
+const saveProject = async () => {
+  saving.value = true
+  try {
+    const result = await saveGanttDataToProject(tasks.value, links.value, projectInfo.value)
+    
+    if (result.success) {
+      // 更新项目信息
+      if (result.data) {
+        if (!projectInfo.value) {
+          projectInfo.value = {}
+        }
+        Object.assign(projectInfo.value, {
+          id: result.data.id,
+          code: result.data.code,
+          name: result.data.name,
+          description: result.data.description,
+          status: result.data.status,
+          updateTime: result.data.updateTime
+        })
+        
+        // 如果是新建项目，更新URL
+        if (!urlParams.value.code && result.data.code) {
+          const newUrl = `${window.location.origin}${window.location.pathname}?code=${result.data.code}`
+          window.history.replaceState({}, '', newUrl)
+          urlParams.value.code = result.data.code
+        }
+        
+        // 更新页面标题
+        if (projectInfo.value.name) {
+          document.title = `${projectInfo.value.name} - 星甘特图`
+        }
+      }
+      
+      ElMessage.success('项目保存成功')
+    } else {
+      throw new Error(result.error || '保存失败')
+    }
+  } catch (error) {
+    console.error('保存项目失败:', error)
+    ElMessage.error('保存项目失败: ' + error.message)
+  } finally {
+    saving.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -1172,6 +1244,12 @@ const getNextLinkId = () => {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.project-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .page-title {
