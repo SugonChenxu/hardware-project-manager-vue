@@ -4,7 +4,9 @@
     <div class="gantt-toolbar">
       <div class="toolbar-left">
         <h1 class="page-title">
-          <el-icon class="title-icon"><Calendar /></el-icon>
+          <el-icon class="title-icon">
+            <Calendar />
+          </el-icon>
           {{ projectInfo && projectInfo.name ? projectInfo.name : '星甘-易用的在线项目进度管理平台' }}
         </h1>
         <div class="project-info">
@@ -12,7 +14,7 @@
           <el-tag v-if="projectInfo && projectInfo.code" type="info" size="large">{{ projectInfo.code }}</el-tag>
         </div>
       </div>
-      
+
       <div class="toolbar-right">
         <!-- 视图切换 -->
         <el-radio-group v-model="viewMode" size="small" @change="changeView">
@@ -21,40 +23,54 @@
           <el-radio-button label="month">月视图</el-radio-button>
           <el-radio-button label="quarter">季度视图</el-radio-button>
         </el-radio-group>
-        
+
         <!-- 操作按钮 -->
         <el-button type="primary" @click="addTask">
-          <el-icon><Plus /></el-icon>
+          <el-icon>
+            <Plus />
+          </el-icon>
           新建任务
         </el-button>
-        
+
         <el-button type="success" @click="saveProject" :loading="saving">
-          <el-icon><Document /></el-icon>
+          <el-icon>
+            <Document />
+          </el-icon>
           保存项目
         </el-button>
-        
+
         <el-button @click="expandAll">
-          <el-icon><Expand /></el-icon>
+          <el-icon>
+            <Expand />
+          </el-icon>
           展开全部
         </el-button>
-        
+
         <el-button @click="collapseAll">
-          <el-icon><Fold /></el-icon>
+          <el-icon>
+            <Fold />
+          </el-icon>
           折叠全部
         </el-button>
-        
+
         <el-button @click="zoomToFit">
-          <el-icon><FullScreen /></el-icon>
+          <el-icon>
+            <FullScreen />
+          </el-icon>
           适应窗口
         </el-button>
-        
+
         <el-button @click="exportData">
-          <el-icon><Download /></el-icon>
+          <el-icon>
+            <Download />
+          </el-icon>
           导出
         </el-button>
-        
+
         <el-button @click="importData">
-          <el-icon><Upload /></el-icon>
+          <el-icon>
+            <Upload />
+          </el-icon>
           导入数据
         </el-button>
       </div>
@@ -66,13 +82,8 @@
     </div>
 
     <!-- 隐藏的文件上传input -->
-    <input 
-      ref="fileInput" 
-      type="file" 
-      accept=".xlsx,.xls,.csv,.json" 
-      @change="handleFileUpload" 
-      style="display: none;"
-    />
+    <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv,.json" @change="handleFileUpload"
+      style="display: none;" />
 
     <!-- 新建任务对话框 -->
     <el-dialog v-model="showTaskDialog" title="新建任务" width="800px">
@@ -80,30 +91,20 @@
         <el-form-item label="任务名称">
           <el-input v-model="newTask.text" placeholder="请输入任务名称" />
         </el-form-item>
-        
+
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="开始时间">
-              <el-date-picker
-                v-model="newTask.start_date"
-                type="date"
-                placeholder="选择开始时间"
-                style="width: 100%"
-              />
+              <el-date-picker v-model="newTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="工期(天)">
-              <el-input-number
-                v-model="newTask.duration"
-                :min="1"
-                :max="365"
-                style="width: 100%"
-              />
+              <el-input-number v-model="newTask.duration" :min="1" :max="365" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="完成进度">
@@ -120,7 +121,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="执行状态">
@@ -139,7 +140,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="相关方">
@@ -150,49 +151,30 @@
             <el-form-item label="父任务">
               <el-select v-model="newTask.parent" placeholder="选择父任务（可选）" style="width: 100%">
                 <el-option label="无" :value="0" />
-                <el-option
-                  v-for="task in tasks"
-                  :key="task.id"
-                  :label="task.text"
-                  :value="task.id"
-                />
+                <el-option v-for="task in tasks" :key="task.id" :label="task.text" :value="task.id" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-form-item label="前置任务">
-          <el-select 
-            v-model="newTask.predecessors" 
-            multiple 
-            placeholder="选择前置任务（可选）" 
-            style="width: 100%"
-          >
-            <el-option
-              v-for="task in availableTasksForPredecessors(newTask.id)"
-              :key="task.id"
-              :label="`${task.text} (ID: ${task.id})`"
-              :value="task.id"
-            />
+          <el-select v-model="newTask.predecessors" multiple placeholder="选择前置任务（可选）" style="width: 100%">
+            <el-option v-for="task in availableTasksForPredecessors(newTask.id)" :key="task.id"
+              :label="`${task.text} (ID: ${task.id})`" :value="task.id" />
           </el-select>
           <div style="color: #909399; font-size: 12px; margin-top: 4px;">
             选择的前置任务必须在此任务开始之前完成
           </div>
         </el-form-item>
-        
+
         <el-row :gutter="16">
         </el-row>
-        
+
         <el-form-item label="任务描述">
-          <el-input
-            v-model="newTask.description"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入任务描述"
-          />
+          <el-input v-model="newTask.description" type="textarea" :rows="3" placeholder="请输入任务描述" />
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="showTaskDialog = false">取消</el-button>
         <el-button type="primary" @click="createTask">创建任务</el-button>
@@ -205,30 +187,20 @@
         <el-form-item label="任务名称">
           <el-input v-model="editTask.text" placeholder="请输入任务名称" />
         </el-form-item>
-        
+
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="开始时间">
-              <el-date-picker
-                v-model="editTask.start_date"
-                type="date"
-                placeholder="选择开始时间"
-                style="width: 100%"
-              />
+              <el-date-picker v-model="editTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="工期(天)">
-              <el-input-number
-                v-model="editTask.duration"
-                :min="1"
-                :max="365"
-                style="width: 100%"
-              />
+              <el-input-number v-model="editTask.duration" :min="1" :max="365" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="完成进度">
@@ -245,7 +217,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="执行状态">
@@ -264,7 +236,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="相关方">
@@ -275,55 +247,40 @@
             <el-form-item label="父任务">
               <el-select v-model="editTask.parent" placeholder="选择父任务（可选）" style="width: 100%">
                 <el-option label="无" :value="0" />
-                <el-option
-                  v-for="task in tasks.filter(t => t.id !== editTask.id)"
-                  :key="task.id"
-                  :label="task.text"
-                  :value="task.id"
-                />
+                <el-option v-for="task in tasks.filter(t => t.id !== editTask.id)" :key="task.id" :label="task.text"
+                  :value="task.id" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-form-item label="前置任务">
-          <el-select 
-            v-model="editTask.predecessors" 
-            multiple 
-            placeholder="选择前置任务（可选）" 
-            style="width: 100%"
-          >
-            <el-option
-              v-for="task in availableTasksForPredecessors(editTask.id)"
-              :key="task.id"
-              :label="`${task.text} (ID: ${task.id})`"
-              :value="task.id"
-            />
+          <el-select v-model="editTask.predecessors" multiple placeholder="选择前置任务（可选）" style="width: 100%">
+            <el-option v-for="task in availableTasksForPredecessors(editTask.id)" :key="task.id"
+              :label="`${task.text} (ID: ${task.id})`" :value="task.id" />
           </el-select>
           <div style="color: #909399; font-size: 12px; margin-top: 4px;">
             选择的前置任务必须在此任务开始之前完成
           </div>
         </el-form-item>
-        
+
         <el-row :gutter="16">
         </el-row>
-        
+
         <el-form-item label="任务描述">
-          <el-input
-            v-model="editTask.description"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入任务描述"
-          />
+          <el-input v-model="editTask.description" type="textarea" :rows="3" placeholder="请输入任务描述" />
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="showEditDialog = false">取消</el-button>
         <el-button type="primary" @click="updateTask">更新任务</el-button>
         <el-button type="danger" @click="confirmDeleteTask">删除任务</el-button>
       </template>
     </el-dialog>
+
+    <!-- 登录模态框 -->
+    <LoginModal v-model="showLoginModal" @login-success="handleLoginSuccess" />
   </div>
 </template>
 
@@ -334,15 +291,16 @@ import dayjs from 'dayjs'
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document
 } from '@element-plus/icons-vue'
-import { 
-  loadGanttData, 
-  saveGanttData, 
+import {
+  loadGanttData,
+  saveGanttData,
   saveGanttDataToProject,
-  exportToJson, 
-  importFromJson, 
+  exportToJson,
+  importFromJson,
   generateNewTaskId,
-  getTaskStatistics 
+  getTaskStatistics
 } from '../services/ganttDataService.js'
+import LoginModal from './LoginModal.vue'
 
 // 响应式数据
 const ganttContainer = ref()
@@ -350,6 +308,7 @@ const fileInput = ref()
 const viewMode = ref('week')
 const showTaskDialog = ref(false)
 const showEditDialog = ref(false)  // 编辑对话框显示状态
+const showLoginModal = ref(false)  // 登录模态框显示状态
 const saving = ref(false) // 保存按钮加载状态
 
 // 任务数据 - 从数据服务加载
@@ -398,10 +357,10 @@ onMounted(async () => {
   const params = new URLSearchParams(window.location.search)
   const code = params.get('code')
   urlParams.value = { code }
-  
+
   await loadInitialData(code)
   initGantt()
-  
+
   // 监听窗口尺寸变化
   window.addEventListener('resize', handleResize)
 })
@@ -431,16 +390,10 @@ const loadInitialData = async (code = null) => {
     tasks.value = data.tasks
     links.value = data.links
     projectInfo.value = data.projectInfo || null
-    
-    console.log('甘特图数据加载成功:', {
-      tasks: tasks.value.length,
-      links: links.value.length,
-      projectInfo: projectInfo.value
-    })
-    
+
     // 如果有项目信息，更新页面标题
     if (projectInfo.value && projectInfo.value.name) {
-      document.title = `${projectInfo.value.name} - 星甘特图`
+      document.title = `${projectInfo.value.name} - 星甘`
     }
   } catch (error) {
     console.error('加载甘特图数据失败:', error)
@@ -468,10 +421,10 @@ const initGantt = () => {
     gantt.config.sort = true
     gantt.config.scrollY = "y"     // 启用垂直滚动
     gantt.config.scrollX = "x"     // 启用水平滚动
-    
+
     // 时间刻度配置
     setTimeScale(viewMode.value)
-    
+
     // 列配置
     gantt.config.columns = [
       {
@@ -504,7 +457,7 @@ const initGantt = () => {
         label: "工期",
         width: 90,
         align: "center",
-        template: function(task) {
+        template: function (task) {
           if (task.duration === 0) return "里程碑"
           return task.duration + " 工作日"
         }
@@ -514,7 +467,7 @@ const initGantt = () => {
         label: "执行情况",
         width: 100,
         align: "center",
-        template: function(task) {
+        template: function (task) {
           const statusMap = {
             'completed': '<span style="color: #67c23a;">✅ 已完成</span>',
             'in_progress': '<span style="color: #409eff;">🔄 进行中</span>',
@@ -530,13 +483,13 @@ const initGantt = () => {
         label: "完成比例",
         width: 90,
         align: "center",
-        template: function(task) {
+        template: function (task) {
           const percent = Math.round(task.progress * 100)
           let color = '#f56c6c'
           if (percent >= 80) color = '#67c23a'
           else if (percent >= 50) color = '#e6a23c'
           else if (percent >= 20) color = '#409eff'
-          
+
           return `<span style="color: ${color}; font-weight: bold;">${percent}%</span>`
         }
       },
@@ -545,7 +498,7 @@ const initGantt = () => {
         label: "负责人",
         width: 90,
         align: "center",
-        template: function(task) {
+        template: function (task) {
           return task.owner || '<span style="color: #c0c4cc;">未分配</span>'
         }
       },
@@ -554,7 +507,7 @@ const initGantt = () => {
         label: "相关方",
         width: 100,
         align: "center",
-        template: function(task) {
+        template: function (task) {
           return task.stakeholder || '<span style="color: #c0c4cc;">-</span>'
         }
       },
@@ -563,7 +516,7 @@ const initGantt = () => {
         label: "前置任务",
         width: 150,
         align: "center",
-        template: function(task) {
+        template: function (task) {
           if (task.predecessors && task.predecessors.length > 0) {
             const predecessorNames = task.predecessors.map(predId => {
               const predTask = gantt.getTask(predId)
@@ -578,26 +531,26 @@ const initGantt = () => {
         name: "description",
         label: "任务描述",
         width: 200,
-        template: function(task) {
+        template: function (task) {
           return task.description || '<span style="color: #c0c4cc;">暂无描述</span>'
         }
       }
     ]
-    
+
     // 任务类型配置
     gantt.config.types = {
       'task': 'task',
-      'project': 'project', 
+      'project': 'project',
       'milestone': 'milestone'
     }
-    
+
     // 层级结构优化
     gantt.config.open_tree_initially = true  // 默认展开树形结构
     gantt.config.auto_scheduling = false     // 关闭自动调度
     gantt.config.auto_scheduling_strict = false
     gantt.config.work_time = true            // 启用工作时间
     gantt.config.correct_work_time = true    // 调整工作时间
-    
+
     // 禁用内置编辑器
     gantt.config.readonly = false            // 保持可编辑状态，但禁用内置编辑器
     gantt.config.drag_links = false          // 禁用拖拽创建依赖
@@ -605,16 +558,16 @@ const initGantt = () => {
     gantt.config.click_drag = {              // 配置点击拖拽行为
       ignore: ".gantt_task_line, .gantt_task_link" // 忽略任务条和链接的拖拽
     }
-    
+
     // 禁用内置弹窗和编辑器
     gantt.config.lightbox = {
       sections: []  // 清空所有内置编辑器配置
     }
     gantt.config.quickinfo_buttons = []      // 清空快速信息按钮
     gantt.config.tooltip = false             // 禁用工具提示
-    
+
     // 任务条颜色配置
-    gantt.templates.task_class = function(start, end, task) {
+    gantt.templates.task_class = function (start, end, task) {
       let css = ""
       if (task.type === 'project') {
         css += "gantt_project_task "
@@ -623,7 +576,7 @@ const initGantt = () => {
       } else {
         css += "gantt_regular_task "
       }
-      
+
       // 根据状态添加CSS类
       if (task.status === 'completed') {
         css += "gantt_completed "
@@ -632,58 +585,58 @@ const initGantt = () => {
       } else if (task.status === 'on_hold') {
         css += "gantt_on_hold "
       }
-      
+
       return css
     }
-    
+
     // 网格行样式
-    gantt.templates.grid_row_class = function(start, end, task) {
+    gantt.templates.grid_row_class = function (start, end, task) {
       let css = ""
       if (task.type === 'project') {
         css += "gantt_project_row "
       }
       return css
     }
-    
+
     // 事件监听
     gantt.attachEvent("onTaskClick", (id, e) => {
       const task = gantt.getTask(id)
       console.info(`点击任务: ${task.text}`)
       return true
     })
-    
+
     // 添加双击事件监听
     gantt.attachEvent("onTaskDblClick", (id, e) => {
       const task = gantt.getTask(id)
       openEditDialog(task)
       return false  // 阻止默认行为
     })
-    
+
     gantt.attachEvent("onAfterTaskUpdate", (id, task) => {
       ElMessage.success(`任务 "${task.text}" 已更新`)
       updateTaskInArray(task)
     })
-    
+
     gantt.attachEvent("onAfterTaskAdd", (id, task) => {
       ElMessage.success(`新增任务: ${task.text}`)
       addTaskToArray(task)
     })
-    
+
     gantt.attachEvent("onAfterTaskDelete", (id, task) => {
       ElMessage.success(`删除任务: ${task.text}`)
       removeTaskFromArray(id)
     })
-    
+
     // 初始化甘特图
     gantt.init(ganttContainer.value)
-    
+
     // 设置甘特图高度以支持滚动
     setTimeout(() => {
       const containerHeight = ganttContainer.value.clientHeight
       gantt.setSizes()
       gantt.render()
     }, 100)
-    
+
     // 加载数据
     loadData()
   })
@@ -727,7 +680,7 @@ const setTimeScale = (mode) => {
 const loadData = () => {
   // 同步前置任务和链接
   syncPredecessorsWithLinks()
-  
+
   gantt.parse({
     data: tasks.value,
     links: links.value
@@ -739,7 +692,7 @@ const syncPredecessorsWithLinks = () => {
   // 清空现有链接，重新根据前置任务生成
   const newLinks = []
   let linkId = 1
-  
+
   tasks.value.forEach(task => {
     if (task.predecessors && task.predecessors.length > 0) {
       task.predecessors.forEach(predId => {
@@ -756,10 +709,10 @@ const syncPredecessorsWithLinks = () => {
       })
     }
   })
-  
+
   // 更新links数组
   links.value = newLinks
-  
+
   console.log('同步完成:', {
     tasks: tasks.value.length,
     links: links.value.length,
@@ -797,7 +750,7 @@ const createTask = () => {
     ElMessage.warning('请输入任务名称')
     return
   }
-  
+
   const task = {
     id: getNextId(),
     text: newTask.value.text,
@@ -812,12 +765,12 @@ const createTask = () => {
     description: newTask.value.description,
     predecessors: newTask.value.predecessors || []
   }
-  
+
   gantt.addTask(task, newTask.value.parent)
-  
+
   // 根据前置任务创建链接
   createLinksFromPredecessors(task.id, task.predecessors)
-  
+
   showTaskDialog.value = false
 }
 
@@ -836,7 +789,7 @@ const openEditDialog = (task) => {
   } else {
     startDate = new Date()
   }
-  
+
   editTask.value = {
     id: task.id,
     text: task.text || '',
@@ -860,7 +813,7 @@ const updateTask = () => {
     ElMessage.warning('请输入任务名称')
     return
   }
-  
+
   const updatedTask = {
     id: editTask.value.id,
     text: editTask.value.text,
@@ -875,27 +828,27 @@ const updateTask = () => {
     description: editTask.value.description,
     predecessors: editTask.value.predecessors || []
   }
-  
+
   try {
     console.log('准备更新任务:', updatedTask)
-    
+
     // 获取原任务的前置任务列表
     const originalTask = gantt.getTask(editTask.value.id)
     const oldPredecessors = originalTask.predecessors || []
     const newPredecessors = updatedTask.predecessors || []
-    
+
     // 更新甘特图中的任务
     gantt.updateTask(editTask.value.id, updatedTask)
-    
+
     // 更新前置任务链接
     updateTaskLinks(editTask.value.id, oldPredecessors, newPredecessors)
-    
+
     // 手动更新tasks数组中的数据
     updateTaskInArray(updatedTask)
-    
+
     showEditDialog.value = false
     ElMessage.success('任务更新成功')
-    
+
     // 强制重新渲染甘特图
     setTimeout(() => {
       gantt.render()
@@ -948,18 +901,18 @@ const zoomToFit = () => {
 const exportData = () => {
   try {
     const jsonData = exportToJson(tasks.value, links.value)
-    
+
     const blob = new Blob([jsonData], {
       type: 'application/json'
     })
-    
+
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `gantt-data-${dayjs().format('YYYY-MM-DD')}.json`
     a.click()
     URL.revokeObjectURL(url)
-    
+
     ElMessage.success('数据导出成功')
   } catch (error) {
     console.error('导出数据失败:', error)
@@ -976,9 +929,9 @@ const importData = () => {
 const handleFileUpload = (event) => {
   const file = event.target.files[0]
   if (!file) return
-  
+
   const fileType = file.name.split('.').pop().toLowerCase()
-  
+
   if (fileType === 'json') {
     handleJsonFile(file)
   } else if (fileType === 'csv') {
@@ -988,7 +941,7 @@ const handleFileUpload = (event) => {
   } else {
     ElMessage.error('不支持的文件格式，请使用JSON、CSV或Excel文件')
   }
-  
+
   // 清空文件选择
   event.target.value = ''
 }
@@ -1022,12 +975,12 @@ const handleCsvFile = (file) => {
       const csv = e.target.result
       const lines = csv.split('\n')
       const headers = lines[0].split(',').map(h => h.trim())
-      
+
       const newTasks = []
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim()
         if (!line) continue
-        
+
         const values = line.split(',').map(v => v.trim().replace(/"/g, ''))
         const task = {
           id: newTasks.length + 1,
@@ -1044,7 +997,7 @@ const handleCsvFile = (file) => {
         }
         newTasks.push(task)
       }
-      
+
       if (newTasks.length > 0) {
         tasks.value = newTasks
         links.value = [] // 清空依赖关系，需要用户重新设置
@@ -1067,19 +1020,19 @@ const getNextId = () => {
 const updateTaskInArray = (task) => {
   const index = tasks.value.findIndex(t => t.id == task.id)
   console.log('更新任务数组:', { taskId: task.id, index, task })
-  
+
   if (index !== -1) {
     // 确保所有字段都被正确更新
-    tasks.value[index] = { 
+    tasks.value[index] = {
       ...tasks.value[index],  // 保留原有字段
       ...task  // 覆盖更新的字段
     }
-    
+
     console.log('任务已更新:', tasks.value[index])
-    
+
     // 自动保存数据
     saveDataToBrowser()
-    
+
     // 触发响应式更新
     tasks.value = [...tasks.value]
   } else {
@@ -1114,13 +1067,13 @@ const availableTasksForPredecessors = (currentTaskId) => {
   return tasks.value.filter(task => {
     // 排除当前任务本身
     if (task.id === currentTaskId) return false
-    
+
     // 排除已经是当前任务子任务的任务（避免循环依赖）
     if (task.parent === currentTaskId) return false
-    
+
     // 排除项目类型的任务作为前置任务（项目通常是容器）
     if (task.type === 'project') return false
-    
+
     return true
   })
 }
@@ -1128,7 +1081,7 @@ const availableTasksForPredecessors = (currentTaskId) => {
 // 根据前置任务创建链接
 const createLinksFromPredecessors = (taskId, predecessors) => {
   if (!predecessors || predecessors.length === 0) return
-  
+
   predecessors.forEach(predId => {
     const linkId = getNextLinkId()
     const link = {
@@ -1137,10 +1090,10 @@ const createLinksFromPredecessors = (taskId, predecessors) => {
       target: taskId,
       type: "0"  // 完成-开始关系
     }
-    
+
     // 添加到links数组
     links.value.push(link)
-    
+
     // 添加到甘特图
     gantt.addLink(link)
   })
@@ -1150,7 +1103,7 @@ const createLinksFromPredecessors = (taskId, predecessors) => {
 const updateTaskLinks = (taskId, oldPredecessors, newPredecessors) => {
   // 删除旧的链接
   oldPredecessors.forEach(predId => {
-    const linkToRemove = links.value.find(link => 
+    const linkToRemove = links.value.find(link =>
       link.source === predId && link.target === taskId
     )
     if (linkToRemove) {
@@ -1161,9 +1114,9 @@ const updateTaskLinks = (taskId, oldPredecessors, newPredecessors) => {
       }
     }
   })
-  
+
   // 添加新的链接
-  const predecessorsToAdd = newPredecessors.filter(predId => 
+  const predecessorsToAdd = newPredecessors.filter(predId =>
     !oldPredecessors.includes(predId)
   )
   createLinksFromPredecessors(taskId, predecessorsToAdd)
@@ -1180,45 +1133,52 @@ const saveProject = async () => {
   saving.value = true
   try {
     const result = await saveGanttDataToProject(tasks.value, links.value, projectInfo.value)
-    
-    if (result.success) {
-      // 更新项目信息
-      if (result.data) {
-        if (!projectInfo.value) {
-          projectInfo.value = {}
-        }
-        Object.assign(projectInfo.value, {
-          id: result.data.id,
-          code: result.data.code,
-          name: result.data.name,
-          description: result.data.description,
-          status: result.data.status,
-          updateTime: result.data.updateTime
-        })
-        
-        // 如果是新建项目，更新URL
-        if (!urlParams.value.code && result.data.code) {
-          const newUrl = `${window.location.origin}${window.location.pathname}?code=${result.data.code}`
-          window.history.replaceState({}, '', newUrl)
-          urlParams.value.code = result.data.code
-        }
-        
-        // 更新页面标题
-        if (projectInfo.value.name) {
-          document.title = `${projectInfo.value.name} - 星甘特图`
-        }
+
+    // 更新项目信息
+    if (result.data) {
+      if (!projectInfo.value) {
+        projectInfo.value = {}
       }
-      
-      ElMessage.success('项目保存成功')
-    } else {
-      throw new Error(result.error || '保存失败')
+      Object.assign(projectInfo.value, {
+        id: result.data
+      })
+
+      // 如果是新建项目，更新URL
+      if (!urlParams.value.code && result.data) {
+        const newUrl = `${window.location.origin}${window.location.pathname}?code=${result.data}`
+        window.history.replaceState({}, '', newUrl)
+        urlParams.value.code = result.data
+      }
+
+      // 更新页面标题
+      if (projectInfo.value.name) {
+        document.title = `${projectInfo.value.name} - 星甘特图`
+      }
     }
+
+    ElMessage.success('项目保存成功')
   } catch (error) {
-    console.error('保存项目失败:', error)
-    ElMessage.error('保存项目失败: ' + error.message)
+    if (error.status === 401 || error.code === '401') {
+      ElMessage.error('用户未授权，请重新登录')
+      showLoginModal.value = true
+    } else if (error.code === 'ERR_NETWORK') {
+      ElMessage.error('网络连接失败，请检查网络连接')
+    } else if (error.code === 'ECONNABORTED') {
+      ElMessage.error('请求超时，请稍后重试')
+    } else {
+      // 默认错误处理
+      const errorMessage = error.message || error.msg || '保存项目失败，请重试'
+      ElMessage.error(errorMessage)
+    }
   } finally {
     saving.value = false
   }
+}
+
+// 处理登录成功
+const handleLoginSuccess = () => {
+  ElMessage.success('登录成功，请重新保存项目')
+  showLoginModal.value = false
 }
 </script>
 
@@ -1277,7 +1237,8 @@ const saveProject = async () => {
   flex: 1;
   padding: 3px;
   overflow: hidden;
-  height: calc(100vh - 120px); /* 减去顶部工具栏的高度 */
+  height: calc(100vh - 120px);
+  /* 减去顶部工具栏的高度 */
 }
 
 .gantt-chart {
@@ -1285,7 +1246,8 @@ const saveProject = async () => {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  overflow: auto; /* 允许滚动 */
+  overflow: auto;
+  /* 允许滚动 */
 }
 
 /* 甘特图样式定制 */
@@ -1423,12 +1385,10 @@ const saveProject = async () => {
 
 /* 网格增强 */
 :deep(.gantt_task_bg) {
-  background: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 99px,
-    rgba(0, 0, 0, 0.02) 100px
-  );
+  background: repeating-linear-gradient(90deg,
+      transparent,
+      transparent 99px,
+      rgba(0, 0, 0, 0.02) 100px);
 }
 
 /* 响应式设计 */
@@ -1438,18 +1398,18 @@ const saveProject = async () => {
     gap: 16px;
     align-items: stretch;
   }
-  
+
   .toolbar-left,
   .toolbar-right {
     justify-content: center;
   }
-  
+
   .toolbar-right {
     flex-wrap: wrap;
   }
-  
+
   .gantt-container {
     padding: 10px;
   }
 }
-</style> 
+</style>

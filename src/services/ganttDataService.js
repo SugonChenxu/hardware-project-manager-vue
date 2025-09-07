@@ -124,21 +124,11 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
       response = await addProject(projectData)
     }
     
-    if (response && (response.success || response.data)) {
-      console.log('项目数据保存成功')
-      return {
-        success: true,
-        data: response.data
-      }
-    } else {
-      throw new Error('保存响应异常')
-    }
+    return response;
   } catch (error) {
-    console.error('保存项目数据失败:', error)
-    return {
-      success: false,
-      error: error.message
-    }
+    // 重新抛出错误，保持错误信息完整
+    console.error('保存甘特图数据到项目失败:', error)
+    throw error
   }
 }
 

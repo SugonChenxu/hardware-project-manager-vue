@@ -8,13 +8,27 @@
 import request from '@/utils/request'
 import { getToken } from '@/utils/auth' // 验权
 
-export function login(username, password) {
+export function login(data) {
   return request({
     url: '/check/login',
     method: 'post',
     data: {
-      Account: username,
-      Password: password,
+      Account: data.username,
+      Password: data.password,
+      AppKey: 'openauth',
+    },
+  })
+}
+
+// 注册接口
+export function register(data) {
+  return request({
+    url: '/check/register',
+    method: 'post',
+    data: {
+      Account: data.username,
+      Password: data.password,
+      Email: data.email,
       AppKey: 'openauth',
     },
   })

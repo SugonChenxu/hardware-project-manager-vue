@@ -2,7 +2,7 @@
  * @Descripttion:
  * @version:
  * @Date: 2022-05-12 22:06:21
- * @LastEditTime: 2025-09-07 17:38:06
+ * @LastEditTime: 2025-09-07 18:19:23
  * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
  */
 import axios from 'axios'
@@ -32,21 +32,6 @@ service.interceptors.response.use(
   response => {
     const res = response.data  //res就是后端返回的自定义Response实例
     if (res.code !== 200) {
-      if ( res.code === 50014) { //50014:Token过期了
-        ElMessageBox.confirm(
-          '登录已超时，可以【取消】继续留在该页面，或者【重新登录】',
-          '超时提醒',
-          {
-            confirmButtonText: '重新登录',
-            cancelButtonText: '取消',
-            type: 'warning',
-          }
-        ).then(() => {
-        
-        })
-      } else {
-        ElMessage.error(res.message || res.msg)
-      }
       return Promise.reject('error')
     } else {
       return res
@@ -56,20 +41,17 @@ service.interceptors.response.use(
   async error => {
     // HttpResponse的状态码如果是401 
     if (error.response && error.response.status === 401) {
-      // 校验是否有 refresh_token
-      if (!getToken()) {
-        // 清除token
+      // 清除token
+      if (getToken()) {
         removeToken()
-        setTimeout(() => {
-          ElMessage.closeAll()
-          ElMessage.error(error.response.data.message)
-        })
-        return Promise.reject(error)
       }
+      // 创建一个包含错误信息的错误对象
+      const unauthorizedError = new Error('用户未授权，请重新登录')
+      unauthorizedError.status = 401
+      unauthorizedError.code = '401'
+      return Promise.reject(unauthorizedError)
     }
     //ERR_NETWORK等没有HttpResponse的情况
-    ElMessage.closeAll()
-    ElMessage.error(error.message)
     return Promise.reject(error)
   }
 )
