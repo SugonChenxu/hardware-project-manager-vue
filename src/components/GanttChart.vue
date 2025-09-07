@@ -1,78 +1,149 @@
 <template>
   <div class="gantt-page">
-    <!-- 顶部工具栏 -->
-    <div class="gantt-toolbar">
-      <div class="toolbar-left">
-        <h1 class="page-title">
-          <el-icon class="title-icon">
-            <Calendar />
-          </el-icon>
-          {{ projectInfo && projectInfo.name ? projectInfo.name : '星甘-专注进度管理' }}
-        </h1>
-        <div class="project-info">
-          <el-tag type="success" size="large">{{ tasks.length }} 个任务</el-tag>
-          <el-tag v-if="projectInfo && projectInfo.code" type="info" size="large">{{ projectInfo.code }}</el-tag>
+    <!-- 顶部工具栏 - Outlook风格 -->
+    <div class="outlook-toolbar">
+      <!-- 左侧品牌区域 -->
+      <div class="brand-section">
+        <div class="app-logo">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 3h6v2H8v-2zm0 3h8v2H8v-2z" fill="currentColor"/>
+          </svg>
+          <span class="app-name">星甘</span>
+        </div>
+        <div class="project-selector">
+          <el-dropdown class="project-dropdown" @command="handleProjectCommand">
+            <div class="project-info">
+              <span class="project-title">{{ projectInfo?.name || '未命名项目' }}</span>
+              <span class="project-meta">{{ tasks.length }} 个任务</span>
+              <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu class="project-menu">
+                <div class="project-details">
+                  <div class="detail-row">
+                    <span class="label">项目名称</span>
+                    <span class="value">{{ projectInfo?.name || '未命名项目' }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">项目编码</span>
+                    <span class="value">{{ projectInfo?.code || '无' }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">任务数量</span>
+                    <span class="value">{{ tasks.length }} 个</span>
+                  </div>
+                </div>
+                <div class="project-actions">
+                  <el-button size="small" type="primary" @click="editProjectInfo">编辑项目</el-button>
+                  <el-button size="small" @click="saveProject" :loading="saving">保存项目</el-button>
+                </div>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </div>
 
-      <div class="toolbar-right">
-        <!-- 视图切换 -->
-        <el-radio-group v-model="viewMode" size="small" @change="changeView">
-          <el-radio-button label="day">日视图</el-radio-button>
-          <el-radio-button label="week">周视图</el-radio-button>
-          <el-radio-button label="month">月视图</el-radio-button>
-          <el-radio-button label="quarter">季度视图</el-radio-button>
-        </el-radio-group>
-
-        <!-- 操作按钮 -->
-        <el-button type="primary" @click="addTask">
-          <el-icon>
-            <Plus />
-          </el-icon>
-          新建任务
+      <!-- 中间操作区域 -->
+      <div class="action-section">
+        <el-button class="outlook-btn primary" @click="createNewProject">
+          <el-icon><FolderAdd /></el-icon>
+          <span>新建</span>
+        </el-button>
+        
+        <el-button class="outlook-btn" @click="saveProject" :loading="saving">
+          <el-icon><Document /></el-icon>
+          <span>保存</span>
         </el-button>
 
-        <el-button type="success" @click="saveProject" :loading="saving">
-          <el-icon>
-            <Document />
-          </el-icon>
-          保存项目
-        </el-button>
+        <div class="divider"></div>
 
-        <el-button @click="expandAll">
-          <el-icon>
-            <Expand />
-          </el-icon>
-          展开全部
+        <el-button class="outlook-btn primary" @click="addTask">
+          <el-icon><Plus /></el-icon>
+          <span>新建任务</span>
         </el-button>
+        
+        <el-dropdown @command="handleMoreCommand">
+          <el-button class="outlook-btn dropdown-btn">
+            <el-icon><MoreFilled /></el-icon>
+            <span>更多</span>
+            <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="expand">
+                <el-icon><Expand /></el-icon>展开全部
+              </el-dropdown-item>
+              <el-dropdown-item command="collapse">
+                <el-icon><Fold /></el-icon>折叠全部
+              </el-dropdown-item>
+              <el-dropdown-item command="fit">
+                <el-icon><FullScreen /></el-icon>适应窗口
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
 
-        <el-button @click="collapseAll">
-          <el-icon>
-            <Fold />
-          </el-icon>
-          折叠全部
-        </el-button>
+        <div class="divider"></div>
 
-        <el-button @click="zoomToFit">
-          <el-icon>
-            <FullScreen />
-          </el-icon>
-          适应窗口
-        </el-button>
+        <el-select v-model="viewMode" class="outlook-select" size="default" @change="changeView">
+          <template #prefix>
+            <el-icon><Calendar /></el-icon>
+          </template>
+          <el-option label="周视图" value="week" />
+          <el-option label="月视图" value="month" />
+          <el-option label="季度视图" value="quarter" />
+        </el-select>
+        
+        <el-dropdown class="column-control" @command="handleColumnCommand">
+          <el-button class="outlook-btn dropdown-btn">
+            <el-icon><Operation /></el-icon>
+            <span>字段</span>
+            <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <div class="column-control-panel">
+                <div class="panel-header">显示字段</div>
+                <el-checkbox-group v-model="visibleColumns" class="column-checkboxes">
+                  <el-checkbox v-for="column in columnOptions" :key="column.name" :label="column.name">
+                    {{ column.label }}
+                  </el-checkbox>
+                </el-checkbox-group>
+              </div>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
 
-        <el-button @click="exportData">
-          <el-icon>
-            <Download />
-          </el-icon>
-          导出
-        </el-button>
+        <div class="divider"></div>
 
-        <el-button @click="importData">
-          <el-icon>
-            <Upload />
-          </el-icon>
-          导入数据
+        <el-button class="outlook-btn" @click="exportData">
+          <el-icon><Download /></el-icon>
+          <span>导出</span>
         </el-button>
+        
+        <el-button class="outlook-btn" @click="importData">
+          <el-icon><Upload /></el-icon>
+          <span>导入</span>
+        </el-button>
+      </div>
+
+      <!-- 右侧用户区域 -->
+      <div class="user-section">
+        <el-dropdown @command="handleUserCommand" class="user-dropdown">
+          <div class="user-info">
+            <el-avatar :size="28" :src="userInfo?.avatar" class="user-avatar">
+              <el-icon><User /></el-icon>
+            </el-avatar>
+            <span class="user-name">{{ userInfo?.name || '游客' }}</span>
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item divided command="profile">个人设置</el-dropdown-item>
+              <el-dropdown-item command="logout" v-if="userInfo">退出登录</el-dropdown-item>
+              <el-dropdown-item command="login" v-else>立即登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </div>
 
@@ -279,6 +350,25 @@
       </template>
     </el-dialog>
 
+    <!-- 项目编辑对话框 -->
+    <el-dialog v-model="showProjectDialog" title="编辑项目信息" width="600px">
+      <el-form :model="projectForm" label-width="100px">
+        <el-form-item label="项目名称">
+          <el-input v-model="projectForm.name" placeholder="请输入项目名称" />
+        </el-form-item>
+        <el-form-item label="项目编码">
+          <el-input v-model="projectForm.code" placeholder="请输入项目编码" />
+        </el-form-item>
+        <el-form-item label="项目描述">
+          <el-input v-model="projectForm.description" type="textarea" :rows="3" placeholder="请输入项目描述" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showProjectDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveProjectInfo">保存</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 登录模态框 -->
     <LoginModal v-model="showLoginModal" @login-success="handleLoginSuccess" />
   </div>
@@ -289,7 +379,8 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { gantt } from 'dhtmlx-gantt'
 import dayjs from 'dayjs'
 import {
-  Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document
+  Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
+  ArrowDown, FolderAdd, Operation, MoreFilled, User
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -319,6 +410,32 @@ const loading = ref(true)
 // 项目信息
 const projectInfo = ref(null)
 const urlParams = ref(null)
+
+// 用户信息
+const userInfo = ref(null)
+
+// 字段显示控制
+const visibleColumns = ref(['text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner'])
+const columnOptions = ref([
+  { name: 'text', label: '任务名称' },
+  { name: 'start_date', label: '开始时间' },
+  { name: 'end_date', label: '完成时间' },
+  { name: 'duration', label: '工期' },
+  { name: 'status', label: '执行情况' },
+  { name: 'progress', label: '完成比例' },
+  { name: 'owner', label: '负责人' },
+  { name: 'stakeholder', label: '相关方' },
+  { name: 'predecessors', label: '前置任务' },
+  { name: 'description', label: '任务描述' }
+])
+
+// 项目编辑对话框
+const showProjectDialog = ref(false)
+const projectForm = ref({
+  name: '',
+  code: '',
+  description: ''
+})
 
 // 新建任务表单数据
 const newTask = ref({
@@ -1180,6 +1297,230 @@ const handleLoginSuccess = () => {
   ElMessage.success('登录成功，请重新保存项目')
   showLoginModal.value = false
 }
+
+// 处理项目下拉命令
+const handleProjectCommand = (command) => {
+  console.log('项目命令:', command)
+}
+
+// 处理字段显示命令
+const handleColumnCommand = (command) => {
+  console.log('字段命令:', command)
+  updateColumnVisibility()
+}
+
+// 处理更多操作命令
+const handleMoreCommand = (command) => {
+  switch (command) {
+    case 'expand':
+      expandAll()
+      break
+    case 'collapse':
+      collapseAll()
+      break
+    case 'fit':
+      zoomToFit()
+      break
+    case 'export':
+      exportData()
+      break
+    case 'import':
+      importData()
+      break
+  }
+}
+
+// 处理用户操作命令
+const handleUserCommand = (command) => {
+  switch (command) {
+    case 'profile':
+      ElMessage.info('个人设置功能开发中')
+      break
+    case 'logout':
+      userInfo.value = null
+      ElMessage.success('已退出登录')
+      break
+    case 'login':
+      showLoginModal.value = true
+      break
+  }
+}
+
+// 创建新项目
+const createNewProject = () => {
+  ElMessageBox.confirm('创建新项目将清空当前数据，是否继续？', '确认创建', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    // 清空数据
+    tasks.value = []
+    links.value = []
+    projectInfo.value = null
+    
+    // 重新加载甘特图
+    loadData()
+    
+    // 清空URL参数
+    window.history.replaceState({}, '', window.location.pathname)
+    urlParams.value = {}
+    
+    ElMessage.success('新项目创建成功')
+  }).catch(() => {
+    ElMessage.info('已取消创建')
+  })
+}
+
+// 编辑项目信息
+const editProjectInfo = () => {
+  projectForm.value = {
+    name: projectInfo.value?.name || '',
+    code: projectInfo.value?.code || '',
+    description: projectInfo.value?.description || ''
+  }
+  showProjectDialog.value = true
+}
+
+// 保存项目信息
+const saveProjectInfo = () => {
+  if (!projectForm.value.name) {
+    ElMessage.warning('请输入项目名称')
+    return
+  }
+
+  // 更新项目信息
+  if (!projectInfo.value) {
+    projectInfo.value = {}
+  }
+  
+  Object.assign(projectInfo.value, {
+    name: projectForm.value.name,
+    code: projectForm.value.code,
+    description: projectForm.value.description
+  })
+
+  // 更新页面标题
+  document.title = `${projectInfo.value.name} - 星甘特图`
+
+  showProjectDialog.value = false
+  ElMessage.success('项目信息已更新')
+}
+
+// 更新字段可见性
+const updateColumnVisibility = () => {
+  // 根据visibleColumns更新甘特图列配置
+  const allColumns = [
+    {
+      name: "text",
+      label: "任务名称",
+      width: 280,
+      tree: true
+    },
+    {
+      name: "start_date",
+      label: "开始时间",
+      width: 110,
+      align: "center"
+    },
+    {
+      name: "end_date",
+      label: "完成时间",
+      width: 110,
+      align: "center"
+    },
+    {
+      name: "duration",
+      label: "工期",
+      width: 90,
+      align: "center",
+      template: function (task) {
+        if (task.duration === 0) return "里程碑"
+        return task.duration + " 工作日"
+      }
+    },
+    {
+      name: "status",
+      label: "执行情况",
+      width: 100,
+      align: "center",
+      template: function (task) {
+        const statusMap = {
+          'completed': '<span style="color: #67c23a;">✅ 已完成</span>',
+          'in_progress': '<span style="color: #409eff;">🔄 进行中</span>',
+          'planned': '<span style="color: #909399;">📅 计划中</span>',
+          'on_hold': '<span style="color: #e6a23c;">⏸️ 暂停</span>',
+          'cancelled': '<span style="color: #f56c6c;">❌ 已取消</span>'
+        }
+        return statusMap[task.status] || '<span style="color: #909399;">未开始</span>'
+      }
+    },
+    {
+      name: "progress",
+      label: "完成比例",
+      width: 90,
+      align: "center",
+      template: function (task) {
+        const percent = Math.round(task.progress * 100)
+        let color = '#f56c6c'
+        if (percent >= 80) color = '#67c23a'
+        else if (percent >= 50) color = '#e6a23c'
+        else if (percent >= 20) color = '#409eff'
+
+        return `<span style="color: ${color}; font-weight: bold;">${percent}%</span>`
+      }
+    },
+    {
+      name: "owner",
+      label: "负责人",
+      width: 90,
+      align: "center",
+      template: function (task) {
+        return task.owner || '<span style="color: #c0c4cc;">未分配</span>'
+      }
+    },
+    {
+      name: "stakeholder",
+      label: "相关方",
+      width: 100,
+      align: "center",
+      template: function (task) {
+        return task.stakeholder || '<span style="color: #c0c4cc;">-</span>'
+      }
+    },
+    {
+      name: "predecessors",
+      label: "前置任务",
+      width: 150,
+      align: "center",
+      template: function (task) {
+        if (task.predecessors && task.predecessors.length > 0) {
+          const predecessorNames = task.predecessors.map(predId => {
+            const predTask = gantt.getTask(predId)
+            return predTask ? predTask.text : `任务${predId}`
+          }).join(', ')
+          return `<span style="color: #409eff;">${predecessorNames}</span>`
+        }
+        return '<span style="color: #c0c4cc;">无</span>'
+      }
+    },
+    {
+      name: "description",
+      label: "任务描述",
+      width: 200,
+      template: function (task) {
+        return task.description || '<span style="color: #c0c4cc;">暂无描述</span>'
+      }
+    }
+  ]
+
+  // 筛选可见列
+  gantt.config.columns = allColumns.filter(col => visibleColumns.value.includes(col.name))
+  
+  // 重新渲染甘特图
+  if (gantt && gantt.render) {
+    gantt.render()
+  }
+}
 </script>
 
 <style scoped>
@@ -1190,54 +1531,328 @@ const handleLoginSuccess = () => {
   background: #f5f7fa;
 }
 
-.gantt-toolbar {
+/* Outlook风格工具栏 */
+.outlook-toolbar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  background: white;
-  border-bottom: 1px solid #e4e7ed;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  align-items: stretch;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  height: 40px;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.toolbar-left {
+/* 品牌区域 */
+.brand-section {
   display: flex;
   align-items: center;
-  gap: 16px;
+  background: #ffffff;
+  padding: 0 16px;
+  border-right: 1px solid #dee2e6;
+  min-width: 260px;
+  height: 100%;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 12px;
+}
+
+.logo-icon {
+  width: 20px;
+  height: 20px;
+  color: #0078d4;
+}
+
+.app-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #323130;
+}
+
+.project-selector {
+  flex: 1;
 }
 
 .project-info {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  position: relative;
+  justify-content: center;
+  height: 32px;
 }
 
-.page-title {
+.project-info:hover {
+  background-color: #f3f2f1;
+}
+
+.project-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #323130;
+  line-height: 1.1;
+}
+
+.project-meta {
+  font-size: 11px;
+  color: #605e5c;
+  line-height: 1.1;
+  margin-top: 1px;
+}
+
+.dropdown-arrow {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #605e5c;
+}
+
+/* 项目下拉菜单 */
+.project-menu {
+  min-width: 320px;
+}
+
+.project-details {
+  padding: 16px;
+  border-bottom: 1px solid #edebe9;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-row .label {
+  color: #605e5c;
+  font-weight: 500;
+}
+
+.detail-row .value {
+  color: #323130;
+  font-weight: 400;
+}
+
+.project-actions {
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* 操作区域 */
+.action-section {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 20px;
+  flex: 1;
+  padding: 0 12px;
+  gap: 4px;
+  height: 100%;
+}
+
+/* Outlook按钮样式 */
+.outlook-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 11px;
+  color: #323130;
+  gap: 4px;
+  min-width: 50px;
+}
+
+.outlook-btn:hover {
+  background-color: #f3f2f1;
+  border-color: #c7c7c7;
+  color: #323130;
+}
+
+.outlook-btn.primary {
+  background-color: #0078d4;
+  border-color: #0078d4;
+  color: white;
+}
+
+.outlook-btn.primary:hover {
+  background-color: #106ebe;
+  border-color: #106ebe;
+  color: white;
+}
+
+.outlook-btn .el-icon {
+  font-size: 14px;
+}
+
+.outlook-btn span {
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.dropdown-btn {
+  position: relative;
+}
+
+.dropdown-btn .dropdown-arrow {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  font-size: 8px;
+}
+
+/* 分隔线 */
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: #d1d1d1;
+  margin: 0 8px;
+  align-self: center;
+}
+
+/* Outlook选择器 */
+.outlook-select {
+  width: 90px;
+  height: 32px;
+}
+
+.outlook-select .el-input__wrapper {
+  height: 32px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+
+.outlook-select .el-input__inner {
+  font-size: 11px;
+  height: 30px;
+  line-height: 30px;
+}
+
+.outlook-select:hover .el-input__wrapper {
+  background-color: #f3f2f1;
+  border-color: #c7c7c7;
+}
+
+/* 字段控制面板 */
+.column-control-panel {
+  padding: 16px;
+  min-width: 220px;
+}
+
+.panel-header {
+  font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: #323130;
+  margin-bottom: 12px;
 }
 
-.title-icon {
-  font-size: 24px;
-  color: #409eff;
+.column-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.toolbar-right {
+.column-checkboxes .el-checkbox {
+  margin: 0;
+}
+
+.column-checkboxes .el-checkbox__label {
+  font-size: 13px;
+  color: #323130;
+}
+
+/* 用户区域 */
+.user-section {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  padding: 0 12px;
+  border-left: 1px solid #dee2e6;
+  min-width: 120px;
+  height: 100%;
+}
+
+.user-dropdown {
+  width: 100%;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  width: 100%;
+  height: 32px;
+}
+
+.user-info:hover {
+  background-color: #f3f2f1;
+}
+
+.user-avatar {
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: 12px;
+  color: #323130;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 用户下拉菜单 */
+.user-profile {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #edebe9;
+}
+
+.profile-info .name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #323130;
+  margin-bottom: 2px;
+}
+
+.profile-info .email {
+  font-size: 12px;
+  color: #605e5c;
 }
 
 .gantt-container {
   flex: 1;
   padding: 3px;
   overflow: hidden;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 48px);
   /* 减去顶部工具栏的高度 */
 }
 
@@ -1392,24 +2007,174 @@ const handleLoginSuccess = () => {
 }
 
 /* 响应式设计 */
+@media (max-width: 1200px) {
+  .brand-section {
+    min-width: 220px;
+    padding: 0 12px;
+  }
+  
+  .action-section {
+    padding: 0 8px;
+    gap: 3px;
+  }
+  
+  .divider {
+    margin: 0 6px;
+  }
+  
+  .outlook-btn {
+    min-width: 45px;
+    padding: 0 6px;
+  }
+  
+  .outlook-btn span {
+    font-size: 10px;
+  }
+  
+  .outlook-select {
+    width: 80px;
+  }
+  
+  .user-section {
+    min-width: 100px;
+    padding: 0 8px;
+  }
+}
+
+@media (max-width: 992px) {
+  .outlook-toolbar {
+    height: auto;
+    min-height: 48px;
+  }
+  
+  .brand-section {
+    min-width: 180px;
+  }
+  
+  .action-section {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .action-section::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .user-section {
+    min-width: 90px;
+  }
+}
+
 @media (max-width: 768px) {
-  .gantt-toolbar {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
+  .outlook-toolbar {
+    min-height: auto;
   }
-
-  .toolbar-left,
-  .toolbar-right {
-    justify-content: center;
+  
+  .brand-section {
+    padding: 0 16px;
+    min-width: 180px;
   }
-
-  .toolbar-right {
-    flex-wrap: wrap;
+  
+  .app-name {
+    font-size: 14px;
+  }
+  
+  .logo-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .project-title {
+    font-size: 13px;
+  }
+  
+  .project-meta {
+    font-size: 11px;
+  }
+  
+  .action-section {
+    padding: 0 8px;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+  
+  .button-group {
+    flex-shrink: 0;
+  }
+  
+  .divider {
+    margin: 0 6px;
+    height: 32px;
+  }
+  
+  .outlook-btn {
+    min-width: 44px;
+    padding: 4px 6px;
+    min-height: 36px;
+  }
+  
+  .outlook-btn .el-icon {
+    font-size: 14px;
+  }
+  
+  .outlook-btn span {
+    font-size: 9px;
+  }
+  
+  .group-label {
+    font-size: 9px;
+  }
+  
+  .user-section {
+    min-width: 100px;
+    padding: 0 12px;
+  }
+  
+  .user-name {
+    font-size: 12px;
   }
 
   .gantt-container {
-    padding: 10px;
+    padding: 8px;
+    height: calc(100vh - 140px);
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+  
+  .app-logo {
+    margin-right: 0;
+  }
+  
+  .project-selector {
+    width: 100%;
+  }
+  
+  .action-section {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 8px;
+  }
+  
+  .button-group {
+    margin: 0;
+  }
+  
+  .divider {
+    display: none;
+  }
+  
+  .user-section {
+    width: 100%;
+    justify-content: center;
+    padding: 8px;
   }
 }
 </style>
