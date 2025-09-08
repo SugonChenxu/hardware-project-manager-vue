@@ -6,7 +6,7 @@
       <div class="brand-section">
         <div class="app-logo">
           <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 3h6v2H8v-2zm0 3h8v2H8v-2z" fill="currentColor"/>
+            <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 3h6v2H8v-2zm0 3h8v2H8v-2z" fill="currentColor" />
           </svg>
           <span class="app-name">星甘</span>
         </div>
@@ -14,28 +14,52 @@
           <el-dropdown class="project-dropdown" @command="handleProjectCommand">
             <div class="project-info">
               <span class="project-title">{{ projectInfo?.name || '未命名项目' }}</span>
-              <span class="project-meta">{{ tasks.length }} 个任务</span>
-              <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
+              <span class="project-meta">{{ projectInfo?.code || '无' }}</span>
             </div>
             <template #dropdown>
               <el-dropdown-menu class="project-menu">
                 <div class="project-details">
                   <div class="detail-row">
                     <span class="label">项目名称</span>
-                    <span class="value">{{ projectInfo?.name || '未命名项目' }}</span>
+                    <div class="editable-field" v-if="!editingField.name" @click="startEdit('name')">
+                      <span class="value editable">{{ projectInfo?.name || '点击编辑' }}</span>
+                      <el-icon class="edit-icon">
+                        <Edit />
+                      </el-icon>
+                    </div>
+                    <el-input v-else v-model="editingValue" ref="nameInput" size="small" class="inline-edit-input"
+                      @keyup.enter="confirmEdit('name')" @blur="confirmEdit('name')" @keyup.esc="cancelEdit" />
                   </div>
                   <div class="detail-row">
                     <span class="label">项目编码</span>
-                    <span class="value">{{ projectInfo?.code || '无' }}</span>
+                    <div class="editable-field" v-if="!editingField.code" @click="startEdit('code')">
+                      <span class="value editable">{{ projectInfo?.code || '点击编辑' }}</span>
+                      <el-icon class="edit-icon">
+                        <Edit />
+                      </el-icon>
+                    </div>
+                    <el-input v-else v-model="editingValue" ref="codeInput" size="small" class="inline-edit-input"
+                      @keyup.enter="confirmEdit('code')" @blur="confirmEdit('code')" @keyup.esc="cancelEdit" />
                   </div>
                   <div class="detail-row">
-                    <span class="label">任务数量</span>
-                    <span class="value">{{ tasks.length }} 个</span>
+                    <span class="label">描述</span>
+                    <div class="editable-field" v-if="!editingField.description" @click="startEdit('description')">
+                      <span class="value editable">{{ projectInfo?.description || '点击编辑' }}</span>
+                      <el-icon class="edit-icon">
+                        <Edit />
+                      </el-icon>
+                    </div>
+                    <div v-else class="textarea-container">
+                      <el-input v-model="editingValue" ref="descriptionInput" type="textarea" :rows="2" size="small"
+                        class="inline-edit-textarea" @keyup.ctrl.enter="confirmEdit('description')"
+                        @blur="confirmEdit('description')" @keyup.esc="cancelEdit" />
+                      <div class="edit-hint">Ctrl+Enter确认，Esc取消</div>
+                    </div>
                   </div>
-                </div>
-                <div class="project-actions">
-                  <el-button size="small" type="primary" @click="editProjectInfo">编辑项目</el-button>
-                  <el-button size="small" @click="saveProject" :loading="saving">保存项目</el-button>
+                  <div class="detail-row">
+                    <span class="label">创建时间</span>
+                    <span class="value readonly">{{ projectInfo?.createTime }}</span>
+                  </div>
                 </div>
               </el-dropdown-menu>
             </template>
@@ -47,21 +71,14 @@
       <div class="action-section">
         <!-- 项目切换选择器 -->
         <div class="project-switch-section" v-if="projectList.length > 0">
-          <el-select 
-            v-model="currentProjectCode" 
-            class="project-selector"
-            placeholder="选择项目"
-            filterable
-            size="default"
+          <el-select v-model="currentProjectCode" class="project-selector" placeholder="选择项目" filterable size="default"
             @change="switchProject">
             <template #prefix>
-              <el-icon><FolderAdd /></el-icon>
+              <el-icon>
+                <FolderAdd />
+              </el-icon>
             </template>
-            <el-option
-              v-for="project in projectList"
-              :key="project.code"
-              :label="project.name"
-              :value="project.code">
+            <el-option v-for="project in projectList" :key="project.code" :label="project.name" :value="project.code">
               <div class="project-option">
                 <span class="project-name">{{ project.name }}</span>
                 <span class="project-code">{{ project.code }}</span>
@@ -71,38 +88,54 @@
         </div>
 
         <el-button class="outlook-btn primary" @click="createNewProject">
-          <el-icon><FolderAdd /></el-icon>
+          <el-icon>
+            <FolderAdd />
+          </el-icon>
           <span>新建</span>
         </el-button>
-        
+
         <el-button class="outlook-btn" @click="saveProject" :loading="saving">
-          <el-icon><Document /></el-icon>
+          <el-icon>
+            <Document />
+          </el-icon>
           <span>保存</span>
         </el-button>
 
         <div class="divider"></div>
 
         <el-button class="outlook-btn primary" @click="addTask">
-          <el-icon><Plus /></el-icon>
+          <el-icon>
+            <Plus />
+          </el-icon>
           <span>新建任务</span>
         </el-button>
-        
+
         <el-dropdown @command="handleMoreCommand">
           <el-button class="outlook-btn dropdown-btn">
-            <el-icon><MoreFilled /></el-icon>
+            <el-icon>
+              <MoreFilled />
+            </el-icon>
             <span>更多</span>
-            <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
+            <el-icon class="dropdown-arrow">
+              <ArrowDown />
+            </el-icon>
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="expand">
-                <el-icon><Expand /></el-icon>展开全部
+                <el-icon>
+                  <Expand />
+                </el-icon>展开全部
               </el-dropdown-item>
               <el-dropdown-item command="collapse">
-                <el-icon><Fold /></el-icon>折叠全部
+                <el-icon>
+                  <Fold />
+                </el-icon>折叠全部
               </el-dropdown-item>
               <el-dropdown-item command="fit">
-                <el-icon><FullScreen /></el-icon>适应窗口
+                <el-icon>
+                  <FullScreen />
+                </el-icon>适应窗口
               </el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -112,18 +145,24 @@
 
         <el-select v-model="viewMode" class="outlook-select" size="default" @change="changeView">
           <template #prefix>
-            <el-icon><Calendar /></el-icon>
+            <el-icon>
+              <Calendar />
+            </el-icon>
           </template>
           <el-option label="周视图" value="week" />
           <el-option label="月视图" value="month" />
           <el-option label="季度视图" value="quarter" />
         </el-select>
-        
+
         <el-dropdown class="column-control" @command="handleColumnCommand">
           <el-button class="outlook-btn dropdown-btn">
-            <el-icon><Operation /></el-icon>
+            <el-icon>
+              <Operation />
+            </el-icon>
             <span>字段</span>
-            <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
+            <el-icon class="dropdown-arrow">
+              <ArrowDown />
+            </el-icon>
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
@@ -142,12 +181,16 @@
         <div class="divider"></div>
 
         <el-button class="outlook-btn" @click="exportData">
-          <el-icon><Download /></el-icon>
+          <el-icon>
+            <Download />
+          </el-icon>
           <span>导出</span>
         </el-button>
-        
+
         <el-button class="outlook-btn" @click="importData">
-          <el-icon><Upload /></el-icon>
+          <el-icon>
+            <Upload />
+          </el-icon>
           <span>导入</span>
         </el-button>
       </div>
@@ -157,7 +200,9 @@
         <el-dropdown @command="handleUserCommand" class="user-dropdown">
           <div class="user-info">
             <el-avatar :size="28" :src="userInfo?.avatar" class="user-avatar">
-              <el-icon><User /></el-icon>
+              <el-icon>
+                <User />
+              </el-icon>
             </el-avatar>
             <span class="user-name">{{ userInfo?.name || '游客' }}</span>
           </div>
@@ -375,25 +420,6 @@
       </template>
     </el-dialog>
 
-    <!-- 项目编辑对话框 -->
-    <el-dialog v-model="showProjectDialog" title="编辑项目信息" width="600px">
-      <el-form :model="projectInfo" label-width="100px">
-        <el-form-item label="项目名称">
-          <el-input v-model="projectInfo.name" placeholder="请输入项目名称" />
-        </el-form-item>
-        <el-form-item label="项目编码">
-          <el-input v-model="projectInfo.code" placeholder="请输入项目编码" />
-        </el-form-item>
-        <el-form-item label="项目描述">
-          <el-input v-model="projectInfo.description" type="textarea" :rows="3" placeholder="请输入项目描述" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showProjectDialog = false">取消</el-button>
-        <el-button type="primary" @click="saveProjectInfo">保存</el-button>
-      </template>
-    </el-dialog>
-
     <!-- 登录模态框 -->
     <LoginModal v-model="showLoginModal" @login-success="handleLoginSuccess" />
   </div>
@@ -406,7 +432,7 @@ import { getUserProfile } from '../api/login.js'
 import dayjs from 'dayjs'
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
-  ArrowDown, FolderAdd, Operation, MoreFilled, User
+  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -423,6 +449,9 @@ import { getToken, removeToken } from '../utils/auth.js'
 // 响应式数据
 const ganttContainer = ref()
 const fileInput = ref()
+const nameInput = ref()
+const codeInput = ref()
+const descriptionInput = ref()
 const viewMode = ref('week')
 const showTaskDialog = ref(false)
 const showEditDialog = ref(false)  // 编辑对话框显示状态
@@ -439,6 +468,15 @@ const projectInfo = ref(null)
 const projectList = ref([])
 const currentProjectCode = ref('')
 const urlParams = ref(null)
+
+// 内联编辑状态
+const editingField = ref({
+  name: false,
+  code: false,
+  description: false
+})
+const editingValue = ref('')
+const originalValue = ref('')
 
 // 用户信息
 const userInfo = ref(null)
@@ -457,9 +495,6 @@ const columnOptions = ref([
   { name: 'predecessors', label: '前置任务' },
   { name: 'description', label: '任务描述' }
 ])
-
-// 项目编辑对话框
-const showProjectDialog = ref(false)
 
 // 新建任务表单数据
 const newTask = ref({
@@ -494,7 +529,7 @@ const editTask = ref({
 
 // 生命周期钩子
 onMounted(async () => {
-  
+
   // 获取URL参数
   const params = new URLSearchParams(window.location.search)
   let code = params.get('code')
@@ -503,11 +538,11 @@ onMounted(async () => {
   let loginres;
 
   // 如果用户已登录则加载用户登录信息
-  if(userInfo.value == null &&getToken()) {
+  if (userInfo.value == null && getToken()) {
     loginres = await loadUserInfo();
   }
 
-  if(code == null && loginres!= undefined && loginres && loginres.data.length > 0) {
+  if (code == null && loginres != undefined && loginres && loginres.data.length > 0) {
     code = loginres.data[0].code;
   }
 
@@ -530,9 +565,9 @@ onUnmounted(() => {
 
 const loadUserInfo = async () => {
   let res = await getUserProfile();
-  if(res.code == 200) {
+  if (res.code == 200) {
     userInfo.value = res.data;
-    let projects = await load({page: 1, limit:100});
+    let projects = await load({ page: 1, limit: 100 });
     projectList.value = projects.data;
     return projects;
   }
@@ -553,14 +588,14 @@ const loadInitialData = async (code = null) => {
   try {
     loading.value = true
     const data = await loadGanttData(code);
-    if(data == null) {
+    if (data == null) {
       loading.value = false;
       ElMessage.error(`未能找到${code}对应的进度计划`)
       return;
     }
     tasks.value = data.tasks
     links.value = data.links
-    projectInfo.value = data.projectInfo 
+    projectInfo.value = data.projectInfo
     document.title = `${projectInfo.value.name} - 星甘`
   } catch (error) {
     ElMessage.error('数据加载失败，请刷新页面重试')
@@ -731,13 +766,13 @@ const initGantt = () => {
     }
     gantt.config.quickinfo_buttons = []      // 清空快速信息按钮
     gantt.config.tooltip = false             // 禁用工具提示
-    
+
     // 禁用所有tooltip模板
-    gantt.templates.tooltip_text = function(start, end, task) {
+    gantt.templates.tooltip_text = function (start, end, task) {
       return ""
     }
     gantt.templates.tooltip_date_format = ""
-    
+
     // 动态移除所有可能的title属性
     const removeTooltips = () => {
       const elementsWithTitle = ganttContainer.value?.querySelectorAll('[title]')
@@ -747,7 +782,7 @@ const initGantt = () => {
         })
       }
     }
-    
+
     // 在甘特图渲染后移除tooltip
     gantt.attachEvent("onGanttRender", removeTooltips)
 
@@ -1369,27 +1404,27 @@ const handleLoginSuccess = () => {
 
 // 切换项目
 const switchProject = async (projectCode) => {
-  if (!projectCode || projectCode === currentProjectCode.value) {
+  if (!projectCode) {
     return
   }
-  
+
   try {
     loading.value = true
-    
+
     // 加载新项目数据
     await loadInitialData(projectCode)
-    
+
     // 更新当前项目代码
     currentProjectCode.value = projectCode
-    
+
     // 更新URL
     const newUrl = `${window.location.origin}${window.location.pathname}?code=${projectCode}`
     window.history.replaceState({}, '', newUrl)
     urlParams.value = { code: projectCode }
-    
+
     // 重新渲染甘特图
     loadData()
-    
+
     ElMessage.success(`已切换到项目: ${projectInfo.value?.name || '未命名项目'}`)
   } catch (error) {
     ElMessage.error('项目切换失败，请重试')
@@ -1459,44 +1494,80 @@ const createNewProject = () => {
     // 清空数据
     tasks.value = []
     links.value = []
+    gantt.clearAll()
     projectInfo.value = {
       code: `GANTT_${Date.now()}`,
       name: '未命名项目',
       description: '新建项目',
       createTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
     }
-    
+
     // 重新加载甘特图
     loadData()
-    
+
     // 清空URL参数
     window.history.replaceState({}, '', window.location.pathname)
     urlParams.value = {}
-    
+
     ElMessage.success('新项目创建成功')
   }).catch(() => {
     ElMessage.info('已取消创建')
   })
 }
 
-// 编辑项目信息
-const editProjectInfo = () => {
-  showProjectDialog.value = true
+// 开始编辑字段
+const startEdit = (fieldName) => {
+  // 重置所有编辑状态
+  Object.keys(editingField.value).forEach(key => {
+    editingField.value[key] = false
+  })
+
+  // 设置当前编辑字段
+  editingField.value[fieldName] = true
+  editingValue.value = projectInfo.value?.[fieldName] || ''
+  originalValue.value = projectInfo.value?.[fieldName] || ''
+
+  // 下一个tick时聚焦输入框
+  nextTick(() => {
+    let inputRef
+    if (fieldName === 'name') inputRef = nameInput.value
+    else if (fieldName === 'code') inputRef = codeInput.value
+    else if (fieldName === 'description') inputRef = descriptionInput.value
+
+    if (inputRef) {
+      inputRef.focus()
+      inputRef.select()
+    }
+  })
 }
 
-// 保存项目信息
-const saveProjectInfo = () => {
-  if (!projectInfo.value.name) {
-    ElMessage.warning('请输入项目名称')
-    return
+// 确认编辑
+const confirmEdit = (fieldName) => {
+  if (!projectInfo.value) {
+    projectInfo.value = {}
   }
 
-  // 更新页面标题
-  document.title = `${projectInfo.value.name} - 星甘`
+  // 更新项目信息
+  projectInfo.value[fieldName] = editingValue.value
 
-  showProjectDialog.value = false
-  ElMessage.success('项目信息已更新')
+  // 重置编辑状态
+  editingField.value[fieldName] = false
+  editingValue.value = ''
+  originalValue.value = ''
+
+  // 自动保存项目
+  saveProject()
 }
+
+// 取消编辑
+const cancelEdit = () => {
+  Object.keys(editingField.value).forEach(key => {
+    editingField.value[key] = false
+  })
+  editingValue.value = originalValue.value
+  originalValue.value = ''
+}
+
 
 // 更新字段可见性
 const updateColumnVisibility = () => {
@@ -1607,7 +1678,7 @@ const updateColumnVisibility = () => {
 
   // 筛选可见列
   gantt.config.columns = allColumns.filter(col => visibleColumns.value.includes(col.name))
-  
+
   // 重新渲染甘特图
   if (gantt && gantt.render) {
     gantt.render()
@@ -1736,6 +1807,72 @@ const updateColumnVisibility = () => {
 .detail-row .value {
   color: #323130;
   font-weight: 400;
+}
+
+.detail-row .value.readonly {
+  color: #909399;
+}
+
+/* 可编辑字段样式 */
+.editable-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  min-height: 28px;
+}
+
+.editable-field:hover {
+  background-color: #f5f7fa;
+  border-color: #e4e7ed;
+}
+
+.editable-field .value.editable {
+  flex: 1;
+  color: #409eff;
+}
+
+.editable-field .edit-icon {
+  font-size: 12px;
+  color: #c0c4cc;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.editable-field:hover .edit-icon {
+  opacity: 1;
+}
+
+/* 内联编辑输入框样式 */
+.inline-edit-input,
+.inline-edit-textarea {
+  margin-top: 4px;
+}
+
+.inline-edit-input :deep(.el-input__wrapper) {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.inline-edit-textarea :deep(.el-textarea__inner) {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+  resize: none;
+}
+
+.textarea-container {
+  margin-top: 4px;
+}
+
+.edit-hint {
+  font-size: 11px;
+  color: #909399;
+  margin-top: 4px;
+  text-align: right;
 }
 
 .project-actions {
@@ -2173,29 +2310,29 @@ const updateColumnVisibility = () => {
     min-width: 220px;
     padding: 0 12px;
   }
-  
+
   .action-section {
     padding: 0 8px;
     gap: 3px;
   }
-  
+
   .divider {
     margin: 0 6px;
   }
-  
+
   .outlook-btn {
     min-width: 45px;
     padding: 0 6px;
   }
-  
+
   .outlook-btn span {
     font-size: 10px;
   }
-  
+
   .outlook-select {
     width: 80px;
   }
-  
+
   .user-section {
     min-width: 100px;
     padding: 0 8px;
@@ -2207,21 +2344,21 @@ const updateColumnVisibility = () => {
     height: auto;
     min-height: 48px;
   }
-  
+
   .brand-section {
     min-width: 180px;
   }
-  
+
   .action-section {
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
-  
+
   .action-section::-webkit-scrollbar {
     display: none;
   }
-  
+
   .user-section {
     min-width: 90px;
   }
@@ -2231,67 +2368,67 @@ const updateColumnVisibility = () => {
   .outlook-toolbar {
     min-height: auto;
   }
-  
+
   .brand-section {
     padding: 0 16px;
     min-width: 180px;
   }
-  
+
   .app-name {
     font-size: 14px;
   }
-  
+
   .logo-icon {
     width: 20px;
     height: 20px;
   }
-  
+
   .project-title {
     font-size: 13px;
   }
-  
+
   .project-meta {
     font-size: 11px;
   }
-  
+
   .action-section {
     padding: 0 8px;
     justify-content: flex-start;
     overflow-x: auto;
   }
-  
+
   .button-group {
     flex-shrink: 0;
   }
-  
+
   .divider {
     margin: 0 6px;
     height: 32px;
   }
-  
+
   .outlook-btn {
     min-width: 44px;
     padding: 4px 6px;
     min-height: 36px;
   }
-  
+
   .outlook-btn .el-icon {
     font-size: 14px;
   }
-  
+
   .outlook-btn span {
     font-size: 9px;
   }
-  
+
   .group-label {
     font-size: 9px;
   }
-  
+
   .user-section {
     min-width: 100px;
     padding: 0 12px;
   }
-  
+
   .user-name {
     font-size: 12px;
   }
@@ -2309,29 +2446,29 @@ const updateColumnVisibility = () => {
     gap: 8px;
     padding: 12px 16px;
   }
-  
+
   .app-logo {
     margin-right: 0;
   }
-  
+
   .project-selector {
     width: 100%;
   }
-  
+
   .action-section {
     flex-wrap: wrap;
     gap: 8px;
     padding: 12px 8px;
   }
-  
+
   .button-group {
     margin: 0;
   }
-  
+
   .divider {
     display: none;
   }
-  
+
   .user-section {
     width: 100%;
     justify-content: center;
