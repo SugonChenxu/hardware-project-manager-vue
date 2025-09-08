@@ -154,7 +154,7 @@
           <el-option label="季度视图" value="quarter" />
         </el-select>
 
-        <el-dropdown class="column-control" @command="handleColumnCommand">
+        <el-dropdown class="column-control">
           <el-button class="outlook-btn dropdown-btn">
             <el-icon>
               <Operation />
@@ -167,7 +167,11 @@
           <template #dropdown>
             <el-dropdown-menu>
               <div class="column-control-panel">
-                <div class="panel-header">显示字段</div>
+                <div class="panel-actions">
+                  <el-button size="small" type="text" @click="toggleAllColumns" :disabled="columnOptions.length === 0">
+                    {{ isAllSelected ? '全不选' : '全选' }}
+                  </el-button>
+                </div>
                 <el-checkbox-group v-model="visibleColumns" class="column-checkboxes">
                   <el-checkbox v-for="column in columnOptions" :key="column.name" :label="column.name">
                     {{ column.label }}
@@ -426,7 +430,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { gantt } from 'dhtmlx-gantt'
 import { getUserProfile } from '../api/login.js'
 import dayjs from 'dayjs'
@@ -481,8 +485,8 @@ const originalValue = ref('')
 // 用户信息
 const userInfo = ref(null)
 
-// 字段显示控制
-const visibleColumns = ref(['text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner'])
+// 可显示的字段
+const visibleColumns = ref(['text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description'])
 const columnOptions = ref([
   { name: 'text', label: '任务名称' },
   { name: 'start_date', label: '开始时间' },
@@ -582,6 +586,14 @@ const handleResize = () => {
     }, 100)
   }
 }
+
+// 监听字段显示变化
+watch(visibleColumns, () => {
+  // 确保甘特图已经初始化
+  if (gantt && gantt.config && gantt.render) {
+    updateColumnVisibility()
+  }
+}, { deep: true })
 
 // 加载初始数据
 const loadInitialData = async (code = null) => {
@@ -1440,12 +1452,6 @@ const handleProjectCommand = (command) => {
   console.log('项目命令:', command)
 }
 
-// 处理字段显示命令
-const handleColumnCommand = (command) => {
-  console.log('字段命令:', command)
-  updateColumnVisibility()
-}
-
 // 处理更多操作命令
 const handleMoreCommand = (command) => {
   switch (command) {
@@ -1571,7 +1577,7 @@ const cancelEdit = () => {
 
 // 更新字段可见性
 const updateColumnVisibility = () => {
-  // 根据visibleColumns更新甘特图列配置
+  console.log('更新字段可见性，当前可见字段:', visibleColumns.value)
   const allColumns = [
     {
       name: "text",
@@ -1677,11 +1683,28 @@ const updateColumnVisibility = () => {
   ]
 
   // 筛选可见列
-  gantt.config.columns = allColumns.filter(col => visibleColumns.value.includes(col.name))
+  const filteredColumns = allColumns.filter(col => visibleColumns.value.includes(col.name))
+  gantt.config.columns = filteredColumns
+  console.log('过滤后的列:', filteredColumns.map(col => col.name))
 
   // 重新渲染甘特图
   if (gantt && gantt.render) {
     gantt.render()
+    console.log('甘特图已重新渲染')
+  }
+}
+
+// 计算属性：是否全部选中
+const isAllSelected = computed(() => {
+  return visibleColumns.value.length === columnOptions.value.length
+})
+
+// 切换全选/全不选
+const toggleAllColumns = () => {
+  if (isAllSelected.value) {
+    visibleColumns.value = []
+  } else {
+    visibleColumns.value = columnOptions.value.map(column => column.name)
   }
 }
 </script>
@@ -2056,7 +2079,7 @@ const updateColumnVisibility = () => {
 /* 字段控制面板 */
 .column-control-panel {
   padding: 16px;
-  min-width: 220px;
+  min-width: 180px;
 }
 
 .panel-header {
@@ -2064,6 +2087,33 @@ const updateColumnVisibility = () => {
   font-weight: 600;
   color: #323130;
   margin-bottom: 12px;
+}
+
+.panel-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.panel-actions .el-button {
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #409eff;
+}
+
+.panel-actions .el-button:hover {
+  color: #66b1ff;
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+.panel-actions .el-button.is-disabled {
+  color: #c0c4cc;
+}
+
+.panel-actions .el-button.is-disabled:hover {
+  color: #c0c4cc;
+  background-color: transparent;
 }
 
 .column-checkboxes {
