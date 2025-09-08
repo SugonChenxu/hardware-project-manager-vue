@@ -3,8 +3,9 @@
  * 负责数据的加载、保存和管理
  */
 
-import ganttData from '../data/gantt-data.json'
-import { get as getProject, add as addProject, update as updateProject } from '../api/sysproject.js'
+import defaultData from '../data/gantt-data.json'
+import * as sysprojectapi from '../api/sysproject.js'
+import dayjs from 'dayjs'
 
 /**
  * 加载甘特图数据
@@ -15,7 +16,7 @@ export const loadGanttData = async (code = null) => {
   try {
     if (code) {
       // 从API加载项目数据
-      const response = await getProject({ id:code })
+      const response = await sysprojectapi.get({ id:code })
       
       if (response && response.data) {
         const projectData = response.data
@@ -45,32 +46,29 @@ export const loadGanttData = async (code = null) => {
             code: projectData.code,
             name: projectData.name,
             description: projectData.description,
-            status: projectData.status,
             createTime: projectData.createTime,
             updateTime: projectData.updateTime
           }
         }
-      } else {
-        console.warn('未找到项目数据，使用默认数据')
-        return {
-          tasks: ganttData.tasks,
-          links: ganttData.links
-        }
-      }
+      } 
+
+      return null;
     } else {
-      // 从本地JSON文件加载默认数据
-      console.log('加载默认甘特图数据')
+      // 没有Code直接从本地JSON文件加载默认数据
       return {
-        tasks: ganttData.tasks,
-        links: ganttData.links
+        tasks: defaultData.tasks,
+        links: defaultData.links,
+        projectInfo: {
+          code: `GANTT_${Date.now()}`,
+          name: '未命名项目',
+          description: '这是系统自动生成的一个演示项目',
+          createTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
+        }
       }
     }
   } catch (error) {
-    console.error('加载甘特图数据失败:', error)
-    return {
-      tasks: ganttData.tasks || [],
-      links: ganttData.links || []
-    }
+    ElMessage.error('加载甘特图数据失败:', error)
+    return null;
   }
 }
 
@@ -86,30 +84,21 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
     const ganttDataObj = {
       tasks,
       links,
-      lastUpdateTime: new Date().toISOString()
+      lastUpdateTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
     }
-    
-    const projectData = {
+
+    let projectData = {
       content: JSON.stringify(ganttDataObj),
-      updateTime: new Date().toISOString()
-    }
-    
-    // 如果有项目信息，合并项目基本信息
-    if (projectInfo) {
-      Object.assign(projectData, {
         name: projectInfo.name,
         description: projectInfo.description,
-        status: projectInfo.status,
         code: projectInfo.code
-      })
     }
-    
+
     let response
     
-    if (projectInfo && projectInfo.id) {
-      // 更新现有项目
+    if (projectInfo.id) {
       projectData.id = projectInfo.id
-      response = await updateProject(projectData)
+      response = await sysprojectapi.update(projectData)
     } else {
       // 如果没有项目代码，生成一个
       if (!projectData.code) {
@@ -118,7 +107,7 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
       if (!projectData.name) {
         projectData.name = '新建甘特图项目'
       }
-      response = await addProject(projectData)
+      response = await sysprojectapi.add(projectData)
     }
     
     return response;
@@ -127,6 +116,13 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
     throw error
   }
 }
+
+// 加载用户可访问的列表
+export const load = async (params) => {
+  let res = await sysprojectapi.load(params);
+  return res;
+}
+
 
 /**
  * 保存甘特图数据（兼容旧版本）
@@ -198,33 +194,4 @@ export const validateTask = (task) => {
 export const generateNewTaskId = (tasks) => {
   if (!tasks || tasks.length === 0) return 1
   return Math.max(...tasks.map(t => t.id)) + 1
-}
-
-/**
- * 获取任务统计信息
- * @param {Array} tasks - 任务列表
- * @returns {Object}
- */
-export const getTaskStatistics = (tasks) => {
-  if (!tasks || tasks.length === 0) {
-    return {
-      total: 0,
-      completed: 0,
-      inProgress: 0,
-      planned: 0,
-      completionRate: 0
-    }
-  }
-
-  const completed = tasks.filter(t => t.status === 'completed').length
-  const inProgress = tasks.filter(t => t.status === 'in_progress').length
-  const planned = tasks.filter(t => t.status === 'planned').length
-
-  return {
-    total: tasks.length,
-    completed,
-    inProgress,
-    planned,
-    completionRate: Math.round((completed / tasks.length) * 100)
-  }
 }

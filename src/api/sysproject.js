@@ -2,7 +2,7 @@
  * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
  * @Date: 2024-01-04 09:48:08
  * @Description: 
- * @LastEditTime: 2025-09-07 16:34:39
+ * @LastEditTime: 2025-09-08 16:56:24
  * Copyright (c) 2025 by yubaolee | ahfu~ , All Rights Reserved.  
  */
 import request from '@/utils/request'
@@ -11,7 +11,7 @@ import request from '@/utils/request'
 * 获取当前登录用户可访问的所有角色
 * 分页没有作用
 */
-export function getList(params) {
+export function load(params) {
   return request({
     url: '/sysproject/load',
     method: 'get',

@@ -45,6 +45,31 @@
 
       <!-- 中间操作区域 -->
       <div class="action-section">
+        <!-- 项目切换选择器 -->
+        <div class="project-switch-section" v-if="projectList.length > 0">
+          <el-select 
+            v-model="currentProjectCode" 
+            class="project-selector"
+            placeholder="选择项目"
+            filterable
+            size="default"
+            @change="switchProject">
+            <template #prefix>
+              <el-icon><FolderAdd /></el-icon>
+            </template>
+            <el-option
+              v-for="project in projectList"
+              :key="project.code"
+              :label="project.name"
+              :value="project.code">
+              <div class="project-option">
+                <span class="project-name">{{ project.name }}</span>
+                <span class="project-code">{{ project.code }}</span>
+              </div>
+            </el-option>
+          </el-select>
+        </div>
+
         <el-button class="outlook-btn primary" @click="createNewProject">
           <el-icon><FolderAdd /></el-icon>
           <span>新建</span>
@@ -352,15 +377,15 @@
 
     <!-- 项目编辑对话框 -->
     <el-dialog v-model="showProjectDialog" title="编辑项目信息" width="600px">
-      <el-form :model="projectForm" label-width="100px">
+      <el-form :model="projectInfo" label-width="100px">
         <el-form-item label="项目名称">
-          <el-input v-model="projectForm.name" placeholder="请输入项目名称" />
+          <el-input v-model="projectInfo.name" placeholder="请输入项目名称" />
         </el-form-item>
         <el-form-item label="项目编码">
-          <el-input v-model="projectForm.code" placeholder="请输入项目编码" />
+          <el-input v-model="projectInfo.code" placeholder="请输入项目编码" />
         </el-form-item>
         <el-form-item label="项目描述">
-          <el-input v-model="projectForm.description" type="textarea" :rows="3" placeholder="请输入项目描述" />
+          <el-input v-model="projectInfo.description" type="textarea" :rows="3" placeholder="请输入项目描述" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -377,6 +402,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { gantt } from 'dhtmlx-gantt'
+import { getUserProfile } from '../api/login.js'
 import dayjs from 'dayjs'
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
@@ -386,12 +412,13 @@ import {
   loadGanttData,
   saveGanttData,
   saveGanttDataToProject,
+  load,
   exportToJson,
   importFromJson,
-  generateNewTaskId,
-  getTaskStatistics
+  generateNewTaskId
 } from '../services/ganttDataService.js'
 import LoginModal from './LoginModal.vue'
+import { getToken, removeToken } from '../utils/auth.js'
 
 // 响应式数据
 const ganttContainer = ref()
@@ -409,6 +436,8 @@ const loading = ref(true)
 
 // 项目信息
 const projectInfo = ref(null)
+const projectList = ref([])
+const currentProjectCode = ref('')
 const urlParams = ref(null)
 
 // 用户信息
@@ -431,11 +460,6 @@ const columnOptions = ref([
 
 // 项目编辑对话框
 const showProjectDialog = ref(false)
-const projectForm = ref({
-  name: '',
-  code: '',
-  description: ''
-})
 
 // 新建任务表单数据
 const newTask = ref({
@@ -470,10 +494,25 @@ const editTask = ref({
 
 // 生命周期钩子
 onMounted(async () => {
+  
   // 获取URL参数
   const params = new URLSearchParams(window.location.search)
-  const code = params.get('code')
+  let code = params.get('code')
   urlParams.value = { code }
+
+  let loginres;
+
+  // 如果用户已登录则加载用户登录信息
+  if(userInfo.value == null &&getToken()) {
+    loginres = await loadUserInfo();
+  }
+
+  if(code == null && loginres!= undefined && loginres && loginres.data.length > 0) {
+    code = loginres.data[0].code;
+  }
+
+  // 设置当前项目代码
+  currentProjectCode.value = code || ''
 
   await loadInitialData(code)
   initGantt()
@@ -489,6 +528,16 @@ onUnmounted(() => {
   }
 })
 
+const loadUserInfo = async () => {
+  let res = await getUserProfile();
+  if(res.code == 200) {
+    userInfo.value = res.data;
+    let projects = await load({page: 1, limit:100});
+    projectList.value = projects.data;
+    return projects;
+  }
+}
+
 // 处理窗口尺寸变化
 const handleResize = () => {
   if (gantt && ganttContainer.value) {
@@ -503,17 +552,17 @@ const handleResize = () => {
 const loadInitialData = async (code = null) => {
   try {
     loading.value = true
-    const data = await loadGanttData(code)
+    const data = await loadGanttData(code);
+    if(data == null) {
+      loading.value = false;
+      ElMessage.error(`未能找到${code}对应的进度计划`)
+      return;
+    }
     tasks.value = data.tasks
     links.value = data.links
-    projectInfo.value = data.projectInfo || null
-
-    // 如果有项目信息，更新页面标题
-    if (projectInfo.value && projectInfo.value.name) {
-      document.title = `${projectInfo.value.name} - 星甘`
-    }
+    projectInfo.value = data.projectInfo 
+    document.title = `${projectInfo.value.name} - 星甘`
   } catch (error) {
-    console.error('加载甘特图数据失败:', error)
     ElMessage.error('数据加载失败，请刷新页面重试')
   } finally {
     loading.value = false
@@ -682,6 +731,25 @@ const initGantt = () => {
     }
     gantt.config.quickinfo_buttons = []      // 清空快速信息按钮
     gantt.config.tooltip = false             // 禁用工具提示
+    
+    // 禁用所有tooltip模板
+    gantt.templates.tooltip_text = function(start, end, task) {
+      return ""
+    }
+    gantt.templates.tooltip_date_format = ""
+    
+    // 动态移除所有可能的title属性
+    const removeTooltips = () => {
+      const elementsWithTitle = ganttContainer.value?.querySelectorAll('[title]')
+      if (elementsWithTitle) {
+        elementsWithTitle.forEach(el => {
+          el.removeAttribute('title')
+        })
+      }
+    }
+    
+    // 在甘特图渲染后移除tooltip
+    gantt.attachEvent("onGanttRender", removeTooltips)
 
     // 任务条颜色配置
     gantt.templates.task_class = function (start, end, task) {
@@ -1269,7 +1337,7 @@ const saveProject = async () => {
 
       // 更新页面标题
       if (projectInfo.value.name) {
-        document.title = `${projectInfo.value.name} - 星甘特图`
+        document.title = `${projectInfo.value.name} - 星甘`
       }
     }
 
@@ -1295,7 +1363,41 @@ const saveProject = async () => {
 // 处理登录成功
 const handleLoginSuccess = () => {
   ElMessage.success('登录成功，请重新保存项目')
+  loadUserInfo();
   showLoginModal.value = false
+}
+
+// 切换项目
+const switchProject = async (projectCode) => {
+  if (!projectCode || projectCode === currentProjectCode.value) {
+    return
+  }
+  
+  try {
+    loading.value = true
+    
+    // 加载新项目数据
+    await loadInitialData(projectCode)
+    
+    // 更新当前项目代码
+    currentProjectCode.value = projectCode
+    
+    // 更新URL
+    const newUrl = `${window.location.origin}${window.location.pathname}?code=${projectCode}`
+    window.history.replaceState({}, '', newUrl)
+    urlParams.value = { code: projectCode }
+    
+    // 重新渲染甘特图
+    loadData()
+    
+    ElMessage.success(`已切换到项目: ${projectInfo.value?.name || '未命名项目'}`)
+  } catch (error) {
+    ElMessage.error('项目切换失败，请重试')
+    // 恢复原来的选择
+    currentProjectCode.value = urlParams.value?.code || ''
+  } finally {
+    loading.value = false
+  }
 }
 
 // 处理项目下拉命令
@@ -1338,6 +1440,7 @@ const handleUserCommand = (command) => {
       break
     case 'logout':
       userInfo.value = null
+      removeToken()
       ElMessage.success('已退出登录')
       break
     case 'login':
@@ -1356,7 +1459,12 @@ const createNewProject = () => {
     // 清空数据
     tasks.value = []
     links.value = []
-    projectInfo.value = null
+    projectInfo.value = {
+      code: `GANTT_${Date.now()}`,
+      name: '未命名项目',
+      description: '新建项目',
+      createTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
+    }
     
     // 重新加载甘特图
     loadData()
@@ -1373,34 +1481,18 @@ const createNewProject = () => {
 
 // 编辑项目信息
 const editProjectInfo = () => {
-  projectForm.value = {
-    name: projectInfo.value?.name || '',
-    code: projectInfo.value?.code || '',
-    description: projectInfo.value?.description || ''
-  }
   showProjectDialog.value = true
 }
 
 // 保存项目信息
 const saveProjectInfo = () => {
-  if (!projectForm.value.name) {
+  if (!projectInfo.value.name) {
     ElMessage.warning('请输入项目名称')
     return
   }
 
-  // 更新项目信息
-  if (!projectInfo.value) {
-    projectInfo.value = {}
-  }
-  
-  Object.assign(projectInfo.value, {
-    name: projectForm.value.name,
-    code: projectForm.value.code,
-    description: projectForm.value.description
-  })
-
   // 更新页面标题
-  document.title = `${projectInfo.value.name} - 星甘特图`
+  document.title = `${projectInfo.value.name} - 星甘`
 
   showProjectDialog.value = false
   ElMessage.success('项目信息已更新')
@@ -1661,6 +1753,75 @@ const updateColumnVisibility = () => {
   padding: 0 12px;
   gap: 4px;
   height: 100%;
+}
+
+/* 项目切换区域 */
+.project-switch-section {
+  margin-right: 8px;
+}
+
+.project-selector {
+  width: 200px;
+  height: 32px;
+}
+
+.project-selector :deep(.el-input) {
+  height: 32px;
+}
+
+.project-selector :deep(.el-input__wrapper) {
+  border-radius: 3px;
+  border: 1px solid #d1d1d1;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  padding-left: 32px;
+}
+
+.project-selector :deep(.el-input__wrapper):hover {
+  border-color: #c7c7c7;
+  background: #f3f2f1;
+}
+
+.project-selector :deep(.el-input__wrapper.is-focus) {
+  border-color: #0078d4;
+  box-shadow: 0 0 0 1px #0078d4;
+}
+
+.project-selector :deep(.el-input__inner) {
+  height: 30px;
+  line-height: 30px;
+  font-size: 13px;
+  color: #323130;
+}
+
+.project-selector :deep(.el-input__prefix) {
+  left: 8px;
+  color: #605e5c;
+}
+
+.project-selector :deep(.el-select__caret) {
+  color: #605e5c;
+  font-size: 12px;
+}
+
+/* 项目选项样式 */
+.project-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #323130;
+  line-height: 1.2;
+}
+
+.project-code {
+  font-size: 11px;
+  color: #605e5c;
+  line-height: 1.2;
 }
 
 /* Outlook按钮样式 */
@@ -2176,5 +2337,22 @@ const updateColumnVisibility = () => {
     justify-content: center;
     padding: 8px;
   }
+}
+
+/* 全局禁用所有tooltip */
+/* 禁用dhtmlx-gantt的所有tooltip相关元素 */
+:deep(.gantt_tooltip),
+:deep(.dhx_tooltip) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* 针对甘特图特定元素禁用可能出现的默认tooltip */
+:deep(.gantt_task_line):before,
+:deep(.gantt_task_cell):before,
+:deep(.gantt_task_text):before {
+  content: none !important;
 }
 </style>
