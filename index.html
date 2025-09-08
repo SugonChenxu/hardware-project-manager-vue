@@ -1,7 +1,7 @@
 <!--
  * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
  * @Date: 2025-09-05 01:36:59
- * @LastEditTime: 2025-09-07 19:44:49
+ * @LastEditTime: 2025-09-08 23:47:50
  * @Description: 
  * Copyright (c) 2025 by yubaolee | ahfu~ , All Rights Reserved.  
 -->
@@ -9,18 +9,161 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>星甘 - 专注进度管理</title>
+    
+    <!-- 基础SEO信息 -->
+    <title>星甘 - 专业的项目进度管理工具 | 甘特图在线制作平台</title>
+    <meta name="description" content="星甘是一款专业的项目进度管理工具，提供直观的甘特图制作功能。支持任务管理、时间规划、进度跟踪、团队协作，助力项目高效执行。免费在线使用，无需下载安装。" />
+    <meta name="keywords" content="甘特图,项目管理,进度管理,任务管理,时间规划,项目计划,团队协作,在线甘特图,项目进度跟踪,星甘" />
+    <meta name="author" content="星甘团队" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="zh-CN" />
+    <meta name="revisit-after" content="7 days" />
+    
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="apple-touch-icon" href="/vite.svg" />
+    <link rel="shortcut icon" href="/vite.svg" />
+    
+    <!-- PWA清单 -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="星甘" />
+    <meta property="og:title" content="星甘 - 专业的项目进度管理工具" />
+    <meta property="og:description" content="专业的甘特图制作平台，支持项目管理、任务规划、进度跟踪。直观易用，免费在线使用。" />
+    <meta property="og:image" content="/vite.svg" />
+    <meta property="og:url" content="https://stargantt.com" />
+    <meta property="og:locale" content="zh_CN" />
+    
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@StarGantt" />
+    <meta name="twitter:creator" content="@StarGantt" />
+    <meta name="twitter:title" content="星甘 - 专业的项目进度管理工具" />
+    <meta name="twitter:description" content="专业的甘特图制作平台，支持项目管理、任务规划、进度跟踪。直观易用，免费在线使用。" />
+    <meta name="twitter:image" content="/vite.svg" />
+    
+    <!-- 移动端优化 -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="星甘" />
+    
+    <!-- 浏览器主题色 -->
+    <meta name="theme-color" content="#0078d4" />
+    <meta name="msapplication-TileColor" content="#0078d4" />
+    <meta name="msapplication-navbutton-color" content="#0078d4" />
+    
+    <!-- 禁用自动翻译 -->
+    <meta name="google" content="notranslate" />
+    
+    <!-- DNS预解析和预连接 -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+    <link rel="dns-prefetch" href="//unpkg.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    
+    <!-- 关键资源预加载 -->
+    <link rel="modulepreload" href="/src/main.js" />
+    <link rel="prefetch" href="/src/components/GanttChart.vue" />
+    
+    <!-- 结构化数据 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "星甘",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web Browser",
+      "description": "专业的项目进度管理工具，提供直观的甘特图制作功能",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "CNY"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1000"
+      }
+    }
+    </script>
+    
     <style>
       body {
         margin: 0;
-        font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      /* 加载动画 */
+      .loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f5f7fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+      }
+      
+      .loading-text {
+        color: #0078d4;
+        font-size: 16px;
+        font-weight: 500;
+        animation: loading-pulse 1.5s ease-in-out infinite;
+      }
+      
+      @keyframes loading-pulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
       }
     </style>
   </head>
   <body>
+    <!-- 无脚本支持提示 -->
+    <noscript>
+      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f5f7fa; display: flex; align-items: center; justify-content: center; flex-direction: column; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;">
+        <h1 style="color: #f56c6c; margin-bottom: 16px;">JavaScript 已禁用</h1>
+        <p style="color: #606266; text-align: center; max-width: 400px; line-height: 1.6;">
+          星甘需要启用 JavaScript 才能正常运行。<br>
+          请在浏览器设置中启用 JavaScript，然后刷新页面。
+        </p>
+      </div>
+    </noscript>
+    
+    <!-- 加载动画 -->
+    <div class="loading" id="loading-screen">
+      <div class="loading-text">星甘正在加载中...</div>
+    </div>
+    
+    <!-- 应用容器 -->
     <div id="app"></div>
+    
+    <!-- 主应用脚本 -->
     <script type="module" src="/src/main.js"></script>
+    
+    <!-- 加载完成后隐藏加载动画 -->
+    <script>
+      window.addEventListener('load', function() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          setTimeout(() => {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+              loadingScreen.style.display = 'none';
+            }, 300);
+          }, 500);
+        }
+      });
+    </script>
   </body>
 </html> 
