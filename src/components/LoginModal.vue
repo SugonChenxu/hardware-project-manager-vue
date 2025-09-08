@@ -17,8 +17,8 @@
 
       <!-- 表单 -->
       <el-form :model="form" :rules="rules" ref="formRef" class="login-form" @keyup.enter="handleSubmit">
-        <el-form-item prop="username">
-          <el-input v-model="form.username" placeholder="用户名" size="large" prefix-icon="User" class="form-input" />
+        <el-form-item prop="account">
+          <el-input v-model="form.account" placeholder="用户名" size="large" prefix-icon="User" class="form-input" />
         </el-form-item>
 
         <el-form-item prop="password">
@@ -30,6 +30,12 @@
           <el-form-item v-if="!isLogin" prop="confirmPassword">
             <el-input v-model="form.confirmPassword" type="password" placeholder="确认密码" size="large" prefix-icon="Lock"
               show-password class="form-input" />
+          </el-form-item>
+        </transition>
+
+        <transition name="slide-fade">
+          <el-form-item v-if="!isLogin" prop="name">
+            <el-input v-model="form.name" placeholder="姓名" size="large" prefix-icon="User" class="form-input" />
           </el-form-item>
         </transition>
 
@@ -60,7 +66,8 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { login, register } from '../api/login.js'
+import { login } from '../api/login.js'
+import { add } from '../api/users.js'
 import { setToken } from '../utils/auth.js'
 
 // Props
@@ -87,16 +94,17 @@ const visible = computed({
 
 // 表单数据
 const form = reactive({
-  username: '',
+  account: '',
   password: '',
   confirmPassword: '',
-  email: ''
+  email: '',
+  name: ''
 })
 
 // 表单验证规则
 const rules = computed(() => {
   const baseRules = {
-    username: [
+    account: [
       { required: true, message: '请输入用户名', trigger: 'blur' },
       { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
     ],
@@ -120,6 +128,10 @@ const rules = computed(() => {
         trigger: 'blur'
       }
     ]
+    baseRules.name = [
+      { required: true, message: '请输入姓名', trigger: 'blur' },
+      { min: 1, max: 20, message: '姓名长度在 1 到 20 个字符', trigger: 'blur' }
+    ]
     baseRules.email = [
       { required: true, message: '请输入邮箱', trigger: 'blur' },
       { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
@@ -141,10 +153,11 @@ const resetForm = () => {
     formRef.value.resetFields()
   }
   Object.assign(form, {
-    username: '',
+    account: '',
     password: '',
     confirmPassword: '',
-    email: ''
+    email: '',
+    name: ''
   })
 }
 
@@ -172,7 +185,7 @@ const handleSubmit = async () => {
 const handleLogin = async () => {
   try {
     const response = await login({
-      username: form.username,
+      account: form.account,
       password: form.password
     })
 
@@ -191,8 +204,9 @@ const handleLogin = async () => {
 // 处理注册
 const handleRegister = async () => {
   try {
-    const response = await register({
-      username: form.username,
+    const response = await add({
+      account: form.account,
+      name: form.name,
       password: form.password,
       email: form.email
     })
@@ -202,6 +216,7 @@ const handleRegister = async () => {
       isLogin.value = true
       form.confirmPassword = ''
       form.email = ''
+      form.name = ''
     }
   } catch (error) {
     console.error('注册失败:', error)

@@ -2,7 +2,7 @@
  * @Descripttion:
  * @version:
  * @Date: 2022-05-12 22:06:21
- * @LastEditTime: 2025-09-07 16:35:42
+ * @LastEditTime: 2025-09-08 23:40:26
  * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
  */
 import request from '@/utils/request'
@@ -13,26 +13,13 @@ export function login(data) {
     url: '/check/login',
     method: 'post',
     data: {
-      Account: data.username,
+      Account: data.account,
       Password: data.password,
       AppKey: 'openauth',
     },
   })
 }
 
-// 注册接口
-export function register(data) {
-  return request({
-    url: '/check/register',
-    method: 'post',
-    data: {
-      Account: data.username,
-      Password: data.password,
-      Email: data.email,
-      AppKey: 'openauth',
-    },
-  })
-}
 
 export function getInfo(token) {
   return request({

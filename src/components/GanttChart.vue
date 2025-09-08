@@ -1391,7 +1391,7 @@ const saveProject = async () => {
     ElMessage.success('项目保存成功')
   } catch (error) {
     if (error.status === 401 || error.code === '401') {
-      ElMessage.error('用户未授权，请重新登录')
+      ElMessage.error('请登录后保存')
       showLoginModal.value = true
     } else if (error.code === 'ERR_NETWORK') {
       ElMessage.error('网络连接失败，请检查网络连接')
