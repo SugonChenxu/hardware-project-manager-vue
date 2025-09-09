@@ -69,6 +69,7 @@ import { ElMessage } from 'element-plus'
 import { login } from '../api/login.js'
 import { add } from '../api/users.js'
 import { setToken } from '../utils/auth.js'
+import { encryptByMd5 } from '../utils/encrypt.js'
 
 // Props
 const props = defineProps({
@@ -186,7 +187,7 @@ const handleLogin = async () => {
   try {
     const response = await login({
       account: form.account,
-      password: form.password
+      password: encryptByMd5(form.password) // MD5加密密码
     })
 
     if (response.code === 200) {
@@ -207,7 +208,7 @@ const handleRegister = async () => {
     const response = await add({
       account: form.account,
       name: form.name,
-      password: form.password,
+      password: encryptByMd5(form.password), // MD5加密密码
       email: form.email
     })
 
