@@ -873,6 +873,17 @@ const initGantt = () => {
   })
 }
 
+// 计算本月第几周的函数
+const getWeekOfMonth = (date) => {
+  const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1)
+  const firstWeekday = firstDayOfMonth.getDay() // 0是周日，1是周一...
+  const dayOfMonth = date.getDate()
+  
+  // 计算本月第几周（从1开始）
+  const weekOfMonth = Math.ceil((dayOfMonth + firstWeekday) / 7)
+  return weekOfMonth
+}
+
 // 设置时间刻度
 const setTimeScale = (mode) => {
   switch (mode) {
@@ -885,23 +896,52 @@ const setTimeScale = (mode) => {
       break
     case 'week':
       gantt.config.scale_unit = 'week'
-      gantt.config.date_scale = '第%W周'
+      // 使用自定义模板显示当月第几周
+      gantt.templates.date_scale = function(date) {
+        const year = date.getFullYear()
+        const month = date.getMonth() + 1
+        const weekOfMonth = getWeekOfMonth(date)
+        return `${year}年${month}月第${weekOfMonth}周`
+      }
       gantt.config.subscales = [
-        { unit: 'day', step: 1, date: '%d' }
+        { unit: 'day', step: 1, date: '%m-%d' }
       ]
       break
     case 'month':
       gantt.config.scale_unit = 'month'
-      gantt.config.date_scale = '%Y年%M'
+      gantt.templates.date_scale = function(date) {
+        const year = date.getFullYear()
+        const month = date.getMonth() + 1
+        return `${year}年${month}月`
+      }
       gantt.config.subscales = [
-        { unit: 'week', step: 1, date: '第%W周' }
+        { 
+          unit: 'week', 
+          step: 1, 
+          template: function(date) {
+            const weekOfMonth = getWeekOfMonth(date)
+            return `第${weekOfMonth}周`
+          }
+        }
       ]
       break
     case 'quarter':
       gantt.config.scale_unit = 'quarter'
-      gantt.config.date_scale = '%Y年第%q季度'
+      // 使用自定义模板显示季度
+      gantt.templates.date_scale = function(date) {
+        const year = date.getFullYear()
+        const quarter = Math.floor(date.getMonth() / 3) + 1
+        return `${year}年第${quarter}季度`
+      }
       gantt.config.subscales = [
-        { unit: 'month', step: 1, date: '%M' }
+        { 
+          unit: 'month', 
+          step: 1, 
+          template: function(date) {
+            const month = date.getMonth() + 1
+            return `${month}月`
+          }
+        }
       ]
       break
   }
