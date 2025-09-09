@@ -1,5 +1,6 @@
 <template>
-  <div class="gantt-page">
+  <el-config-provider :locale="zhCn">
+    <div class="gantt-page">
     <!-- 顶部工具栏 - Outlook风格 -->
     <div class="outlook-toolbar">
       <!-- 左侧品牌区域 -->
@@ -238,14 +239,19 @@
         </el-form-item>
 
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="8">
             <el-form-item label="开始时间">
-              <el-date-picker v-model="newTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%" />
+              <el-date-picker v-model="newTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%" @change="calculateDurationForNew" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="8">
+            <el-form-item label="完成时间">
+              <el-date-picker v-model="newTask.end_date" type="date" placeholder="选择完成时间" style="width: 100%" @change="calculateDurationForNew" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
             <el-form-item label="工期(天)">
-              <el-input-number v-model="newTask.duration" :min="1" :max="365" style="width: 100%" />
+              <el-input-number v-model="newTask.duration" :min="1" :max="365" :step="1" style="width: 100%" @change="calculateEndDateForNew" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -334,14 +340,19 @@
         </el-form-item>
 
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="8">
             <el-form-item label="开始时间">
-              <el-date-picker v-model="editTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%" />
+              <el-date-picker v-model="editTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%" @change="calculateDurationForEdit" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="8">
+            <el-form-item label="完成时间">
+              <el-date-picker v-model="editTask.end_date" type="date" placeholder="选择完成时间" style="width: 100%" @change="calculateDurationForEdit" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
             <el-form-item label="工期(天)">
-              <el-input-number v-model="editTask.duration" :min="1" :max="365" style="width: 100%" />
+              <el-input-number v-model="editTask.duration" :min="1" :max="365" :step="1" style="width: 100%" @change="calculateEndDateForEdit" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -426,7 +437,8 @@
 
     <!-- 登录模态框 -->
     <LoginModal v-model="showLoginModal" @login-success="handleLoginSuccess" />
-  </div>
+    </div>
+  </el-config-provider>
 </template>
 
 <script setup>
@@ -434,6 +446,12 @@ import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { gantt } from 'dhtmlx-gantt'
 import { getUserProfile } from '../api/login.js'
 import dayjs from 'dayjs'
+import 'dayjs/locale/zh-cn'
+import { ElConfigProvider } from 'element-plus'
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+
+// 设置dayjs为中文
+dayjs.locale('zh-cn')
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
   ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit
@@ -449,6 +467,9 @@ import {
 } from '../services/ganttDataService.js'
 import LoginModal from './LoginModal.vue'
 import { getToken, removeToken } from '../utils/auth.js'
+
+// 中文语言包
+const locale = zhCn
 
 // 响应式数据
 const ganttContainer = ref()
@@ -504,6 +525,7 @@ const columnOptions = ref([
 const newTask = ref({
   text: '',
   start_date: new Date(),
+  end_date: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // 默认3天后
   duration: 3,
   progress: 0,
   type: 'task',
@@ -520,6 +542,7 @@ const editTask = ref({
   id: null,
   text: '',
   start_date: new Date(),
+  end_date: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // 默认3天后
   duration: 3,
   progress: 0,
   type: 'task',
@@ -958,11 +981,69 @@ const changeView = (mode) => {
   gantt.render()
 }
 
+// 计算工期（基于开始时间和完成时间）- 新建任务
+const calculateDurationForNew = () => {
+  if (newTask.value.start_date && newTask.value.end_date) {
+    const startDate = new Date(newTask.value.start_date)
+    const endDate = new Date(newTask.value.end_date)
+    
+    if (endDate > startDate) {
+      // 计算天数差异（包含小数）
+      const timeDiff = endDate.getTime() - startDate.getTime()
+      const daysDiff = timeDiff / (1000 * 60 * 60 * 24)
+      newTask.value.duration = Math.max(1, Math.round(daysDiff)) // 保留1位小数，最小0.1天
+    } else if (endDate <= startDate) {
+      // 如果结束时间不晚于开始时间，设置为最小工期
+      newTask.value.duration = 0.1
+    }
+  }
+}
+
+// 计算结束时间（基于开始时间和工期）- 新建任务
+const calculateEndDateForNew = () => {
+  if (newTask.value.start_date && newTask.value.duration) {
+    const startDate = new Date(newTask.value.start_date)
+    const endDate = new Date(startDate.getTime() + newTask.value.duration * 24 * 60 * 60 * 1000)
+    newTask.value.end_date = endDate
+  }
+}
+
+// 计算工期（基于开始时间和完成时间）- 编辑任务
+const calculateDurationForEdit = () => {
+  if (editTask.value.start_date && editTask.value.end_date) {
+    const startDate = new Date(editTask.value.start_date)
+    const endDate = new Date(editTask.value.end_date)
+    
+    if (endDate > startDate) {
+      // 计算天数差异（包含小数）
+      const timeDiff = endDate.getTime() - startDate.getTime()
+      const daysDiff = timeDiff / (1000 * 60 * 60 * 24)
+      editTask.value.duration = Math.max(1, Math.round(daysDiff)) // 保留1位小数，最小0.1天
+    } else if (endDate <= startDate) {
+      // 如果结束时间不晚于开始时间，设置为最小工期
+      editTask.value.duration = 0.1
+    }
+  }
+}
+
+// 计算结束时间（基于开始时间和工期）- 编辑任务
+const calculateEndDateForEdit = () => {
+  if (editTask.value.start_date && editTask.value.duration) {
+    const startDate = new Date(editTask.value.start_date)
+    const endDate = new Date(startDate.getTime() + editTask.value.duration * 24 * 60 * 60 * 1000)
+    editTask.value.end_date = endDate
+  }
+}
+
 // 添加任务
 const addTask = () => {
+  const startDate = new Date()
+  const endDate = new Date(startDate.getTime() + 3 * 24 * 60 * 60 * 1000) // 默认3天后
+  
   newTask.value = {
     text: '',
-    start_date: new Date(),
+    start_date: startDate,
+    end_date: endDate,
     duration: 3,
     progress: 0,
     type: 'task',
@@ -987,6 +1068,7 @@ const createTask = () => {
     id: getNextId(),
     text: newTask.value.text,
     start_date: dayjs(newTask.value.start_date).format('YYYY-MM-DD'),
+    end_date: dayjs(newTask.value.end_date).format('YYYY-MM-DD'),
     duration: newTask.value.duration,
     progress: newTask.value.progress,
     type: newTask.value.type,
@@ -1008,7 +1090,7 @@ const createTask = () => {
 
 // 打开编辑任务对话框
 const openEditDialog = (task) => {
-  // 确保日期格式正确
+  // 确保开始日期格式正确
   let startDate
   if (task.start_date) {
     if (typeof task.start_date === 'string') {
@@ -1022,10 +1104,29 @@ const openEditDialog = (task) => {
     startDate = new Date()
   }
 
+  // 确保结束日期格式正确
+  let endDate
+  if (task.end_date) {
+    if (typeof task.end_date === 'string') {
+      endDate = new Date(task.end_date)
+    } else if (task.end_date instanceof Date) {
+      endDate = task.end_date
+    } else {
+      // 如果没有结束日期，根据开始日期和工期计算
+      const duration = task.duration || 1
+      endDate = new Date(startDate.getTime() + duration * 24 * 60 * 60 * 1000)
+    }
+  } else {
+    // 如果没有结束日期，根据开始日期和工期计算
+    const duration = task.duration || 1
+    endDate = new Date(startDate.getTime() + duration * 24 * 60 * 60 * 1000)
+  }
+
   editTask.value = {
     id: task.id,
     text: task.text || '',
     start_date: startDate,
+    end_date: endDate,
     duration: task.duration || 1,
     progress: task.progress || 0,
     type: task.type || 'task',
@@ -1050,6 +1151,7 @@ const updateTask = () => {
     id: editTask.value.id,
     text: editTask.value.text,
     start_date: editTask.value.start_date,
+    end_date: editTask.value.end_date,
     duration: editTask.value.duration,
     progress: editTask.value.progress,
     type: editTask.value.type,
@@ -1062,7 +1164,6 @@ const updateTask = () => {
   }
 
   try {
-    console.log('准备更新任务:', updatedTask)
 
     // 获取原任务的前置任务列表
     const originalTask = gantt.getTask(editTask.value.id)
@@ -1166,9 +1267,7 @@ const handleFileUpload = (event) => {
 
   if (fileType === 'json') {
     handleJsonFile(file)
-  } else if (fileType === 'csv') {
-    handleCsvFile(file)
-  } else if (fileType === 'xlsx' || fileType === 'xls') {
+  } if (fileType === 'xlsx' || fileType === 'xls') {
     ElMessage.warning('Excel文件导入功能开发中，请使用JSON或CSV格式')
   } else {
     ElMessage.error('不支持的文件格式，请使用JSON、CSV或Excel文件')
@@ -1199,51 +1298,6 @@ const handleJsonFile = (file) => {
   reader.readAsText(file)
 }
 
-// 处理CSV文件
-const handleCsvFile = (file) => {
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    try {
-      const csv = e.target.result
-      const lines = csv.split('\n')
-      const headers = lines[0].split(',').map(h => h.trim())
-
-      const newTasks = []
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim()
-        if (!line) continue
-
-        const values = line.split(',').map(v => v.trim().replace(/"/g, ''))
-        const task = {
-          id: newTasks.length + 1,
-          text: values[0] || '',
-          start_date: values[1] || dayjs().format('YYYY-MM-DD'),
-          duration: parseInt(values[2]) || 1,
-          progress: parseFloat(values[3]) || 0,
-          type: values[4] || 'task',
-          parent: parseInt(values[5]) || 0,
-          status: values[6] || 'planned',
-          owner: values[7] || '',
-          stakeholder: values[8] || '',
-          description: values[9] || ''
-        }
-        newTasks.push(task)
-      }
-
-      if (newTasks.length > 0) {
-        tasks.value = newTasks
-        links.value = [] // 清空依赖关系，需要用户重新设置
-        loadData()
-        ElMessage.success(`CSV数据导入成功，导入了${newTasks.length}个任务`)
-      } else {
-        ElMessage.warning('CSV文件中没有有效的任务数据')
-      }
-    } catch (error) {
-      ElMessage.error('CSV文件解析失败: ' + error.message)
-    }
-  }
-  reader.readAsText(file)
-}
 
 const getNextId = () => {
   return generateNewTaskId(tasks.value)

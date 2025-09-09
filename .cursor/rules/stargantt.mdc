@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+StarGantt 是一个基于vue3 element-plus 的甘特图组件，用于展示项目进度计划。
+
+## 开发规范
+1. 生成代码时，不要添加console.log语句
+2. 使用setup语法糖
+3. 使用composition API
+4. template在前面，script在后面
