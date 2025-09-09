@@ -1,6 +1,5 @@
 <template>
-  <el-config-provider :locale="zhCn">
-    <div class="gantt-page">
+  <div class="gantt-page">
     <!-- 顶部工具栏 - Outlook风格 -->
     <div class="outlook-toolbar">
       <!-- 左侧品牌区域 -->
@@ -241,17 +240,20 @@
         <el-row :gutter="16">
           <el-col :span="8">
             <el-form-item label="开始时间">
-              <el-date-picker v-model="newTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%" @change="calculateDurationForNew" />
+              <el-date-picker v-model="newTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%"
+                @change="calculateDurationForNew" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="完成时间">
-              <el-date-picker v-model="newTask.end_date" type="date" placeholder="选择完成时间" style="width: 100%" @change="calculateDurationForNew" />
+              <el-date-picker v-model="newTask.end_date" type="date" placeholder="选择完成时间" style="width: 100%"
+                @change="calculateDurationForNew" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="工期(天)">
-              <el-input-number v-model="newTask.duration" :min="1" :max="365" :step="1" style="width: 100%" @change="calculateEndDateForNew" />
+              <el-input-number v-model="newTask.duration" :min="1" :max="365" :step="1" style="width: 100%"
+                @change="calculateEndDateForNew" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -277,10 +279,10 @@
           <el-col :span="12">
             <el-form-item label="执行状态">
               <el-select v-model="newTask.status" style="width: 100%">
-                <el-option label="计划阶段" value="planned" />
-                <el-option label="开发已完成" value="in_progress" />
+                <el-option label="未开始" value="not_started" />
+                <el-option label="进行中" value="in_progress" />
                 <el-option label="已完成" value="completed" />
-                <el-option label="暂停" value="on_hold" />
+                <el-option label="已暂停" value="on_hold" />
                 <el-option label="已取消" value="cancelled" />
               </el-select>
             </el-form-item>
@@ -342,17 +344,20 @@
         <el-row :gutter="16">
           <el-col :span="8">
             <el-form-item label="开始时间">
-              <el-date-picker v-model="editTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%" @change="calculateDurationForEdit" />
+              <el-date-picker v-model="editTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%"
+                @change="calculateDurationForEdit" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="完成时间">
-              <el-date-picker v-model="editTask.end_date" type="date" placeholder="选择完成时间" style="width: 100%" @change="calculateDurationForEdit" />
+              <el-date-picker v-model="editTask.end_date" type="date" placeholder="选择完成时间" style="width: 100%"
+                @change="calculateDurationForEdit" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="工期(天)">
-              <el-input-number v-model="editTask.duration" :min="1" :max="365" :step="1" style="width: 100%" @change="calculateEndDateForEdit" />
+              <el-input-number v-model="editTask.duration" :min="1" :max="365" :step="1" style="width: 100%"
+                @change="calculateEndDateForEdit" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -378,10 +383,10 @@
           <el-col :span="12">
             <el-form-item label="执行状态">
               <el-select v-model="editTask.status" style="width: 100%">
-                <el-option label="计划阶段" value="planned" />
-                <el-option label="开发已完成" value="in_progress" />
+                <el-option label="未开始" value="not_started" />
+                <el-option label="进行中" value="in_progress" />
                 <el-option label="已完成" value="completed" />
-                <el-option label="暂停" value="on_hold" />
+                <el-option label="已暂停" value="on_hold" />
                 <el-option label="已取消" value="cancelled" />
               </el-select>
             </el-form-item>
@@ -437,8 +442,7 @@
 
     <!-- 登录模态框 -->
     <LoginModal v-model="showLoginModal" @login-success="handleLoginSuccess" />
-    </div>
-  </el-config-provider>
+  </div>
 </template>
 
 <script setup>
@@ -530,7 +534,7 @@ const newTask = ref({
   progress: 0,
   type: 'task',
   parent: 0,
-  status: 'planned',
+  status: 'not_started',
   owner: '',
   stakeholder: '',
   description: '',
@@ -547,7 +551,7 @@ const editTask = ref({
   progress: 0,
   type: 'task',
   parent: 0,
-  status: 'planned',
+  status: 'not_started',
   owner: '',
   stakeholder: '',
   description: '',
@@ -707,7 +711,7 @@ const initGantt = () => {
           const statusMap = {
             'completed': '<span style="color: #67c23a;">✅ 已完成</span>',
             'in_progress': '<span style="color: #409eff;">🔄 进行中</span>',
-            'planned': '<span style="color: #909399;">📅 计划中</span>',
+            'not_started': '<span style="color: #909399;">📅 未开始</span>',
             'on_hold': '<span style="color: #e6a23c;">⏸️ 暂停</span>',
             'cancelled': '<span style="color: #f56c6c;">❌ 已取消</span>'
           }
@@ -986,7 +990,7 @@ const calculateDurationForNew = () => {
   if (newTask.value.start_date && newTask.value.end_date) {
     const startDate = new Date(newTask.value.start_date)
     const endDate = new Date(newTask.value.end_date)
-    
+
     if (endDate > startDate) {
       // 计算天数差异（包含小数）
       const timeDiff = endDate.getTime() - startDate.getTime()
@@ -1013,7 +1017,7 @@ const calculateDurationForEdit = () => {
   if (editTask.value.start_date && editTask.value.end_date) {
     const startDate = new Date(editTask.value.start_date)
     const endDate = new Date(editTask.value.end_date)
-    
+
     if (endDate > startDate) {
       // 计算天数差异（包含小数）
       const timeDiff = endDate.getTime() - startDate.getTime()
@@ -1039,7 +1043,7 @@ const calculateEndDateForEdit = () => {
 const addTask = () => {
   const startDate = new Date()
   const endDate = new Date(startDate.getTime() + 3 * 24 * 60 * 60 * 1000) // 默认3天后
-  
+
   newTask.value = {
     text: '',
     start_date: startDate,
@@ -1048,7 +1052,7 @@ const addTask = () => {
     progress: 0,
     type: 'task',
     parent: 0,
-    status: 'planned',
+    status: 'not_started',
     owner: '',
     stakeholder: '',
     description: '',
@@ -1131,7 +1135,7 @@ const openEditDialog = (task) => {
     progress: task.progress || 0,
     type: task.type || 'task',
     parent: task.parent || 0,
-    status: task.status || 'planned',
+    status: task.status || 'not_started',
     owner: task.owner || '',
     stakeholder: task.stakeholder || '',
     description: task.description || '',
@@ -1670,7 +1674,7 @@ const updateColumnVisibility = () => {
         const statusMap = {
           'completed': '<span style="color: #67c23a;">✅ 已完成</span>',
           'in_progress': '<span style="color: #409eff;">🔄 进行中</span>',
-          'planned': '<span style="color: #909399;">📅 计划中</span>',
+          'not_started': '<span style="color: #909399;">📅 未开始</span>',
           'on_hold': '<span style="color: #e6a23c;">⏸️ 暂停</span>',
           'cancelled': '<span style="color: #f56c6c;">❌ 已取消</span>'
         }
