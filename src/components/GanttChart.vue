@@ -1493,6 +1493,8 @@ const switchProject = async (projectCode) => {
   try {
     loading.value = true
 
+    gantt.clearAll()
+
     // 加载新项目数据
     await loadInitialData(projectCode)
 
