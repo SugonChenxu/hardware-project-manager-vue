@@ -47,6 +47,7 @@ export const loadGanttData = async (code = null) => {
             name: projectData.name,
             description: projectData.description,
             createTime: projectData.createTime,
+            createUserId: projectData.createUserId,
             updateTime: projectData.updateTime
           }
         }

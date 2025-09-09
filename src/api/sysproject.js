@@ -2,7 +2,7 @@
  * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
  * @Date: 2024-01-04 09:48:08
  * @Description: 
- * @LastEditTime: 2025-09-08 16:56:24
+ * @LastEditTime: 2025-09-09 22:01:52
  * Copyright (c) 2025 by yubaolee | ahfu~ , All Rights Reserved.  
  */
 import request from '@/utils/request'
@@ -35,6 +35,29 @@ export function add(data) {
     data,
   })
 }
+
+//收藏
+export function star(projectid) {
+  return request({
+    url: '/sysproject/star',
+    method: 'post',
+    data: {
+      projectid,
+    },
+  })
+}
+
+//取消收藏
+export function unstar(projectid) {
+  return request({
+    url: '/sysproject/unstar',
+    method: 'post',
+    data: {
+      projectid,
+    },
+  })
+}
+
 
 export function update(data) {
   return request({
