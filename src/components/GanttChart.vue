@@ -676,21 +676,14 @@ const initGantt = () => {
       {
         name: "start_date",
         label: "开始时间",
-        width: 110,
+        width: 100,
         align: "center",
-        // template: function(task) {
-        //   return gantt.date.date_to_str("%Y-%m-%d")(task.start_date)
-        // }
       },
       {
         name: "end_date",
         label: "完成时间",
-        width: 110,
+        width: 100,
         align: "center",
-        // template: function(task) {
-        //   const endDate = gantt.calculateEndDate(task.start_date, task.duration)
-        //   return gantt.date.date_to_str("%Y-%m-%d")(endDate)
-        // }
       },
       {
         name: "duration",
@@ -698,8 +691,8 @@ const initGantt = () => {
         width: 90,
         align: "center",
         template: function (task) {
-          if (task.duration === 0) return "里程碑"
-          return task.duration + " 工作日"
+          if (task.duration === 0) return "当天"
+          return task.duration + "天"
         }
       },
       {
@@ -739,7 +732,7 @@ const initGantt = () => {
         width: 90,
         align: "center",
         template: function (task) {
-          return task.owner || '<span style="color: #c0c4cc;">未分配</span>'
+          return task.owner || '<span style="color: #c0c4cc;">-</span>'
         }
       },
       {
@@ -764,7 +757,7 @@ const initGantt = () => {
             }).join(', ')
             return `<span style="color: #409eff;">${predecessorNames}</span>`
           }
-          return '<span style="color: #c0c4cc;">无</span>'
+          return '<span style="color: #c0c4cc;">-</span>'
         }
       },
       {
@@ -772,7 +765,7 @@ const initGantt = () => {
         label: "任务描述",
         width: 200,
         template: function (task) {
-          return task.description || '<span style="color: #c0c4cc;">暂无描述</span>'
+          return task.description || '<span style="color: #c0c4cc;">-</span>'
         }
       }
     ]
@@ -788,42 +781,21 @@ const initGantt = () => {
     gantt.config.open_tree_initially = true  // 默认展开树形结构
     gantt.config.auto_scheduling = false     // 关闭自动调度
     gantt.config.auto_scheduling_strict = false
-    gantt.config.work_time = true            // 启用工作时间
-    gantt.config.correct_work_time = true    // 调整工作时间
+    gantt.config.work_time = false            // 禁用工作时间，如果启用则不能选则周末等
+    gantt.config.correct_work_time = false    // 禁用调整工作时间
 
     // 禁用内置编辑器
     gantt.config.readonly = false            // 保持可编辑状态，但禁用内置编辑器
-    gantt.config.drag_links = false          // 禁用拖拽创建依赖
+    gantt.config.drag_links = true          // 启用拖拽创建依赖
     gantt.config.details_on_dblclick = false // 禁用双击打开详情
-    gantt.config.click_drag = {              // 配置点击拖拽行为
-      ignore: ".gantt_task_line, .gantt_task_link" // 忽略任务条和链接的拖拽
-    }
+    // gantt.config.click_drag = {              // 配置点击拖拽行为
+    //   ignore: ".gantt_task_line, .gantt_task_link" // 忽略任务条和链接的拖拽
+    // }
 
     // 禁用内置弹窗和编辑器
     gantt.config.lightbox = {
       sections: []  // 清空所有内置编辑器配置
     }
-    gantt.config.quickinfo_buttons = []      // 清空快速信息按钮
-    gantt.config.tooltip = false             // 禁用工具提示
-
-    // 禁用所有tooltip模板
-    gantt.templates.tooltip_text = function (start, end, task) {
-      return ""
-    }
-    gantt.templates.tooltip_date_format = ""
-
-    // 动态移除所有可能的title属性
-    const removeTooltips = () => {
-      const elementsWithTitle = ganttContainer.value?.querySelectorAll('[title]')
-      if (elementsWithTitle) {
-        elementsWithTitle.forEach(el => {
-          el.removeAttribute('title')
-        })
-      }
-    }
-
-    // 在甘特图渲染后移除tooltip
-    gantt.attachEvent("onGanttRender", removeTooltips)
 
     // 任务条颜色配置
     gantt.templates.task_class = function (start, end, task) {
@@ -2584,20 +2556,4 @@ const toggleAllColumns = () => {
   }
 }
 
-/* 全局禁用所有tooltip */
-/* 禁用dhtmlx-gantt的所有tooltip相关元素 */
-:deep(.gantt_tooltip),
-:deep(.dhx_tooltip) {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-/* 针对甘特图特定元素禁用可能出现的默认tooltip */
-:deep(.gantt_task_line):before,
-:deep(.gantt_task_cell):before,
-:deep(.gantt_task_text):before {
-  content: none !important;
-}
 </style>

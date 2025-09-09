@@ -72,7 +72,7 @@ body {
 }
 
 .gantt_grid_data .gantt_row.gantt_selected {
-  background: rgba(64, 158, 255, 0.1) !important;
+  background: rgba(255, 243, 161, 1) !important;
 }
 
 /* 任务条样式 */
