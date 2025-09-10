@@ -2,7 +2,7 @@
  * @Descripttion:
  * @version:
  * @Date: 2022-05-12 22:06:21
- * @LastEditTime: 2025-09-07 18:19:23
+ * @LastEditTime: 2025-09-10 16:05:40
  * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
  */
 import axios from 'axios'
@@ -32,7 +32,7 @@ service.interceptors.response.use(
   response => {
     const res = response.data  //res就是后端返回的自定义Response实例
     if (res.code !== 200) {
-      return Promise.reject('error')
+      return Promise.reject(res)
     } else {
       return res
     }

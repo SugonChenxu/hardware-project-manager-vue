@@ -1643,7 +1643,7 @@ const startEdit = (fieldName) => {
   editingValue.value = projectInfo.value?.[fieldName] || ''
   originalValue.value = projectInfo.value?.[fieldName] || ''
 
-  下一个tick时聚焦输入框
+  //下一个tick时聚焦输入框
   nextTick(() => {
     let inputRef
     if (fieldName === 'name') inputRef = nameInput.value
@@ -1652,7 +1652,6 @@ const startEdit = (fieldName) => {
 
     if (inputRef) {
       inputRef.focus()
-      inputRef.select()
     }
   })
 }
