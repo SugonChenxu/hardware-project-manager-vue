@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="visible" title="" width="380px" :close-on-click-modal="false" :close-on-press-escape="false"
+  <el-dialog v-model="visible" title="" width="380px" :close-on-click-modal="true" :close-on-press-escape="false"
     :show-close="false" center class="login-dialog">
     <div class="login-container">
       <!-- 头部 -->
