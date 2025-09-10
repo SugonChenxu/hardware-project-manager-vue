@@ -11,8 +11,9 @@
           <span class="app-name">星甘</span>
         </div>
         <div class="project-selector">
-          <el-dropdown class="project-dropdown" @command="handleProjectCommand">
-            <div class="project-info">
+          <el-dropdown class="project-dropdown" v-model:visible="projectDropdownVisible" :hide-on-click="false"
+            trigger="click" @visible-change="handleDropdownVisibleChange">
+            <div class="project-info" @click="toggleProjectDropdown">
               <span class="project-title">{{ projectInfo?.name || '未命名项目' }}</span>
               <span class="project-meta">{{ projectInfo?.code || '无' }}</span>
             </div>
@@ -20,7 +21,7 @@
               <el-dropdown-menu class="project-menu">
                 <div class="project-details">
                   <div class="detail-row">
-                    <span class="label">项目名称</span>
+                    <span class="label">名称</span>
                     <div class="editable-field" v-if="!editingField.name" @click="startEdit('name')">
                       <span class="value editable">{{ projectInfo?.name || '点击编辑' }}</span>
                       <el-icon class="edit-icon">
@@ -28,10 +29,10 @@
                       </el-icon>
                     </div>
                     <el-input v-else v-model="editingValue" ref="nameInput" size="small" class="inline-edit-input"
-                      @keyup.enter="confirmEdit('name')" @blur="confirmEdit('name')" @keyup.esc="cancelEdit" />
+                      @keyup.enter="confirmEdit('name')" @keyup.esc="cancelEdit" />
                   </div>
                   <div class="detail-row">
-                    <span class="label">项目编码</span>
+                    <span class="label">编码</span>
                     <div class="editable-field" v-if="!editingField.code" @click="startEdit('code')">
                       <span class="value editable">{{ projectInfo?.code || '点击编辑' }}</span>
                       <el-icon class="edit-icon">
@@ -53,7 +54,6 @@
                       <el-input v-model="editingValue" ref="descriptionInput" type="textarea" :rows="2" size="small"
                         class="inline-edit-textarea" @keyup.ctrl.enter="confirmEdit('description')"
                         @blur="confirmEdit('description')" @keyup.esc="cancelEdit" />
-                      <div class="edit-hint">Ctrl+Enter确认，Esc取消</div>
                     </div>
                   </div>
                   <div class="detail-row">
@@ -506,6 +506,7 @@ const editingField = ref({
 })
 const editingValue = ref('')
 const originalValue = ref('')
+const projectDropdownVisible = ref(false) // 项目下拉菜单显示状态
 
 // 用户信息
 const userInfo = ref(null)
@@ -878,7 +879,7 @@ const getWeekOfMonth = (date) => {
   const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1)
   const firstWeekday = firstDayOfMonth.getDay() // 0是周日，1是周一...
   const dayOfMonth = date.getDate()
-  
+
   // 计算本月第几周（从1开始）
   const weekOfMonth = Math.ceil((dayOfMonth + firstWeekday) / 7)
   return weekOfMonth
@@ -897,7 +898,7 @@ const setTimeScale = (mode) => {
     case 'week':
       gantt.config.scale_unit = 'week'
       // 使用自定义模板显示当月第几周
-      gantt.templates.date_scale = function(date) {
+      gantt.templates.date_scale = function (date) {
         const year = date.getFullYear()
         const month = date.getMonth() + 1
         const weekOfMonth = getWeekOfMonth(date)
@@ -909,16 +910,16 @@ const setTimeScale = (mode) => {
       break
     case 'month':
       gantt.config.scale_unit = 'month'
-      gantt.templates.date_scale = function(date) {
+      gantt.templates.date_scale = function (date) {
         const year = date.getFullYear()
         const month = date.getMonth() + 1
         return `${year}年${month}月`
       }
       gantt.config.subscales = [
-        { 
-          unit: 'week', 
-          step: 1, 
-          template: function(date) {
+        {
+          unit: 'week',
+          step: 1,
+          template: function (date) {
             const weekOfMonth = getWeekOfMonth(date)
             return `第${weekOfMonth}周`
           }
@@ -928,16 +929,16 @@ const setTimeScale = (mode) => {
     case 'quarter':
       gantt.config.scale_unit = 'quarter'
       // 使用自定义模板显示季度
-      gantt.templates.date_scale = function(date) {
+      gantt.templates.date_scale = function (date) {
         const year = date.getFullYear()
         const quarter = Math.floor(date.getMonth() / 3) + 1
         return `${year}年第${quarter}季度`
       }
       gantt.config.subscales = [
-        { 
-          unit: 'month', 
-          step: 1, 
-          template: function(date) {
+        {
+          unit: 'month',
+          step: 1,
+          template: function (date) {
             const month = date.getMonth() + 1
             return `${month}月`
           }
@@ -1517,11 +1518,6 @@ const switchProject = async (projectCode) => {
   }
 }
 
-// 处理项目下拉命令
-const handleProjectCommand = (command) => {
-  console.log('项目命令:', command)
-}
-
 // 处理更多操作命令
 const handleMoreCommand = (command) => {
   switch (command) {
@@ -1560,9 +1556,23 @@ const handleUserCommand = (command) => {
   }
 }
 
+// 切换项目下拉菜单显示状态
+const toggleProjectDropdown = () => {
+  projectDropdownVisible.value = !projectDropdownVisible.value
+}
+
+// 处理项目下拉菜单显示状态变化
+const handleDropdownVisibleChange = (visible) => {
+  console.log('Dropdown visible change:', visible)
+  // 如果dropdown关闭，取消所有编辑状态
+  if (!visible) {
+    cancelEdit()
+  }
+}
+
 // 创建新项目
 const createNewProject = () => {
-  ElMessageBox.confirm('创建新项目将清空当前数据，是否继续？', '确认创建', {
+  ElMessageBox.confirm('创建新项目前，注意保存当前项目', '确认创建', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
@@ -1603,7 +1613,7 @@ const startEdit = (fieldName) => {
   editingValue.value = projectInfo.value?.[fieldName] || ''
   originalValue.value = projectInfo.value?.[fieldName] || ''
 
-  // 下一个tick时聚焦输入框
+  下一个tick时聚焦输入框
   nextTick(() => {
     let inputRef
     if (fieldName === 'name') inputRef = nameInput.value
@@ -2595,5 +2605,4 @@ const toggleAllColumns = () => {
     padding: 8px;
   }
 }
-
 </style>
