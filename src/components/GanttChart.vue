@@ -65,6 +65,18 @@
             </template>
           </el-dropdown>
         </div>
+        <el-button 
+          class="outlook-btn" 
+          :class="{ 'starred': isStarred }"
+          @click="toggleStar" 
+          :loading="starring"
+          v-if="userInfo && projectInfo?.id && projectInfo.createUserId != userInfo.id">
+          <el-icon>
+            <StarFilled v-if="isStarred" />
+            <Star v-else />
+          </el-icon>
+          <span>{{ isStarred ? '已收藏' : '收藏' }}</span>
+        </el-button>
       </div>
 
       <!-- 中间操作区域 -->
@@ -100,6 +112,8 @@
           </el-icon>
           <span>保存</span>
         </el-button>
+
+
 
         <div class="divider"></div>
 
@@ -458,7 +472,7 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 dayjs.locale('zh-cn')
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
-  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit
+  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -469,6 +483,7 @@ import {
   importFromJson,
   generateNewTaskId
 } from '../services/ganttDataService.js'
+import { star, unstar } from '../api/sysproject.js'
 import LoginModal from './LoginModal.vue'
 import { getToken, removeToken } from '../utils/auth.js'
 
@@ -510,6 +525,10 @@ const projectDropdownVisible = ref(false) // 项目下拉菜单显示状态
 
 // 用户信息
 const userInfo = ref(null)
+
+// 收藏状态
+const isStarred = ref(false)
+const starring = ref(false) // 收藏操作加载状态
 
 // 可显示的字段
 const visibleColumns = ref(['text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description'])
@@ -637,6 +656,9 @@ const loadInitialData = async (code = null) => {
     links.value = data.links
     projectInfo.value = data.projectInfo
     document.title = `${projectInfo.value.name} - 星甘`
+    
+    // 检查收藏状态
+    checkStarStatus()
   } catch (error) {
     ElMessage.error('数据加载失败，请刷新页面重试')
   } finally {
@@ -1457,6 +1479,9 @@ const saveProject = async () => {
       if (projectInfo.value.name) {
         document.title = `${projectInfo.value.name} - 星甘`
       }
+      
+      // 重新检查收藏状态
+      checkStarStatus()
     }
 
     ElMessage.success('项目保存成功')
@@ -1493,6 +1518,8 @@ const switchProject = async (projectCode) => {
 
   try {
     loading.value = true
+
+    gantt.clearAll()
 
     // 加载新项目数据
     await loadInitialData(projectCode)
@@ -1594,6 +1621,9 @@ const createNewProject = () => {
     // 清空URL参数
     window.history.replaceState({}, '', window.location.pathname)
     urlParams.value = {}
+    
+    // 重置收藏状态
+    isStarred.value = false
 
     ElMessage.success('新项目创建成功')
   }).catch(() => {
@@ -1785,6 +1815,80 @@ const toggleAllColumns = () => {
     visibleColumns.value = []
   } else {
     visibleColumns.value = columnOptions.value.map(column => column.name)
+  }
+}
+
+// 检查收藏状态
+const checkStarStatus = () => {
+  if (!projectInfo.value?.id || !projectList.value || !userInfo.value) {
+    isStarred.value = false
+    return
+  }
+  
+  // 检查当前项目是否在用户的项目列表中（已收藏的项目）
+  const starProject = projectList.value.find(project => 
+    (project.id === projectInfo.value.id || project.code === projectInfo.value.code) &&(project.createUserId != userInfo.value.id)
+  )
+  isStarred.value = !!starProject
+}
+
+// 切换收藏状态
+const toggleStar = async () => {
+  if (!userInfo.value) {
+    ElMessage.warning('请先登录')
+    showLoginModal.value = true
+    return
+  }
+  
+  if (!projectInfo.value?.id) {
+    ElMessage.warning('请先保存项目后再收藏')
+    return
+  }
+  
+  try {
+    starring.value = true
+    
+    if (isStarred.value) {
+      // 取消收藏
+      await unstar(projectInfo.value.id)
+      isStarred.value = false
+      ElMessage.success('已取消收藏')
+      
+      // 从项目列表中移除
+      const index = projectList.value.findIndex(project => 
+        project.id === projectInfo.value.id || project.code === projectInfo.value.code
+      )
+      if (index !== -1) {
+        projectList.value.splice(index, 1)
+      }
+    } else {
+      // 添加收藏
+      await star(projectInfo.value.id)
+      isStarred.value = true
+      ElMessage.success('收藏成功')
+      
+      // 添加到项目列表中
+      if (!projectList.value.find(project => 
+        project.id === projectInfo.value.id || project.code === projectInfo.value.code
+      )) {
+        projectList.value.unshift({
+          id: projectInfo.value.id,
+          code: projectInfo.value.code,
+          name: projectInfo.value.name,
+          description: projectInfo.value.description
+        })
+      }
+    }
+  } catch (error) {
+    console.error('收藏操作失败:', error)
+    if (error.code === '401' || error.status === 401) {
+      ElMessage.error('登录已过期，请重新登录')
+      showLoginModal.value = true
+    } else {
+      ElMessage.error(isStarred.value ? '取消收藏失败' : '收藏失败')
+    }
+  } finally {
+    starring.value = false
   }
 }
 </script>
@@ -2097,6 +2201,18 @@ const toggleAllColumns = () => {
 .outlook-btn.primary:hover {
   background-color: #106ebe;
   border-color: #106ebe;
+  color: white;
+}
+
+.outlook-btn.starred {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+  color: white;
+}
+
+.outlook-btn.starred:hover {
+  background-color: #f78989;
+  border-color: #f78989;
   color: white;
 }
 
