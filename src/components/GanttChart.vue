@@ -205,12 +205,12 @@
           <span>导出</span>
         </el-button>
 
-        <el-button class="outlook-btn" @click="importData">
+        <!-- <el-button class="outlook-btn" @click="importData">
           <el-icon>
             <Upload />
           </el-icon>
           <span>导入</span>
-        </el-button>
+        </el-button> -->
       </div>
 
       <!-- 右侧用户区域 -->
@@ -467,6 +467,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { ElConfigProvider } from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import * as XLSX from 'xlsx'
 
 // 设置dayjs为中文
 dayjs.locale('zh-cn')
@@ -1269,28 +1270,133 @@ const zoomToFit = () => {
   gantt.zoomToFit()
 }
 
-// 导出数据
-const exportData = () => {
+// 导出Excel数据
+const exportData  = () => {
   try {
-    const jsonData = exportToJson(tasks.value, links.value)
-
-    const blob = new Blob([jsonData], {
-      type: 'application/json'
+    // 准备Excel数据
+    const excelData = []
+    
+    // 添加表头
+    const headers = [
+      '任务ID',
+      '任务名称', 
+      '开始时间',
+      '完成时间',
+      '工期(天)',
+      '完成进度(%)',
+      '任务类型',
+      '执行状态',
+      '负责人',
+      '相关方',
+      '父任务',
+      '前置任务',
+      '任务描述'
+    ]
+    excelData.push(headers)
+    
+    // 添加任务数据
+    tasks.value.forEach(task => {
+      // 获取父任务名称
+      const parentTask = task.parent ? tasks.value.find(t => t.id === task.parent) : null
+      const parentTaskName = parentTask ? parentTask.text : '无'
+      
+      // 获取前置任务名称
+      const predecessorNames = task.predecessors && task.predecessors.length > 0 
+        ? task.predecessors.map(predId => {
+            const predTask = tasks.value.find(t => t.id === predId)
+            return predTask ? predTask.text : `任务${predId}`
+          }).join(', ')
+        : '无'
+      
+      // 状态映射
+      const statusMap = {
+        'completed': '已完成',
+        'in_progress': '进行中',
+        'not_started': '未开始',
+        'on_hold': '已暂停',
+        'cancelled': '已取消'
+      }
+      
+      // 任务类型映射
+      const typeMap = {
+        'task': '普通任务',
+        'project': '项目组',
+        'milestone': '里程碑'
+      }
+      
+      const row = [
+        task.id,
+        task.text || '',
+        task.start_date || '',
+        task.end_date || '',
+        task.duration || 0,
+        Math.round((task.progress || 0) * 100),
+        typeMap[task.type] || '普通任务',
+        statusMap[task.status] || '未开始',
+        task.owner || '',
+        task.stakeholder || '',
+        parentTaskName,
+        predecessorNames,
+        task.description || ''
+      ]
+      excelData.push(row)
     })
-
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `gantt-data-${dayjs().format('YYYY-MM-DD')}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-
-    ElMessage.success('数据导出成功')
+    
+    // 创建工作簿
+    const wb = XLSX.utils.book_new()
+    
+    // 创建工作表
+    const ws = XLSX.utils.aoa_to_sheet(excelData)
+    
+    // 设置列宽
+    const colWidths = [
+      { wch: 8 },   // 任务ID
+      { wch: 30 },  // 任务名称
+      { wch: 12 },  // 开始时间
+      { wch: 12 },  // 完成时间
+      { wch: 10 },  // 工期
+      { wch: 12 },  // 完成进度
+      { wch: 10 },  // 任务类型
+      { wch: 10 },  // 执行状态
+      { wch: 10 },  // 负责人
+      { wch: 10 },  // 相关方
+      { wch: 15 },  // 父任务
+      { wch: 20 },  // 前置任务
+      { wch: 30 }   // 任务描述
+    ]
+    ws['!cols'] = colWidths
+    
+    // 设置表头样式
+    const headerStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "4472C4" } },
+      alignment: { horizontal: "center", vertical: "center" }
+    }
+    
+    // 应用表头样式
+    for (let i = 0; i < headers.length; i++) {
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c: i })
+      if (!ws[cellRef]) ws[cellRef] = {}
+      ws[cellRef].s = headerStyle
+    }
+    
+    // 添加工作表到工作簿
+    const sheetName = projectInfo.value?.name ? `${projectInfo.value.name}-任务列表` : '甘特图任务列表'
+    XLSX.utils.book_append_sheet(wb, ws, sheetName)
+    
+    // 生成文件名
+    const fileName = `${projectInfo.value?.name || '甘特图'}-${dayjs().format('YYYY-MM-DD')}.xlsx`
+    
+    // 导出文件
+    XLSX.writeFile(wb, fileName)
+    
+    ElMessage.success(`Excel文件导出成功：${fileName}`)
   } catch (error) {
-    console.error('导出数据失败:', error)
-    ElMessage.error('导出失败，请重试')
+    console.error('导出Excel数据失败:', error)
+    ElMessage.error('Excel导出失败，请重试')
   }
 }
+
 
 // 导入数据
 const importData = () => {
@@ -1556,12 +1662,6 @@ const handleMoreCommand = (command) => {
       break
     case 'fit':
       zoomToFit()
-      break
-    case 'export':
-      exportData()
-      break
-    case 'import':
-      importData()
       break
   }
 }
