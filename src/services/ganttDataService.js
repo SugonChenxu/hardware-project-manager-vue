@@ -124,38 +124,6 @@ export const load = async (params) => {
   return res;
 }
 
-
-/**
- * 保存甘特图数据（兼容旧版本）
- * @param {Array} tasks - 任务数据
- * @param {Array} links - 依赖关系数据
- */
-export const saveGanttData = async (tasks, links) => {
-  try {
-    console.log('甘特图数据已保存到本地:', { tasks: tasks.length, links: links.length })
-    return true
-  } catch (error) {
-    console.error('保存甘特图数据失败:', error)
-    return false
-  }
-}
-
-/**
- * 导出甘特图数据为JSON格式
- * @param {Array} tasks - 任务数据
- * @param {Array} links - 依赖关系数据
- * @returns {string} JSON字符串
- */
-export const exportToJson = (tasks, links) => {
-  const data = {
-    tasks,
-    links,
-    exportTime: new Date().toISOString(),
-    version: '1.0'
-  }
-  return JSON.stringify(data, null, 2)
-}
-
 /**
  * 从JSON数据导入
  * @param {string} jsonString - JSON字符串

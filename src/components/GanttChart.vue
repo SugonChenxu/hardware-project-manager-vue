@@ -477,10 +477,8 @@ import {
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
-  saveGanttData,
   saveGanttDataToProject,
   load,
-  exportToJson,
   importFromJson,
   generateNewTaskId
 } from '../services/ganttDataService.js'
@@ -1461,9 +1459,6 @@ const updateTaskInArray = (task) => {
 
     console.log('任务已更新:', tasks.value[index])
 
-    // 自动保存数据
-    saveDataToBrowser()
-
     // 触发响应式更新
     tasks.value = [...tasks.value]
   } else {
@@ -1473,25 +1468,15 @@ const updateTaskInArray = (task) => {
 
 const addTaskToArray = (task) => {
   tasks.value.push({ ...task })
-  saveDataToBrowser()
 }
 
 const removeTaskFromArray = (id) => {
   const index = tasks.value.findIndex(t => t.id == id)
   if (index !== -1) {
     tasks.value.splice(index, 1)
-    saveDataToBrowser()
   }
 }
 
-// 保存数据到浏览器本地存储（可选功能）
-const saveDataToBrowser = async () => {
-  try {
-    await saveGanttData(tasks.value, links.value)
-  } catch (error) {
-    console.error('保存数据失败:', error)
-  }
-}
 
 // 获取可选择的前置任务列表
 const availableTasksForPredecessors = (currentTaskId) => {
