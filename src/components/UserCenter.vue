@@ -37,13 +37,13 @@
                   <span class="version-price">免费</span>
                 </div>
               </th>
-              <th class="version-column" :class="{ active: currentVersion === 'personal' }">
+              <th class="version-column" :class="{ active: currentVersion === 'UserPersonal' }">
                 <div class="version-header">
                   <span class="version-name">个人版</span>
                   <span class="version-price">¥9/月</span>
                 </div>
               </th>
-              <th class="version-column" :class="{ active: currentVersion === 'premium' }">
+              <th class="version-column" :class="{ active: currentVersion === 'UserEnterprise' }">
                 <div class="version-header">
                   <span class="version-name">旗舰版</span>
                   <span class="version-price">¥29/月</span>
@@ -75,31 +75,47 @@
             <tr>
               <td class="feature-name">数据导出</td>
               <td class="feature-value">
-                <el-icon class="check-icon"><Check /></el-icon>
+                <el-icon class="check-icon">
+                  <Check />
+                </el-icon>
               </td>
               <td class="feature-value">
-                <el-icon class="check-icon"><Check /></el-icon>
+                <el-icon class="check-icon">
+                  <Check />
+                </el-icon>
               </td>
               <td class="feature-value">
-                <el-icon class="check-icon"><Check /></el-icon>
+                <el-icon class="check-icon">
+                  <Check />
+                </el-icon>
               </td>
               <td class="feature-value">
-                <el-icon class="check-icon"><Check /></el-icon>
+                <el-icon class="check-icon">
+                  <Check />
+                </el-icon>
               </td>
             </tr>
             <tr>
               <td class="feature-name">API接口</td>
               <td class="feature-value">
-                <el-icon class="cross-icon"><Close /></el-icon>
+                <el-icon class="cross-icon">
+                  <Close />
+                </el-icon>
               </td>
               <td class="feature-value">
-                <el-icon class="cross-icon"><Close /></el-icon>
+                <el-icon class="cross-icon">
+                  <Close />
+                </el-icon>
               </td>
               <td class="feature-value">
-                <el-icon class="check-icon"><Check /></el-icon>
+                <el-icon class="check-icon">
+                  <Check />
+                </el-icon>
               </td>
               <td class="feature-value">
-                <el-icon class="check-icon"><Check /></el-icon>
+                <el-icon class="check-icon">
+                  <Check />
+                </el-icon>
               </td>
             </tr>
             <tr>
@@ -112,30 +128,18 @@
           </tbody>
         </table>
       </div>
-      
+
       <!-- 升级按钮 -->
       <div class="upgrade-actions">
-        <el-button 
-          v-if="currentVersion !== 'personal'" 
-          type="primary" 
-          @click="handleUpgrade('personal')"
-          class="upgrade-btn"
-        >
+        <el-button v-if="currentVersion !== 'UserPersonal'" type="primary" @click="handleUpgrade('UserPersonal')"
+          class="upgrade-btn">
           升级到个人版
         </el-button>
-        <el-button 
-          v-if="currentVersion !== 'premium'" 
-          type="success" 
-          @click="handleUpgrade('premium')"
-          class="upgrade-btn"
-        >
+        <el-button v-if="currentVersion !== 'UserEnterprise'" type="success" @click="handleUpgrade('UserEnterprise')"
+          class="upgrade-btn">
           升级到旗舰版
         </el-button>
-        <el-button 
-          type="info" 
-          @click="handleContact"
-          class="upgrade-btn"
-        >
+        <el-button type="info" @click="handleContact" class="upgrade-btn">
           联系本地部署
         </el-button>
       </div>
@@ -143,11 +147,8 @@
   </div>
 
   <!-- 支付对话框 -->
-  <PaymentDialog 
-    v-model="paymentDialogVisible" 
-    :version="selectedUpgradeVersion"
-    @payment-success="handlePaymentSuccess"
-  />
+  <PaymentDialog v-model="paymentDialogVisible" :version="selectedUpgradeVersion"
+    @payment-success="handlePaymentSuccess" />
 </template>
 
 <script setup>
@@ -155,6 +156,9 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Check, Close, User } from '@element-plus/icons-vue'
 import PaymentDialog from './PaymentDialog.vue'
+import { getToken } from '@/utils/auth'
+import { getUserVip } from '../api/users'
+import { getUserProfile } from '../api/login'
 
 // 用户信息
 const userInfo = reactive({
@@ -165,10 +169,10 @@ const userInfo = reactive({
 
 // 用户统计
 const userStats = reactive({
-  createdCount: 0,
-  maxCreated: 1,
-  favoriteCount: 0,
-  maxFavorite: 1
+  createdCount: 0,  // 创建数量
+  maxCreated: 1,  // 创建数量上限
+  favoriteCount: 0,  // 收藏数量
+  maxFavorite: 1  // 收藏数量上限
 })
 
 // 当前版本
@@ -176,7 +180,7 @@ const currentVersion = ref('free')
 
 // 支付对话框相关
 const paymentDialogVisible = ref(false)
-const selectedUpgradeVersion = ref('personal')
+const selectedUpgradeVersion = ref('UserPersonal')
 
 // 版本配置
 const versionConfig = {
@@ -185,12 +189,12 @@ const versionConfig = {
     maxCreated: 1,
     maxFavorite: 1
   },
-  personal: {
+  UserPersonal: {
     name: '个人版',
     maxCreated: 5,
     maxFavorite: 5
   },
-  premium: {
+  UserEnterprise: {
     name: '旗舰版',
     maxCreated: -1, // -1 表示无限
     maxFavorite: -1
@@ -200,30 +204,6 @@ const versionConfig = {
     maxCreated: -1,
     maxFavorite: -1
   }
-}
-
-// 初始化用户信息
-const initUserInfo = () => {
-  // 从本地存储或API获取用户信息
-  const storedUser = localStorage.getItem('userInfo')
-  if (storedUser) {
-    const user = JSON.parse(storedUser)
-    userInfo.username = user.name || user.username || '未登录'
-    userInfo.level = user.level || '免费版'
-    userInfo.avatar = user.avatar || ''
-    currentVersion.value = user.version || 'free'
-  }
-  
-  // 更新用户统计限制
-  const config = versionConfig[currentVersion.value]
-  if (config) {
-    userStats.maxCreated = config.maxCreated
-    userStats.maxFavorite = config.maxFavorite
-  }
-  
-  // 模拟获取用户统计数据
-  userStats.createdCount = 0
-  userStats.favoriteCount = 0
 }
 
 // 处理升级
@@ -247,18 +227,18 @@ const handleContact = () => {
 // 处理支付成功
 const handlePaymentSuccess = (paymentData) => {
   ElMessage.success('支付成功！您的会员已开通')
-  
+
   // 更新用户版本信息
   currentVersion.value = paymentData.version
   userInfo.level = versionConfig[paymentData.version].name
-  
+
   // 更新用户统计限制
   const config = versionConfig[paymentData.version]
   if (config) {
     userStats.maxCreated = config.maxCreated
     userStats.maxFavorite = config.maxFavorite
   }
-  
+
   // 保存到本地存储
   const userData = {
     ...userInfo,
@@ -268,8 +248,50 @@ const handlePaymentSuccess = (paymentData) => {
   localStorage.setItem('userInfo', JSON.stringify(userData))
 }
 
-onMounted(() => {
-  initUserInfo()
+onMounted(async () => {
+  // 从本地存储或API获取用户信息
+  const storedUser = localStorage.getItem('userInfo')
+  if (storedUser) {
+    const user = JSON.parse(storedUser)
+    userInfo.username = user.name || user.username || '未登录'
+    userInfo.level = user.level || '免费版'
+    userInfo.avatar = user.avatar || ''
+    currentVersion.value = user.version || 'free'
+  }
+
+  let loginres;
+
+  // 如果用户已登录则加载用户登录信息
+  if (userInfo.value == null && getToken()) {
+    loginres = await getUserProfile();
+    if (loginres.code == 200) {
+      userInfo.username = loginres.data.account;
+      var vip = await getUserVip();
+      if (vip.code == 200) {
+        if (vip.data.length > 0) {
+          currentVersion.value = vip.data[0].rechargeType
+          const config = versionConfig[currentVersion.value]
+          if (config) {
+            userStats.maxCreated = config.maxCreated
+            userStats.maxFavorite = config.maxFavorite
+            userInfo.level = config.name
+          }
+
+        } else {
+          userStats.maxCreated = 1
+          userStats.maxFavorite = 1
+          userInfo.level = '免费版'
+        }
+      }
+    }
+  }
+
+
+  
+
+  // 模拟获取用户统计数据
+  userStats.createdCount = 0
+  userStats.favoriteCount = 0
 })
 </script>
 
@@ -371,7 +393,8 @@ table {
   min-width: 600px;
 }
 
-th, td {
+th,
+td {
   padding: 12px 8px;
   text-align: center;
   border: 1px solid #ebeef5;
@@ -460,44 +483,45 @@ th, td {
   .user-center {
     padding: 12px;
   }
-  
+
   .user-header {
     flex-direction: column;
     gap: 16px;
     text-align: center;
     padding: 12px;
   }
-  
+
   .user-stats {
     gap: 16px;
   }
-  
+
   .version-comparison {
     padding: 12px;
   }
-  
+
   .upgrade-actions {
     flex-direction: column;
     align-items: center;
     gap: 6px;
   }
-  
+
   .upgrade-btn {
     width: 100%;
     max-width: 180px;
     font-size: 12px;
     padding: 6px 12px;
   }
-  
+
   .comparison-table {
     margin-bottom: 12px;
   }
-  
-  th, td {
+
+  th,
+  td {
     padding: 8px 6px;
     font-size: 12px;
   }
-  
+
   .feature-column {
     width: 120px;
   }

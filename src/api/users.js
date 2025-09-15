@@ -1,3 +1,10 @@
+/*
+ * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
+ * @Date: 2025-09-07 14:43:31
+ * @LastEditTime: 2025-09-15 22:38:24
+ * @Description: 
+ * Copyright (c) 2025 by yubaolee | ahfu~ , All Rights Reserved.  
+ */
 import request from '@/utils/request'
 
 export function getList(params) {
@@ -25,6 +32,13 @@ export function get(params) {
     url: '/users/get',
     method: 'get',
     params,
+  })
+}
+
+export function getUserVip() {
+  return request({
+    url: '/users/getuservip',
+    method: 'get'
   })
 }
 
