@@ -456,6 +456,17 @@
 
     <!-- 登录模态框 -->
     <LoginModal v-model="showLoginModal" @login-success="handleLoginSuccess" />
+
+    <!-- 个人中心对话框 -->
+    <el-dialog
+      v-model="userCenterVisible"
+      title="个人中心"
+      width="800px"
+      :close-on-click-modal="false"
+      class="user-center-dialog"
+    >
+      <UserCenter />
+    </el-dialog>
   </div>
 </template>
 
@@ -463,6 +474,7 @@
 import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { gantt } from 'dhtmlx-gantt'
 import { getUserProfile } from '../api/login.js'
+import UserCenter from './UserCenter.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { ElConfigProvider } from 'element-plus'
@@ -501,6 +513,7 @@ const viewMode = ref('week')
 const showTaskDialog = ref(false)
 const showEditDialog = ref(false)  // 编辑对话框显示状态
 const showLoginModal = ref(false)  // 登录模态框显示状态
+const userCenterVisible = ref(false)  // 个人中心对话框显示状态
 const saving = ref(false) // 保存按钮加载状态
 
 // 任务数据 - 从数据服务加载
@@ -1670,7 +1683,7 @@ const handleMoreCommand = (command) => {
 const handleUserCommand = (command) => {
   switch (command) {
     case 'profile':
-      ElMessage.info('个人设置功能开发中')
+      userCenterVisible.value = true
       break
     case 'logout':
       userInfo.value = null
@@ -2818,6 +2831,29 @@ const toggleStar = async () => {
     width: 100%;
     justify-content: center;
     padding: 8px;
+  }
+}
+
+/* 个人中心对话框样式 */
+.user-center-dialog {
+  .el-dialog__body {
+    padding: 0;
+    max-height: 65vh;
+    overflow: hidden;
+  }
+  
+  .el-dialog {
+    max-height: 75vh;
+    overflow: hidden;
+  }
+  
+  .el-dialog__header {
+    padding: 16px 20px 12px;
+  }
+  
+  .el-dialog__title {
+    font-size: 16px;
+    font-weight: 600;
   }
 }
 </style>
