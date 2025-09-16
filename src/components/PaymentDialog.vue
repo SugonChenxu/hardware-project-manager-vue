@@ -122,13 +122,13 @@
         <div class="duration-selection">
           <h3 class="section-title">订阅时长</h3>
           <div class="duration-input">
-            <el-input-number v-model="months" :min="1" :max="12" :step="1" size="large" class="month-input"
+            <el-input-number v-model="months" :min="1" :max="36" :step="1" size="large" class="month-input"
               @change="calculateTotal" />
             <span class="duration-label">个月</span>
           </div>
           <div class="duration-tips">
-            <span v-if="months >= 6" class="tip-text">选择6个月以上享受9折优惠</span>
-            <span v-else class="tip-text">选择6个月以上享受9折优惠</span>
+            <span v-if="months >= 6" class="tip-text">选择6个月以上享受8折优惠</span>
+            <span v-else class="tip-text">选择6个月以上享受8折优惠</span>
           </div>
         </div>
 
@@ -222,7 +222,7 @@ const selectedVersionInfo = computed(() => versionOptions[selectedVersion.value]
 const discount = computed(() => {
   if (months.value >= 6) {
     const originalPrice = selectedVersionInfo.value?.price * months.value
-    return originalPrice * 0.1 // 9折优惠
+    return originalPrice * 0.2 // 8折优惠
   }
   return 0
 })
@@ -301,8 +301,9 @@ const createOrder = async () => {
   }
 }
 
+let pollInterval = null //定时轮询
 const startPaymentStatusPolling = () => {
-  const pollInterval = setInterval(async () => {
+  pollInterval = setInterval(async () => {
     try {
       const result = await getOrderDetail(orderId.value)
 
@@ -310,7 +311,6 @@ const startPaymentStatusPolling = () => {
         if (result.data.tradeState === 'SUCCESS') {
           clearInterval(pollInterval)
           paymentStatus.value = 'success'
-          ElMessage.success('支付成功！')
           emit('payment-success', {
             version: selectedVersion.value,
             months: months.value,
@@ -347,6 +347,9 @@ const cancelPayment = () => {
   paymentStatus.value = 'idle'
   qrCodeDataUrl.value = ''
   orderId.value = ''
+  if(pollInterval != null){
+    clearInterval(pollInterval)
+  }
 }
 
 const retryPayment = () => {
