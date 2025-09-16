@@ -8,17 +8,31 @@
         </div>
         <div class="user-details">
           <h3 class="username">{{ userInfo.username || '未登录' }}</h3>
-          <p class="user-level">{{ userInfo.level || '免费版' }}</p>
+          <div class="user-level">
+            <el-tag v-if="currentVersion.length === 0" type="info" size="small">免费版</el-tag>
+            <template v-else>
+              <el-tag 
+                v-for="version in currentVersion" 
+                :key="version.rechargeType"
+                :type="getVersionTagType(version.rechargeType)"
+                size="small"
+                class="version-tag"
+              >
+                {{ version.name }}
+                <span class="expire-date">{{ formatExpireDate(version.expireDate) }}</span>
+              </el-tag>
+            </template>
+          </div>
         </div>
       </div>
       <div class="user-stats">
         <div class="stat-item">
           <span class="stat-label">创建数量</span>
-          <span class="stat-value">{{ userStats.createdCount }}/{{ userStats.maxCreated }}</span>
+          <span class="stat-value">{{ userStats.createdCount }}</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">收藏数量</span>
-          <span class="stat-value">{{ userStats.favoriteCount }}/{{ userStats.maxFavorite }}</span>
+          <span class="stat-value">{{ userStats.favoriteCount }}</span>
         </div>
       </div>
     </div>
@@ -31,28 +45,28 @@
           <thead>
             <tr>
               <th class="feature-column">功能特性</th>
-              <th class="version-column" :class="{ active: currentVersion === 'free' }">
+              <th class="version-column" :class="{ active: currentVersion.length == 0 }">
                 <div class="version-header">
                   <span class="version-name">免费版</span>
                   <span class="version-price">免费</span>
                 </div>
               </th>
-              <th class="version-column" :class="{ active: currentVersion === 'UserPersonal' }">
+              <th class="version-column" :class="{ active: currentVersion.length > 0 && currentVersion.some(item => item.rechargeType == 'UserPersonal') }">
                 <div class="version-header">
                   <span class="version-name">个人版</span>
                   <span class="version-price">¥9/月</span>
                 </div>
               </th>
-              <th class="version-column" :class="{ active: currentVersion === 'UserEnterprise' }">
+              <th class="version-column" :class="{ active: currentVersion.length > 0 && currentVersion.some(item => item.rechargeType == 'UserEnterprise') }">
                 <div class="version-header">
                   <span class="version-name">旗舰版</span>
                   <span class="version-price">¥29/月</span>
                 </div>
               </th>
-              <th class="version-column" :class="{ active: currentVersion === 'enterprise' }">
+              <th class="version-column">
                 <div class="version-header">
                   <span class="version-name">本地部署</span>
-                  <span class="version-price">5999元/套</span>
+                  <span class="version-price">¥5999/套</span>
                 </div>
               </th>
             </tr>
@@ -131,11 +145,11 @@
 
       <!-- 升级按钮 -->
       <div class="upgrade-actions">
-        <el-button v-if="currentVersion !== 'UserPersonal'" type="primary" @click="handleUpgrade('UserPersonal')"
+        <el-button  type="primary" @click="handleUpgrade('UserPersonal')"
           class="upgrade-btn">
           升级到个人版
         </el-button>
-        <el-button v-if="currentVersion !== 'UserEnterprise'" type="success" @click="handleUpgrade('UserEnterprise')"
+        <el-button type="success" @click="handleUpgrade('UserEnterprise')"
           class="upgrade-btn">
           升级到旗舰版
         </el-button>
@@ -159,11 +173,11 @@ import PaymentDialog from './PaymentDialog.vue'
 import { getToken } from '@/utils/auth'
 import { getUserVip } from '../api/users'
 import { getUserProfile } from '../api/login'
+import dayjs from 'dayjs'
 
 // 用户信息
 const userInfo = reactive({
   username: '',
-  level: '免费版',
   avatar: ''
 })
 
@@ -176,7 +190,7 @@ const userStats = reactive({
 })
 
 // 当前版本
-const currentVersion = ref('free')
+const currentVersion = ref([])
 
 // 支付对话框相关
 const paymentDialogVisible = ref(false)
@@ -226,26 +240,38 @@ const handleContact = () => {
 
 // 处理支付成功
 const handlePaymentSuccess = (paymentData) => {
-  ElMessage.success('支付成功！您的会员已开通')
+  ElMessage.success('支付成功！刷新后生效')
+}
 
-  // 更新用户版本信息
-  currentVersion.value = paymentData.version
-  userInfo.level = versionConfig[paymentData.version].name
-
-  // 更新用户统计限制
-  const config = versionConfig[paymentData.version]
-  if (config) {
-    userStats.maxCreated = config.maxCreated
-    userStats.maxFavorite = config.maxFavorite
+// 获取版本标签类型
+const getVersionTagType = (rechargeType) => {
+  switch (rechargeType) {
+    case 'UserPersonal':
+      return 'primary'
+    case 'UserEnterprise':
+      return 'success'
+    default:
+      return 'info'
   }
+}
 
-  // 保存到本地存储
-  const userData = {
-    ...userInfo,
-    version: paymentData.version,
-    level: versionConfig[paymentData.version].name
+// 格式化过期日期
+const formatExpireDate = (expireDate) => {
+  if (!expireDate) return ''
+  
+  const now = dayjs()
+  const expire = dayjs(expireDate)
+  const diffDays = expire.diff(now, 'day')
+  
+  if (diffDays < 0) {
+    return '已过期'
+  } else if (diffDays === 0) {
+    return '今日到期'
+  } else if (diffDays <= 7) {
+    return `${diffDays}天后到期`
+  } else {
+    return expire.format('YYYY-MM-DD')
   }
-  localStorage.setItem('userInfo', JSON.stringify(userData))
 }
 
 onMounted(async () => {
@@ -254,9 +280,7 @@ onMounted(async () => {
   if (storedUser) {
     const user = JSON.parse(storedUser)
     userInfo.username = user.name || user.username || '未登录'
-    userInfo.level = user.level || '免费版'
     userInfo.avatar = user.avatar || ''
-    currentVersion.value = user.version || 'free'
   }
 
   let loginres;
@@ -269,25 +293,19 @@ onMounted(async () => {
       var vip = await getUserVip();
       if (vip.code == 200) {
         if (vip.data.length > 0) {
-          currentVersion.value = vip.data[0].rechargeType
-          const config = versionConfig[currentVersion.value]
-          if (config) {
-            userStats.maxCreated = config.maxCreated
-            userStats.maxFavorite = config.maxFavorite
-            userInfo.level = config.name
+          for (let i = 0; i < vip.data.length; i++) {
+            const config = versionConfig[vip.data[i].rechargeType]
+            currentVersion.value.push({
+              expireDate: vip.data[i].expireDate,
+              rechargeType: vip.data[i].rechargeType,
+              name: config.name
+            })
           }
-
-        } else {
-          userStats.maxCreated = 1
-          userStats.maxFavorite = 1
-          userInfo.level = '免费版'
-        }
+          
+        } 
       }
     }
   }
-
-
-  
 
   // 模拟获取用户统计数据
   userStats.createdCount = 0
@@ -335,14 +353,22 @@ onMounted(async () => {
 }
 
 .user-level {
-  font-size: 14px;
-  color: #909399;
-  margin: 0;
-  padding: 3px 10px;
-  background: #f0f9ff;
-  border: 1px solid #b3d8ff;
-  border-radius: 16px;
-  display: inline-block;
+  margin: 6px 0 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.version-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.expire-date {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-left: 4px;
 }
 
 .user-stats {
