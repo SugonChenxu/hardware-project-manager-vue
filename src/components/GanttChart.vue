@@ -211,6 +211,22 @@
 
       <!-- 右侧用户区域 -->
       <div class="user-section">
+        <!-- 客服联系按钮 -->
+        <el-tooltip content="联系客服" placement="bottom">
+          <el-button class="outlook-btn service-btn" @click="contactService">
+            <el-icon>
+              <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M512 74.666667C270.933333 74.666667 74.666667 270.933333 74.666667 512S270.933333 949.333333 512 949.333333 949.333333 753.066667 949.333333 512 753.066667 74.666667 512 74.666667z m0 810.666666c-200.533333 0-362.666667-162.133333-362.666667-362.666666S311.466667 160 512 160s362.666667 162.133333 362.666667 362.666667-162.133333 362.666666-362.666667 362.666666z"
+                  fill="currentColor" />
+                <path
+                  d="M512 298.666667c-64 0-117.333333 53.333333-117.333333 117.333333v32c0 17.066667 14.933333 32 32 32s32-14.933333 32-32v-32c0-29.866667 23.466667-53.333333 53.333333-53.333333s53.333333 23.466667 53.333333 53.333333-23.466667 53.333333-53.333333 53.333333c-17.066667 0-32 14.933333-32 32v53.333334c0 17.066667 14.933333 32 32 32s32-14.933333 32-32v-25.6C571.733333 512 608 460.8 608 416c0-64-53.333333-117.333333-96-117.333333z"
+                  fill="currentColor" />
+                <circle cx="512" cy="704" r="32" fill="currentColor" />
+              </svg>
+            </el-icon>
+          </el-button>
+        </el-tooltip>
         <el-dropdown @command="handleUserCommand" class="user-dropdown">
           <div class="user-info">
             <el-avatar :size="28" :src="userInfo?.avatar" class="user-avatar">
@@ -458,6 +474,30 @@
       class="user-center-dialog">
       <UserCenter />
     </el-dialog>
+
+    <!-- 客服联系对话框 -->
+    <el-dialog v-model="showContactDialog" title="联系客服" width="400px" align-center>
+      <div class="contact-service-content">
+        <div class="qr-code-section">
+          <h3>扫码添加微信客服</h3>
+          <div class="qr-code-container">
+            <!-- 这里放置微信二维码图片 -->
+            <img src="/kefu.png" alt="微信二维码" class="qr-code-image" />
+          </div>
+          <p class="qr-code-tip">使用微信扫一扫添加客服微信</p>
+          <div class="wechat-info">
+            <p><strong>微信号：</strong>yubaolee</p>
+            <p><strong>工作时间：</strong>周一至周五 9:00-18:00</p>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="contact-footer">
+          <el-button @click="showContactDialog = false">关闭</el-button>
+          <el-button type="primary" @click="copyWechatId">复制微信号</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -503,6 +543,7 @@ const showTaskDialog = ref(false)
 const showEditDialog = ref(false)  // 编辑对话框显示状态
 const showLoginModal = ref(false)  // 登录模态框显示状态
 const userCenterVisible = ref(false)  // 个人中心对话框显示状态
+const showContactDialog = ref(false)  // 客服联系对话框显示状态
 const pendingUserCenterOpen = ref(false)  // 待打开个人中心标志
 const saving = ref(false) // 保存按钮加载状态
 
@@ -617,6 +658,10 @@ onUnmounted(() => {
     gantt.destructor()
   }
 })
+
+const contactService = () => {
+  showContactDialog.value = true
+}
 
 const loadUserInfo = async () => {
   let res = await getUserProfile();
@@ -1992,6 +2037,39 @@ const toggleStar = async () => {
     starring.value = false
   }
 }
+
+// 复制微信号
+const copyWechatId = () => {
+  const wechatId = 'yubaolee'
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(wechatId).then(() => {
+      ElMessage.success('微信号已复制到剪贴板')
+    }).catch(() => {
+      fallbackCopyTextToClipboard(wechatId)
+    })
+  } else {
+    fallbackCopyTextToClipboard(wechatId)
+  }
+}
+
+// 兼容性复制函数
+const fallbackCopyTextToClipboard = (text) => {
+  const textArea = document.createElement('textarea')
+  textArea.value = text
+  textArea.style.top = '0'
+  textArea.style.left = '0'
+  textArea.style.position = 'fixed'
+  document.body.appendChild(textArea)
+  textArea.focus()
+  textArea.select()
+  try {
+    document.execCommand('copy')
+    ElMessage.success('微信号已复制到剪贴板')
+  } catch (err) {
+    ElMessage.error('复制失败，请手动复制微信号')
+  }
+  document.body.removeChild(textArea)
+}
 </script>
 
 <style scoped>
@@ -2844,5 +2922,74 @@ const toggleStar = async () => {
     font-size: 16px;
     font-weight: 600;
   }
+}
+
+/* 客服联系对话框样式 */
+.contact-service-content {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.qr-code-section h3 {
+  margin-bottom: 20px;
+  color: #303133;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.qr-code-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.qr-code-image {
+  width: 200px;
+  height: 200px;
+  border: 2px solid #e4e7ed;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.qr-code-tip {
+  color: #606266;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.wechat-info {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 20px 0;
+}
+
+.wechat-info p {
+  margin: 8px 0;
+  color: #606266;
+  font-size: 14px;
+}
+
+.wechat-info strong {
+  color: #303133;
+  font-weight: 600;
+}
+
+.contact-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.service-btn {
+  background: #07c160 !important;
+  border-color: #07c160 !important;
+  color: white !important;
+}
+
+.service-btn:hover {
+  background: #06a74e !important;
+  border-color: #06a74e !important;
+  color: white !important;
 }
 </style>
