@@ -65,11 +65,7 @@
             </template>
           </el-dropdown>
         </div>
-        <el-button 
-          class="outlook-btn" 
-          :class="{ 'starred': isStarred }"
-          @click="toggleStar" 
-          :loading="starring"
+        <el-button class="outlook-btn" :class="{ 'starred': isStarred }" @click="toggleStar" :loading="starring"
           v-if="userInfo && projectInfo?.id && projectInfo.createUserId != userInfo.id">
           <el-icon>
             <StarFilled v-if="isStarred" />
@@ -458,13 +454,8 @@
     <LoginModal v-model="showLoginModal" @login-success="handleLoginSuccess" />
 
     <!-- 个人中心对话框 -->
-    <el-dialog
-      v-model="userCenterVisible"
-      title="个人中心"
-      width="800px"
-      :close-on-click-modal="false"
-      class="user-center-dialog"
-    >
+    <el-dialog v-model="userCenterVisible" title="个人中心" width="800px" :close-on-click-modal="false"
+      class="user-center-dialog">
       <UserCenter />
     </el-dialog>
   </div>
@@ -512,6 +503,7 @@ const showTaskDialog = ref(false)
 const showEditDialog = ref(false)  // 编辑对话框显示状态
 const showLoginModal = ref(false)  // 登录模态框显示状态
 const userCenterVisible = ref(false)  // 个人中心对话框显示状态
+const pendingUserCenterOpen = ref(false)  // 待打开个人中心标志
 const saving = ref(false) // 保存按钮加载状态
 
 // 任务数据 - 从数据服务加载
@@ -668,7 +660,7 @@ const loadInitialData = async (code = null) => {
     links.value = data.links
     projectInfo.value = data.projectInfo
     document.title = `${projectInfo.value.name} - 星甘`
-    
+
     // 检查收藏状态
     checkStarStatus()
   } catch (error) {
@@ -1282,15 +1274,15 @@ const zoomToFit = () => {
 }
 
 // 导出Excel数据
-const exportData  = () => {
+const exportData = () => {
   try {
     // 准备Excel数据
     const excelData = []
-    
+
     // 添加表头
     const headers = [
       '任务ID',
-      '任务名称', 
+      '任务名称',
       '开始时间',
       '完成时间',
       '工期(天)',
@@ -1304,21 +1296,21 @@ const exportData  = () => {
       '任务描述'
     ]
     excelData.push(headers)
-    
+
     // 添加任务数据
     tasks.value.forEach(task => {
       // 获取父任务名称
       const parentTask = task.parent ? tasks.value.find(t => t.id === task.parent) : null
       const parentTaskName = parentTask ? parentTask.text : '无'
-      
+
       // 获取前置任务名称
-      const predecessorNames = task.predecessors && task.predecessors.length > 0 
+      const predecessorNames = task.predecessors && task.predecessors.length > 0
         ? task.predecessors.map(predId => {
-            const predTask = tasks.value.find(t => t.id === predId)
-            return predTask ? predTask.text : `任务${predId}`
-          }).join(', ')
+          const predTask = tasks.value.find(t => t.id === predId)
+          return predTask ? predTask.text : `任务${predId}`
+        }).join(', ')
         : '无'
-      
+
       // 状态映射
       const statusMap = {
         'completed': '已完成',
@@ -1327,14 +1319,14 @@ const exportData  = () => {
         'on_hold': '已暂停',
         'cancelled': '已取消'
       }
-      
+
       // 任务类型映射
       const typeMap = {
         'task': '普通任务',
         'project': '项目组',
         'milestone': '里程碑'
       }
-      
+
       const row = [
         task.id,
         task.text || '',
@@ -1352,13 +1344,13 @@ const exportData  = () => {
       ]
       excelData.push(row)
     })
-    
+
     // 创建工作簿
     const wb = XLSX.utils.book_new()
-    
+
     // 创建工作表
     const ws = XLSX.utils.aoa_to_sheet(excelData)
-    
+
     // 设置列宽
     const colWidths = [
       { wch: 8 },   // 任务ID
@@ -1376,31 +1368,31 @@ const exportData  = () => {
       { wch: 30 }   // 任务描述
     ]
     ws['!cols'] = colWidths
-    
+
     // 设置表头样式
     const headerStyle = {
       font: { bold: true, color: { rgb: "FFFFFF" } },
       fill: { fgColor: { rgb: "4472C4" } },
       alignment: { horizontal: "center", vertical: "center" }
     }
-    
+
     // 应用表头样式
     for (let i = 0; i < headers.length; i++) {
       const cellRef = XLSX.utils.encode_cell({ r: 0, c: i })
       if (!ws[cellRef]) ws[cellRef] = {}
       ws[cellRef].s = headerStyle
     }
-    
+
     // 添加工作表到工作簿
     const sheetName = projectInfo.value?.name ? `${projectInfo.value.name}-任务列表` : '甘特图任务列表'
     XLSX.utils.book_append_sheet(wb, ws, sheetName)
-    
+
     // 生成文件名
     const fileName = `${projectInfo.value?.name || '甘特图'}-${dayjs().format('YYYY-MM-DD')}.xlsx`
-    
+
     // 导出文件
     XLSX.writeFile(wb, fileName)
-    
+
     ElMessage.success(`Excel文件导出成功：${fileName}`)
   } catch (error) {
     console.error('导出Excel数据失败:', error)
@@ -1583,7 +1575,7 @@ const saveProject = async () => {
       if (projectInfo.value.name) {
         document.title = `${projectInfo.value.name} - 星甘`
       }
-      
+
       // 重新检查收藏状态
       checkStarStatus()
     }
@@ -1609,9 +1601,14 @@ const saveProject = async () => {
 
 // 处理登录成功
 const handleLoginSuccess = () => {
-  ElMessage.success('登录成功，请重新保存项目')
+  ElMessage.success('登录成功')
   loadUserInfo();
   showLoginModal.value = false
+  // 如果用户是通过个人中心触发的登录，登录成功后自动打开个人中心
+  if (pendingUserCenterOpen.value) {
+    userCenterVisible.value = true
+    pendingUserCenterOpen.value = false
+  }
 }
 
 // 切换项目
@@ -1668,6 +1665,13 @@ const handleMoreCommand = (command) => {
 const handleUserCommand = (command) => {
   switch (command) {
     case 'profile':
+      // 检查是否已登录
+      if (!userInfo.value || !getToken()) {
+        ElMessage.warning('请先登录后查看个人中心')
+        pendingUserCenterOpen.value = true  // 设置待打开标志
+        showLoginModal.value = true
+        return
+      }
       userCenterVisible.value = true
       break
     case 'logout':
@@ -1719,7 +1723,7 @@ const createNewProject = () => {
     // 清空URL参数
     window.history.replaceState({}, '', window.location.pathname)
     urlParams.value = {}
-    
+
     // 重置收藏状态
     isStarred.value = false
 
@@ -1921,10 +1925,10 @@ const checkStarStatus = () => {
     isStarred.value = false
     return
   }
-  
+
   // 检查当前项目是否在用户的项目列表中（已收藏的项目）
-  const starProject = projectList.value.find(project => 
-    (project.id === projectInfo.value.id || project.code === projectInfo.value.code) &&(project.createUserId != userInfo.value.id)
+  const starProject = projectList.value.find(project =>
+    (project.id === projectInfo.value.id || project.code === projectInfo.value.code) && (project.createUserId != userInfo.value.id)
   )
   isStarred.value = !!starProject
 }
@@ -1936,23 +1940,23 @@ const toggleStar = async () => {
     showLoginModal.value = true
     return
   }
-  
+
   if (!projectInfo.value?.id) {
     ElMessage.warning('请先保存项目后再收藏')
     return
   }
-  
+
   try {
     starring.value = true
-    
+
     if (isStarred.value) {
       // 取消收藏
       await unstar(projectInfo.value.id)
       isStarred.value = false
       ElMessage.success('已取消收藏')
-      
+
       // 从项目列表中移除
-      const index = projectList.value.findIndex(project => 
+      const index = projectList.value.findIndex(project =>
         project.id === projectInfo.value.id || project.code === projectInfo.value.code
       )
       if (index !== -1) {
@@ -1963,9 +1967,9 @@ const toggleStar = async () => {
       await star(projectInfo.value.id)
       isStarred.value = true
       ElMessage.success('收藏成功')
-      
+
       // 添加到项目列表中
-      if (!projectList.value.find(project => 
+      if (!projectList.value.find(project =>
         project.id === projectInfo.value.id || project.code === projectInfo.value.code
       )) {
         projectList.value.unshift({
@@ -2826,16 +2830,16 @@ const toggleStar = async () => {
     max-height: 65vh;
     overflow: hidden;
   }
-  
+
   .el-dialog {
     max-height: 75vh;
     overflow: hidden;
   }
-  
+
   .el-dialog__header {
     padding: 16px 20px 12px;
   }
-  
+
   .el-dialog__title {
     font-size: 16px;
     font-weight: 600;
