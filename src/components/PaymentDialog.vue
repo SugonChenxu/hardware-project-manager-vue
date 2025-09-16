@@ -255,7 +255,6 @@ const generateQRCode = async (url) => {
     })
     qrCodeDataUrl.value = dataUrl
   } catch (error) {
-    console.error('生成二维码失败:', error)
     ElMessage.error('生成二维码失败')
   }
 }

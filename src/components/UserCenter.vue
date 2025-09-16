@@ -173,6 +173,7 @@ import PaymentDialog from './PaymentDialog.vue'
 import { getToken } from '@/utils/auth'
 import { getUserVip } from '../api/users'
 import { getUserProfile } from '../api/login'
+import { getProjCnt } from '../api/sysproject'
 import dayjs from 'dayjs'
 
 // 用户信息
@@ -307,9 +308,11 @@ onMounted(async () => {
     }
   }
 
-  // 模拟获取用户统计数据
-  userStats.createdCount = 0
-  userStats.favoriteCount = 0
+  let projCnt = await getProjCnt();
+  if (projCnt.code == 200) {
+    userStats.createdCount = projCnt.data.createCnt
+    userStats.favoriteCount = projCnt.data.favoriteCnt
+  }
 })
 </script>
 

@@ -2,7 +2,7 @@
  * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
  * @Date: 2024-01-04 09:48:08
  * @Description: 
- * @LastEditTime: 2025-09-09 22:01:52
+ * @LastEditTime: 2025-09-16 17:27:58
  * Copyright (c) 2025 by yubaolee | ahfu~ , All Rights Reserved.  
  */
 import request from '@/utils/request'
@@ -24,6 +24,13 @@ export function get(params) {
     url: '/sysproject/get',
     method: 'get',
     params,
+  })
+}
+
+export function getProjCnt() {
+  return request({
+    url: '/sysproject/getProjCnt',
+    method: 'get'
   })
 }
 
