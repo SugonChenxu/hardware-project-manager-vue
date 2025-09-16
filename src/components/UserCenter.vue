@@ -163,6 +163,9 @@
   <!-- 支付对话框 -->
   <PaymentDialog v-model="paymentDialogVisible" :version="selectedUpgradeVersion"
     @payment-success="handlePaymentSuccess" />
+
+  <!-- 联系客服对话框 -->
+  <ContactServiceDialog v-model="showContactDialog" />
 </template>
 
 <script setup>
@@ -170,6 +173,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Check, Close, User } from '@element-plus/icons-vue'
 import PaymentDialog from './PaymentDialog.vue'
+import ContactServiceDialog from './ContactServiceDialog.vue'
 import { getToken } from '@/utils/auth'
 import { getUserVip } from '../api/users'
 import { getUserProfile } from '../api/login'
@@ -196,6 +200,7 @@ const currentVersion = ref([])
 // 支付对话框相关
 const paymentDialogVisible = ref(false)
 const selectedUpgradeVersion = ref('UserPersonal')
+const showContactDialog = ref(false)
 
 // 版本配置
 const versionConfig = {
@@ -235,8 +240,7 @@ const handleUpgrade = (version) => {
 
 // 联系客服
 const handleContact = () => {
-  ElMessage.info('正在为您转接客服...')
-  // 这里可以打开客服窗口或跳转到联系页面
+  showContactDialog.value = true
 }
 
 // 处理支付成功
