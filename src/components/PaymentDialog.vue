@@ -62,8 +62,8 @@
           <div v-if="paymentStatus === 'pending'" class="qr-code-container">
             <h4 class="qr-title">请使用微信扫码支付</h4>
             <div class="qr-code">
-              <div v-if="qrCodeUrl" class="qr-image">
-                <img :src="qrCodeUrl" alt="微信支付二维码" />
+              <div v-if="qrCodeDataUrl" class="qr-image">
+                <img :src="qrCodeDataUrl" alt="微信支付二维码" />
               </div>
               <div v-else class="qr-loading">
                 <el-icon class="loading-icon">
@@ -167,10 +167,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Loading, CircleCheck, CircleClose } from '@element-plus/icons-vue'
 import { createPaymentOrder, getOrderDetail } from '@/api/payment'
+import QRCode from 'qrcode'
 
 // Props
 const props = defineProps({
@@ -197,7 +198,7 @@ const selectedVersion = ref(props.version)
 const months = ref(1)
 const creatingOrder = ref(false)
 const paymentStatus = ref('idle') // idle, pending, success, failed
-const qrCodeUrl = ref('')
+const qrCodeDataUrl = ref('')
 const errorMessage = ref('')
 const orderId = ref('')
 
@@ -241,6 +242,24 @@ const calculateTotal = () => {
   // 价格计算逻辑已在计算属性中处理
 }
 
+// 生成二维码
+const generateQRCode = async (url) => {
+  try {
+    const dataUrl = await QRCode.toDataURL(url, {
+      width: 160,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    })
+    qrCodeDataUrl.value = dataUrl
+  } catch (error) {
+    console.error('生成二维码失败:', error)
+    ElMessage.error('生成二维码失败')
+  }
+}
+
 const createOrder = async () => {
   if (!selectedVersion.value || months.value < 1) {
     ElMessage.warning('请选择版本和订阅时长')
@@ -263,7 +282,9 @@ const createOrder = async () => {
 
     if (result.code === 200) {
       orderId.value = result.data.outTradeNo
-      qrCodeUrl.value = result.data.codeUrl
+      
+      // 生成二维码
+      await generateQRCode(result.data.codeUrl)
 
       // 开始轮询支付状态
       startPaymentStatusPolling()
@@ -324,13 +345,13 @@ const btnCheckPaymentStatus = () => {
 
 const cancelPayment = () => {
   paymentStatus.value = 'idle'
-  qrCodeUrl.value = ''
+  qrCodeDataUrl.value = ''
   orderId.value = ''
 }
 
 const retryPayment = () => {
   paymentStatus.value = 'idle'
-  qrCodeUrl.value = ''
+  qrCodeDataUrl.value = ''
   orderId.value = ''
   createOrder()
 }
@@ -339,7 +360,7 @@ const handleClose = () => {
   visible.value = false
   // 重置状态
   paymentStatus.value = 'idle'
-  qrCodeUrl.value = ''
+  qrCodeDataUrl.value = ''
   orderId.value = ''
   errorMessage.value = ''
 }
