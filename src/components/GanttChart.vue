@@ -159,7 +159,7 @@
               <Calendar />
             </el-icon>
           </template>
-          <el-option label="周视图" value="week" />
+          <el-option label="默认视图" value="default" />
           <el-option label="月视图" value="month" />
           <el-option label="季度视图" value="quarter" />
         </el-select>
@@ -457,7 +457,7 @@
     <!-- 个人中心对话框 -->
     <el-dialog v-model="userCenterVisible" title="个人中心" width="800px" :close-on-click-modal="false"
       class="user-center-dialog">
-      <UserCenter />
+      <UserCenter v-if="userCenterVisible" />
     </el-dialog>
 
     <!-- 客服联系对话框 -->
@@ -505,7 +505,7 @@ const fileInput = ref()
 const nameInput = ref()
 const codeInput = ref()
 const descriptionInput = ref()
-const viewMode = ref('week')
+const viewMode = ref('default')
 const showTaskDialog = ref(false)
 const showEditDialog = ref(false)  // 编辑对话框显示状态
 const showLoginModal = ref(false)  // 登录模态框显示状态
@@ -732,6 +732,11 @@ const initGantt = () => {
     gantt.config.sort = true
     gantt.config.scrollY = "y"     // 启用垂直滚动
     gantt.config.scrollX = "x"     // 启用水平滚动
+    
+    // 时间轴列宽配置
+    gantt.config.min_column_width = 30  // 最小列宽（像素）
+    gantt.config.scale_height = 60      // 时间轴高度
+    gantt.config.subscales = []         // 子刻度配置
 
     // 时间刻度配置
     setTimeScale(viewMode.value)
@@ -961,21 +966,21 @@ const setTimeScale = (mode) => {
     case 'day':
       gantt.config.scale_unit = 'day'
       gantt.config.date_scale = '%Y-%m-%d'
+      gantt.config.min_column_width = 80  // 日视图：每天80像素
       gantt.config.subscales = [
         { unit: 'hour', step: 6, date: '%H:%i' }
       ]
       break
-    case 'week':
-      gantt.config.scale_unit = 'week'
-      // 使用自定义模板显示当月第几周
+    case 'default':
+      gantt.config.scale_unit = 'month'
       gantt.templates.date_scale = function (date) {
         const year = date.getFullYear()
         const month = date.getMonth() + 1
-        const weekOfMonth = getWeekOfMonth(date)
-        return `${year}年${month}月第${weekOfMonth}周`
+        return `${year}年${month}月`
       }
+      gantt.config.min_column_width = 30  // 默认视图：每天30像素
       gantt.config.subscales = [
-        { unit: 'day', step: 1, date: '%m-%d' }
+        { unit: 'day', step: 1, date: '%d' }
       ]
       break
     case 'month':
@@ -985,6 +990,7 @@ const setTimeScale = (mode) => {
         const month = date.getMonth() + 1
         return `${year}年${month}月`
       }
+      gantt.config.min_column_width = 100  // 月视图：每月100像素
       gantt.config.subscales = [
         {
           unit: 'week',
@@ -1004,6 +1010,7 @@ const setTimeScale = (mode) => {
         const quarter = Math.floor(date.getMonth() / 3) + 1
         return `${year}年第${quarter}季度`
       }
+      gantt.config.min_column_width = 150  // 季度视图：每季度150像素
       gantt.config.subscales = [
         {
           unit: 'month',
