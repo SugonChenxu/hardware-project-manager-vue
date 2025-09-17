@@ -201,12 +201,13 @@
           <span>导出</span>
         </el-button>
 
-        <!-- <el-button class="outlook-btn" @click="importData">
+        <!-- 客服联系按钮 -->
+        <el-button class="outlook-btn" @click="contactService">
           <el-icon>
-            <Upload />
+            <Message />
           </el-icon>
-          <span>导入</span>
-        </el-button> -->
+          <span>客服</span>
+        </el-button>
       </div>
 
       <!-- 右侧用户区域 -->
@@ -458,6 +459,9 @@
       class="user-center-dialog">
       <UserCenter />
     </el-dialog>
+
+    <!-- 客服联系对话框 -->
+    <ContactServiceDialog v-model="showContactDialog" />
   </div>
 </template>
 
@@ -466,6 +470,7 @@ import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { gantt } from 'dhtmlx-gantt'
 import { getUserProfile } from '../api/login.js'
 import UserCenter from './UserCenter.vue'
+import ContactServiceDialog from './ContactServiceDialog.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { ElConfigProvider } from 'element-plus'
@@ -476,7 +481,7 @@ import * as XLSX from 'xlsx'
 dayjs.locale('zh-cn')
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
-  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled
+  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, Message
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -503,6 +508,7 @@ const showTaskDialog = ref(false)
 const showEditDialog = ref(false)  // 编辑对话框显示状态
 const showLoginModal = ref(false)  // 登录模态框显示状态
 const userCenterVisible = ref(false)  // 个人中心对话框显示状态
+const showContactDialog = ref(false)  // 客服联系对话框显示状态
 const pendingUserCenterOpen = ref(false)  // 待打开个人中心标志
 const saving = ref(false) // 保存按钮加载状态
 
@@ -617,6 +623,10 @@ onUnmounted(() => {
     gantt.destructor()
   }
 })
+
+const contactService = () => {
+  showContactDialog.value = true
+}
 
 const loadUserInfo = async () => {
   let res = await getUserProfile();
@@ -1992,6 +2002,8 @@ const toggleStar = async () => {
     starring.value = false
   }
 }
+
+
 </script>
 
 <style scoped>
@@ -2845,4 +2857,6 @@ const toggleStar = async () => {
     font-weight: 600;
   }
 }
+
+
 </style>
