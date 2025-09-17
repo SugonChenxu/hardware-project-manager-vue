@@ -2,7 +2,7 @@
  * @Descripttion:
  * @version:
  * @Date: 2022-05-12 22:06:21
- * @LastEditTime: 2025-09-10 16:05:40
+ * @LastEditTime: 2025-09-17 16:24:15
  * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
  */
 import axios from 'axios'
@@ -37,13 +37,14 @@ service.interceptors.response.use(
       return res
     }
   },
-  //HttpResponse的状态码不是200时，都会进入erro环节
+  //HttpResponse的状态码不是200时，都会进入error环节
   async error => {
     // HttpResponse的状态码如果是401 
     if (error.response && error.response.status === 401) {
       // 清除token
       if (getToken()) {
         removeToken()
+        location.reload(true) //强制刷新
       }
       // 创建一个包含错误信息的错误对象
       const unauthorizedError = new Error('用户未授权，请重新登录')

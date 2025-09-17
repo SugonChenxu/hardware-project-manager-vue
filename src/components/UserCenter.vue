@@ -11,13 +11,8 @@
           <div class="user-level">
             <el-tag v-if="currentVersion.length === 0" type="info" size="small">免费版</el-tag>
             <template v-else>
-              <el-tag 
-                v-for="version in currentVersion" 
-                :key="version.rechargeType"
-                :type="getVersionTagType(version.rechargeType)"
-                size="small"
-                class="version-tag"
-              >
+              <el-tag v-for="version in currentVersion" :key="version.rechargeType"
+                :type="getVersionTagType(version.rechargeType)" size="small" class="version-tag">
                 {{ version.name }}
                 <span class="expire-date">{{ formatExpireDate(version.expireDate) }}</span>
               </el-tag>
@@ -37,6 +32,29 @@
       </div>
     </div>
 
+    <!-- 优惠信息 -->
+    <div class="promo-section">
+      <h2 class="section-title">优惠活动</h2>
+      <div class="promo-cards">
+        <div class="promo-card first-recharge-promo">
+          <div class="promo-icon">🎉</div>
+          <div class="promo-content">
+            <h3 class="promo-title">首次充值优惠</h3>
+            <p class="promo-desc">个人版首次充值首月仅需¥1</p>
+            <div class="promo-tag">限时优惠</div>
+          </div>
+        </div>
+        <div class="promo-card long-term-promo">
+          <div class="promo-icon">💰</div>
+          <div class="promo-content">
+            <h3 class="promo-title">长期订阅优惠</h3>
+            <p class="promo-desc">选择6个月以上享受8折优惠</p>
+            <div class="promo-tag">长期优惠</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 版本对比表格 -->
     <div class="version-comparison">
       <h2 class="section-title">版本对比</h2>
@@ -51,13 +69,15 @@
                   <span class="version-price">免费</span>
                 </div>
               </th>
-              <th class="version-column" :class="{ active: currentVersion.length > 0 && currentVersion.some(item => item.rechargeType == 'UserPersonal') }">
+              <th class="version-column"
+                :class="{ active: currentVersion.length > 0 && currentVersion.some(item => item.rechargeType == 'UserPersonal') }">
                 <div class="version-header">
                   <span class="version-name">个人版</span>
                   <span class="version-price">¥9/月</span>
                 </div>
               </th>
-              <th class="version-column" :class="{ active: currentVersion.length > 0 && currentVersion.some(item => item.rechargeType == 'UserEnterprise') }">
+              <th class="version-column"
+                :class="{ active: currentVersion.length > 0 && currentVersion.some(item => item.rechargeType == 'UserEnterprise') }">
                 <div class="version-header">
                   <span class="version-name">旗舰版</span>
                   <span class="version-price">¥29/月</span>
@@ -145,12 +165,10 @@
 
       <!-- 升级按钮 -->
       <div class="upgrade-actions">
-        <el-button  type="primary" @click="handleUpgrade('UserPersonal')"
-          class="upgrade-btn">
+        <el-button type="primary" @click="handleUpgrade('UserPersonal')" class="upgrade-btn">
           升级到个人版
         </el-button>
-        <el-button type="success" @click="handleUpgrade('UserEnterprise')"
-          class="upgrade-btn">
+        <el-button type="success" @click="handleUpgrade('UserEnterprise')" class="upgrade-btn">
           升级到旗舰版
         </el-button>
         <el-button type="info" @click="handleContact" class="upgrade-btn">
@@ -259,11 +277,11 @@ const getVersionTagType = (rechargeType) => {
 // 格式化过期日期
 const formatExpireDate = (expireDate) => {
   if (!expireDate) return ''
-  
+
   const now = dayjs()
   const expire = dayjs(expireDate)
   const diffDays = expire.diff(now, 'day')
-  
+
   if (diffDays < 0) {
     return '已过期'
   } else if (diffDays === 0) {
@@ -289,22 +307,24 @@ onMounted(async () => {
   // 如果用户已登录则加载用户登录信息
   if (userInfo.value == null && getToken()) {
     loginres = await getUserProfile();
-    if (loginres.code == 200) {
-      userInfo.username = loginres.data.account;
-      var vip = await getUserVip();
-      if (vip.code == 200) {
-        if (vip.data.length > 0) {
-          for (let i = 0; i < vip.data.length; i++) {
-            const config = versionConfig[vip.data[i].rechargeType]
-            currentVersion.value.push({
-              expireDate: vip.data[i].expireDate,
-              rechargeType: vip.data[i].rechargeType,
-              name: config.name
-            })
-          }
-          
-        } 
+    if (loginres.code != 200) {
+      return;
+    }
+    userInfo.username = loginres.data.account;
+    var vip = await getUserVip();
+    if (vip.code != 200) {
+      return;
+    }
+    if (vip.data.length > 0) {
+      for (let i = 0; i < vip.data.length; i++) {
+        const config = versionConfig[vip.data[i].rechargeType]
+        currentVersion.value.push({
+          expireDate: vip.data[i].expireDate,
+          rechargeType: vip.data[i].rechargeType,
+          name: config.name
+        })
       }
+
     }
   }
 
@@ -395,6 +415,103 @@ onMounted(async () => {
   font-size: 18px;
   font-weight: 600;
   color: #409eff;
+}
+
+.promo-section {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+}
+
+.promo-cards {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.promo-card {
+  flex: 1;
+  min-width: 280px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.promo-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #409eff, #67c23a);
+}
+
+.promo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.first-recharge-promo {
+  background: linear-gradient(135deg, #fff7e6 0%, #ffeaa7 100%);
+  border-color: #e6a23c;
+}
+
+.long-term-promo {
+  background: linear-gradient(135deg, #f0f9ff 0%, #b3d8ff 100%);
+  border-color: #409eff;
+}
+
+.promo-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.promo-content {
+  flex: 1;
+}
+
+.promo-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 4px 0;
+}
+
+.promo-desc {
+  font-size: 14px;
+  color: #606266;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.promo-tag {
+  display: inline-block;
+  background: #409eff;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.first-recharge-promo .promo-tag {
+  background: #e6a23c;
+}
+
+.long-term-promo .promo-tag {
+  background: #67c23a;
 }
 
 .version-comparison {

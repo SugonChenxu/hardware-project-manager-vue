@@ -16,6 +16,7 @@
                   <h4 class="version-name">{{ version.name }}</h4>
                   <p class="version-price">¥{{ version.price }}/月</p>
                   <p class="version-desc">{{ version.description }}</p>
+                  <p v-if="key === 'UserPersonal' && !firstVip" class="version-promo">首次充值首月仅需¥1</p>
                 </div>
               </div>
             </div>
@@ -44,6 +45,11 @@
             <div class="price-row">
               <span class="price-label">时长：</span>
               <span class="price-value">{{ months }}个月</span>
+            </div>
+            <!-- 首次充值优惠显示 -->
+            <div v-if="!firstVip && selectedVersion === 'UserPersonal' && months >= 1" class="price-row first-recharge-row">
+              <span class="price-label">首次充值优惠：</span>
+              <span class="price-value first-recharge">首月仅需¥1</span>
             </div>
             <div v-if="discount > 0" class="price-row discount-row">
               <span class="price-label">优惠：</span>
@@ -113,6 +119,7 @@
                 <h4 class="version-name">{{ version.name }}</h4>
                 <p class="version-price">¥{{ version.price }}/月</p>
                 <p class="version-desc">{{ version.description }}</p>
+                <p v-if="key === 'UserPersonal' && !firstVip" class="version-promo">首次充值首月仅需¥1</p>
               </div>
             </div>
           </div>
@@ -142,6 +149,11 @@
             <span class="price-label">时长：</span>
             <span class="price-value">{{ months }}个月</span>
           </div>
+          <!-- 首次充值优惠显示 -->
+          <div v-if="!firstVip && selectedVersion === 'UserPersonal' && months >= 1" class="price-row first-recharge-row">
+            <span class="price-label">首次充值优惠：</span>
+            <span class="price-value first-recharge">首月仅需¥1</span>
+          </div>
           <div v-if="discount > 0" class="price-row discount-row">
             <span class="price-label">优惠：</span>
             <span class="price-value discount">-¥{{ discount.toFixed(2) }}</span>
@@ -167,10 +179,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Loading, CircleCheck, CircleClose } from '@element-plus/icons-vue'
 import { createPaymentOrder, getOrderDetail } from '@/api/payment'
+import { getUserVip } from '@/api/users'
 import QRCode from 'qrcode'
 
 // Props
@@ -201,6 +214,7 @@ const paymentStatus = ref('idle') // idle, pending, success, failed
 const qrCodeDataUrl = ref('')
 const errorMessage = ref('')
 const orderId = ref('')
+const firstVip = ref(false) //首次充值
 
 // 版本配置
 const versionOptions = {
@@ -219,6 +233,7 @@ const versionOptions = {
 // 计算属性
 const selectedVersionInfo = computed(() => versionOptions[selectedVersion.value])
 
+//折扣计算
 const discount = computed(() => {
   if (months.value >= 6) {
     const originalPrice = selectedVersionInfo.value?.price * months.value
@@ -228,8 +243,27 @@ const discount = computed(() => {
 })
 
 const totalPrice = computed(() => {
-  const originalPrice = selectedVersionInfo.value?.price * months.value
+  let originalPrice = selectedVersionInfo.value?.price * months.value
+  
+  // 个人版首次充值首月1元优惠
+  if (!firstVip.value && selectedVersion.value === 'UserPersonal' && months.value >= 1) {
+    const firstMonthPrice = 1 // 首月1元
+    const remainingMonths = months.value - 1
+    const remainingPrice = selectedVersionInfo.value?.price * remainingMonths
+    originalPrice = firstMonthPrice + remainingPrice
+  }
+  
   return originalPrice - discount.value
+})
+
+onMounted(async () => {
+  const vip = await getUserVip()
+  if (vip.code != 200) {
+    return
+  }
+  if (vip.data.length > 0) {
+    firstVip.value = true
+  }
 })
 
 // 方法
@@ -471,6 +505,17 @@ watch(() => props.version, (newVersion) => {
   margin: 0;
 }
 
+.version-promo {
+  font-size: 11px;
+  color: #e6a23c;
+  font-weight: 600;
+  margin: 4px 0 0 0;
+  background: #fdf6ec;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
 .duration-selection {
   margin-bottom: 16px;
 }
@@ -527,6 +572,11 @@ watch(() => props.version, (newVersion) => {
 
 .discount-row .price-value {
   color: #67c23a;
+}
+
+.first-recharge-row .price-value {
+  color: #e6a23c;
+  font-weight: 600;
 }
 
 .total-row {
