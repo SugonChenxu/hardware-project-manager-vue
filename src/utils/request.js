@@ -2,7 +2,7 @@
  * @Descripttion:
  * @version:
  * @Date: 2022-05-12 22:06:21
- * @LastEditTime: 2025-09-17 16:24:15
+ * @LastEditTime: 2025-09-17 17:03:19
  * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
  */
 import axios from 'axios'
@@ -14,7 +14,6 @@ const service = axios.create({
   timeout: 50000,
 })
 
-console.log('接口地址:',import.meta.env.VITE_BASE_API);
 // 拦截请求
 service.interceptors.request.use(
   async config => {

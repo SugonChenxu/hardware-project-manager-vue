@@ -493,6 +493,8 @@ import {
 import { star, unstar } from '../api/sysproject.js'
 import LoginModal from './LoginModal.vue'
 import { getToken, removeToken } from '../utils/auth.js'
+import { getWebVersion } from '../api/serverConf.js'
+import { getItem, setItem } from '../utils/storage.js'
 
 // 中文语言包
 const locale = zhCn
@@ -539,6 +541,43 @@ const userInfo = ref(null)
 // 收藏状态
 const isStarred = ref(false)
 const starring = ref(false) // 收藏操作加载状态
+
+// 版本号管理
+const webVersion = ref('')
+
+// 版本检查函数
+const checkVersionAndRefresh = async () => {
+  try {
+    // 获取服务器版本号
+    const serverVersionResponse = await getWebVersion()
+    if (serverVersionResponse.code === 200) {
+      const serverVersion = serverVersionResponse.data
+      webVersion.value = serverVersion
+      
+      // 获取本地存储的版本号
+      const localVersion = getItem('webVersion')
+      
+      // 如果本地版本为空或与服务器版本不同，强制刷新
+      if (!localVersion || localVersion !== serverVersion) {
+        console.log('版本号不匹配，强制刷新页面')
+        console.log('本地版本:', localVersion)
+        console.log('服务器版本:', serverVersion)
+        
+        // 更新本地存储的版本号
+        setItem('webVersion', serverVersion)
+        
+        // 强制刷新页面
+        window.location.reload(true)
+        return
+      }
+      
+      console.log('版本号匹配，无需刷新')
+    }
+  } catch (error) {
+    console.error('版本检查失败:', error)
+    // 版本检查失败时，不进行刷新，避免影响正常使用
+  }
+}
 
 // 可显示的字段
 const visibleColumns = ref(['text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description'])
@@ -590,6 +629,8 @@ const editTask = ref({
 
 // 生命周期钩子
 onMounted(async () => {
+  // 首先进行版本检查，如果版本不匹配会自动刷新页面
+  await checkVersionAndRefresh()
 
   // 获取URL参数
   const params = new URLSearchParams(window.location.search)
@@ -615,13 +656,6 @@ onMounted(async () => {
 
   // 监听窗口尺寸变化
   window.addEventListener('resize', handleResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  if (gantt && gantt.destructor) {
-    gantt.destructor()
-  }
 })
 
 const contactService = () => {
