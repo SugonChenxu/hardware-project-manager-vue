@@ -3,7 +3,7 @@
     {
       "id": 1,
       "text": "华夏古都美食14日游",
-      "start_date": "2025-04-01",
+      "start_date": "2025-10-01",
       "duration": 20,
       "progress": 0.2,
       "type": "project",
@@ -16,7 +16,7 @@
     {
       "id": 2,
       "text": "出行准备",
-      "start_date": "2025-04-01",
+      "start_date": "2025-10-01",
       "duration": 6,
       "progress": 0.85,
       "type": "project",
@@ -29,7 +29,7 @@
     {
       "id": 3,
       "text": "身份证件准备",
-      "start_date": "2025-04-01",
+      "start_date": "2025-10-01",
       "duration": 1,
       "progress": 1.0,
       "type": "task",
@@ -43,7 +43,7 @@
     {
       "id": 4,
       "text": "交通预订",
-      "start_date": "2025-04-02",
+      "start_date": "2025-10-02",
       "duration": 2,
       "progress": 1.0,
       "type": "task",
@@ -57,7 +57,7 @@
     {
       "id": 5,
       "text": "住宿预订",
-      "start_date": "2025-04-03",
+      "start_date": "2025-10-03",
       "duration": 2,
       "progress": 0.9,
       "type": "task",
@@ -71,7 +71,7 @@
     {
       "id": 6,
       "text": "攻略制定",
-      "start_date": "2025-04-04",
+      "start_date": "2025-10-04",
       "duration": 2,
       "progress": 0.7,
       "type": "task",
@@ -85,7 +85,7 @@
     {
       "id": 7,
       "text": "行李整理",
-      "start_date": "2025-04-06",
+      "start_date": "2025-10-06",
       "duration": 1,
       "progress": 0.4,
       "type": "task",
@@ -99,7 +99,7 @@
     {
       "id": 8,
       "text": "第一站：帝都北京",
-      "start_date": "2025-04-07",
+      "start_date": "2025-10-07",
       "duration": 4,
       "progress": 0,
       "type": "project",
@@ -112,7 +112,7 @@
     {
       "id": 9,
       "text": "抵达北京",
-      "start_date": "2025-04-07",
+      "start_date": "2025-10-07",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -126,7 +126,7 @@
     {
       "id": 10,
       "text": "天安门广场·故宫",
-      "start_date": "2025-04-08",
+      "start_date": "2025-10-08",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -140,7 +140,7 @@
     {
       "id": 11,
       "text": "长城一日游",
-      "start_date": "2025-04-09",
+      "start_date": "2025-10-09",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -154,7 +154,7 @@
     {
       "id": 12,
       "text": "颐和园·天坛",
-      "start_date": "2025-04-10",
+      "start_date": "2025-10-10",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -168,7 +168,7 @@
     {
       "id": 13,
       "text": "第二站：古都西安",
-      "start_date": "2025-04-11",
+      "start_date": "2025-10-11",
       "duration": 3,
       "progress": 0,
       "type": "project",
@@ -181,7 +181,7 @@
     {
       "id": 14,
       "text": "前往西安",
-      "start_date": "2025-04-11",
+      "start_date": "2025-10-11",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -195,7 +195,7 @@
     {
       "id": 15,
       "text": "兵马俑博物馆",
-      "start_date": "2025-04-12",
+      "start_date": "2025-10-12",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -209,7 +209,7 @@
     {
       "id": 16,
       "text": "古城墙·回民街",
-      "start_date": "2025-04-13",
+      "start_date": "2025-10-13",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -223,7 +223,7 @@
     {
       "id": 17,
       "text": "第三站：天府成都",
-      "start_date": "2025-04-14",
+      "start_date": "2025-10-14",
       "duration": 4,
       "progress": 0,
       "type": "project",
@@ -236,7 +236,7 @@
     {
       "id": 18,
       "text": "前往成都",
-      "start_date": "2025-04-14",
+      "start_date": "2025-10-14",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -250,7 +250,7 @@
     {
       "id": 19,
       "text": "熊猫基地",
-      "start_date": "2025-04-15",
+      "start_date": "2025-10-15",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -264,7 +264,7 @@
     {
       "id": 20,
       "text": "宽窄巷子·锦里",
-      "start_date": "2025-04-16",
+      "start_date": "2025-10-16",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -278,7 +278,7 @@
     {
       "id": 21,
       "text": "春熙路·太古里",
-      "start_date": "2025-04-17",
+      "start_date": "2025-10-17",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -292,7 +292,7 @@
     {
       "id": 22,
       "text": "第四站：山城重庆",
-      "start_date": "2025-04-18",
+      "start_date": "2025-10-18",
       "duration": 3,
       "progress": 0,
       "type": "project",
@@ -305,7 +305,7 @@
     {
       "id": 23,
       "text": "前往重庆",
-      "start_date": "2025-04-18",
+      "start_date": "2025-10-18",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -319,7 +319,7 @@
     {
       "id": 24,
       "text": "洪崖洞·解放碑",
-      "start_date": "2025-04-19",
+      "start_date": "2025-10-19",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -333,7 +333,7 @@
     {
       "id": 25,
       "text": "长江索道·磁器口",
-      "start_date": "2025-04-20",
+      "start_date": "2025-10-20",
       "duration": 1,
       "progress": 0,
       "type": "task",
@@ -347,7 +347,7 @@
     {
       "id": 26,
       "text": "返程总结",
-      "start_date": "2025-04-21",
+      "start_date": "2025-10-21",
       "duration": 1,
       "progress": 0,
       "type": "project",
@@ -360,7 +360,7 @@
     {
       "id": 27,
       "text": "整理返程",
-      "start_date": "2025-04-21",
+      "start_date": "2025-10-21",
       "duration": 1,
       "progress": 0,
       "type": "task",

@@ -731,7 +731,6 @@ const initGantt = () => {
     
     // 时间轴列宽配置
     gantt.config.min_column_width = 30  // 最小列宽（像素）
-    gantt.config.scale_height = 60      // 时间轴高度
     gantt.config.subscales = []         // 子刻度配置
 
     // 时间刻度配置
