@@ -66,7 +66,7 @@
           </el-dropdown>
         </div>
         <el-button class="outlook-btn" :class="{ 'starred': isStarred }" @click="toggleStar" :loading="starring"
-          v-if="userInfo && projectInfo?.id && projectInfo.createUserId != userInfo.id">
+          v-if="userInfo == null  ||(userInfo && projectInfo.createUserId != userInfo.id)">
           <el-icon>
             <StarFilled v-if="isStarred" />
             <Star v-else />
@@ -99,7 +99,7 @@
           <el-icon>
             <FolderAdd />
           </el-icon>
-          <span>新建</span>
+          <span>新项目</span>
         </el-button>
 
         <el-button class="outlook-btn" @click="saveProject" :loading="saving">
@@ -117,7 +117,7 @@
           <el-icon>
             <Plus />
           </el-icon>
-          <span>新建任务</span>
+          <span>新任务</span>
         </el-button>
 
         <el-dropdown @command="handleMoreCommand">
@@ -203,9 +203,7 @@
 
         <!-- 客服联系按钮 -->
         <el-button class="outlook-btn" @click="contactService">
-          <el-icon>
-            <Message />
-          </el-icon>
+          <el-icon><ChatDotSquare /></el-icon>
           <span>客服</span>
         </el-button>
       </div>
@@ -481,7 +479,7 @@ import * as XLSX from 'xlsx'
 dayjs.locale('zh-cn')
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
-  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, Message
+  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -1993,7 +1991,7 @@ const toggleStar = async () => {
   }
 
   if (!projectInfo.value?.id) {
-    ElMessage.warning('请先保存项目后再收藏')
+    ElMessage.warning('这是个临时项目，不能Star')
     return
   }
 
