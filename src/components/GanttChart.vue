@@ -64,7 +64,7 @@
           </el-dropdown>
         </div>
         <el-button class="outlook-btn" :class="{ 'starred': isStarred }" @click="toggleStar" :loading="starring"
-          v-if="userInfo == null  ||(userInfo && projectInfo.createUserId != userInfo.id)">
+          v-if="userInfo == null  ||(userInfo && (projectInfo == null || projectInfo.createUserId != userInfo.id))">
           <el-icon>
             <StarFilled v-if="isStarred" />
             <Star v-else />

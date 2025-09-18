@@ -13,19 +13,19 @@
   "icons": [
     {
       "src": "/favicon.ico",
-      "sizes": "any",
+      "sizes": "32x32",
       "type": "image/x-icon",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/favicon.ico",
+      "src": "/favicon-192x192.png",
       "sizes": "192x192",
-      "type": "image/x-icon"
+      "type": "image/png"
     },
     {
-      "src": "/favicon.ico",
+      "src": "/favicon-512x512.png",
       "sizes": "512x512",
-      "type": "image/x-icon"
+      "type": "image/png"
     }
   ],
   "screenshots": [
@@ -34,27 +34,6 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide"
-    },
-    {
-      "src": "/screenshot-narrow.png",
-      "sizes": "720x1280",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "新建项目",
-      "short_name": "新建",
-      "description": "快速创建新的项目计划",
-      "url": "/?action=new",
-      "icons": [
-        {
-          "src": "/favicon.ico",
-          "sizes": "96x96",
-          "type": "image/x-icon"
-        }
-      ]
     }
   ]
 } 
