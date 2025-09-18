@@ -5,9 +5,7 @@
       <!-- 左侧品牌区域 -->
       <div class="brand-section">
         <div class="app-logo">
-          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 3h6v2H8v-2zm0 3h8v2H8v-2z" fill="currentColor" />
-          </svg>
+          <img class="logo-icon" src="/favicon-32x32.png" alt="星甘" />
           <span class="app-name">星甘</span>
         </div>
         <div class="project-selector">
