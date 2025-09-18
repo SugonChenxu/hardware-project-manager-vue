@@ -140,11 +140,6 @@
                   <Fold />
                 </el-icon>折叠全部
               </el-dropdown-item>
-              <el-dropdown-item command="fit">
-                <el-icon>
-                  <FullScreen />
-                </el-icon>适应窗口
-              </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -1314,11 +1309,6 @@ const collapseAll = () => {
   })
 }
 
-// 适应窗口
-const zoomToFit = () => {
-  gantt.zoomToFit()
-}
-
 // 导出Excel数据
 const exportData = () => {
   try {
@@ -1700,9 +1690,6 @@ const handleMoreCommand = (command) => {
       break
     case 'collapse':
       collapseAll()
-      break
-    case 'fit':
-      zoomToFit()
       break
   }
 }
@@ -2172,7 +2159,7 @@ const toggleStar = async () => {
 /* 可编辑字段样式 */
 .editable-field {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   padding: 4px 8px;
   border-radius: 4px;
@@ -2190,6 +2177,11 @@ const toggleStar = async () => {
 .editable-field .value.editable {
   flex: 1;
   color: #409eff;
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
+  max-width: 300px;
+  line-height: 1.4;
 }
 
 .editable-field .edit-icon {
@@ -2197,6 +2189,8 @@ const toggleStar = async () => {
   color: #c0c4cc;
   opacity: 0;
   transition: opacity 0.2s ease;
+  margin-top: 2px;
+  flex-shrink: 0;
 }
 
 .editable-field:hover .edit-icon {
@@ -2218,6 +2212,8 @@ const toggleStar = async () => {
   border-color: #409eff;
   box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
   resize: none;
+  min-width: 300px;  /* 设置最小宽度 */
+  max-width: 500px;  /* 设置最大宽度 */
 }
 
 .textarea-container {

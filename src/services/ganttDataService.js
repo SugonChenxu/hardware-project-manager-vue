@@ -62,7 +62,7 @@ export const loadGanttData = async (code = null) => {
         projectInfo: {
           code: `GANTT_${Date.now()}`,
           name: '未命名项目',
-          description: '这是系统自动生成的一个演示项目',
+          description: '这是系统自动生成的一个演示项目，你可以在此基础上修改或者直接新建一个项目',
           createTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
         }
       }
