@@ -1600,11 +1600,23 @@ const saveProject = async () => {
         id: result.data
       })
 
+      // 添加到项目列表中
+      if (!projectList.value.find(project =>
+        project.id === projectInfo.value.id || project.code === projectInfo.value.code
+      )) {
+        projectList.value.unshift({
+          id: projectInfo.value.id,
+          code: projectInfo.value.code,
+          name: projectInfo.value.name,
+          description: projectInfo.value.description
+        })
+      }
+
       // 如果是新建项目，更新URL
       if (!urlParams.value.code && result.data) {
-        const newUrl = `${window.location.origin}${window.location.pathname}?code=${result.data}`
+        const newUrl = `${window.location.origin}${window.location.pathname}?code=${projectInfo.value.code}`
         window.history.replaceState({}, '', newUrl)
-        urlParams.value.code = result.data
+        urlParams.value.code = projectInfo.value.code
       }
 
       // 更新页面标题
@@ -1637,7 +1649,6 @@ const saveProject = async () => {
 
 // 处理登录成功
 const handleLoginSuccess = () => {
-  ElMessage.success('登录成功')
   loadUserInfo();
   showLoginModal.value = false
   // 如果用户是通过个人中心触发的登录，登录成功后自动打开个人中心
