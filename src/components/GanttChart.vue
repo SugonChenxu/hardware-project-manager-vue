@@ -64,7 +64,7 @@
           </el-dropdown>
         </div>
         <el-button class="outlook-btn" :class="{ 'starred': isStarred }" @click="toggleStar" :loading="starring"
-          v-if="userInfo == null  ||(userInfo && (projectInfo == null || projectInfo.createUserId != userInfo.id))">
+          v-if="userInfo == null || (userInfo && (projectInfo == null || projectInfo.createUserId != userInfo.id))">
           <el-icon>
             <StarFilled v-if="isStarred" />
             <Star v-else />
@@ -171,12 +171,12 @@
             <el-dropdown-menu>
               <div class="column-control-panel">
                 <div class="panel-actions">
-                  <el-button size="small" type="text" @click="toggleAllColumns" :disabled="columnOptions.length === 0">
+                  <el-button size="small" type="text" @click="toggleAllColumns">
                     {{ isAllSelected ? '全不选' : '全选' }}
                   </el-button>
                 </div>
                 <el-checkbox-group v-model="visibleColumns" class="column-checkboxes">
-                  <el-checkbox v-for="column in columnOptions" :key="column.name" :label="column.name">
+                  <el-checkbox v-for="column in allColumns" :key="column.name" :label="column.name">
                     {{ column.label }}
                   </el-checkbox>
                 </el-checkbox-group>
@@ -196,7 +196,9 @@
 
         <!-- 客服联系按钮 -->
         <el-button class="outlook-btn" @click="contactService">
-          <el-icon><ChatDotSquare /></el-icon>
+          <el-icon>
+            <ChatDotSquare />
+          </el-icon>
           <span>客服</span>
         </el-button>
       </div>
@@ -544,24 +546,24 @@ const checkVersionAndRefresh = async () => {
     if (serverVersionResponse.code === 200) {
       const serverVersion = serverVersionResponse.data
       webVersion.value = serverVersion
-      
+
       // 获取本地存储的版本号
       const localVersion = getItem('webVersion')
-      
+
       // 如果本地版本为空或与服务器版本不同，强制刷新
       if (!localVersion || localVersion !== serverVersion) {
         console.log('版本号不匹配，强制刷新页面')
         console.log('本地版本:', localVersion)
         console.log('服务器版本:', serverVersion)
-        
+
         // 更新本地存储的版本号
         setItem('webVersion', serverVersion)
-        
+
         // 强制刷新页面
         window.location.reload(true)
         return
       }
-      
+
       console.log('版本号匹配，无需刷新')
     }
   } catch (error) {
@@ -569,22 +571,6 @@ const checkVersionAndRefresh = async () => {
     // 版本检查失败时，不进行刷新，避免影响正常使用
   }
 }
-
-// 可显示的字段
-const visibleColumns = ref(['text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description'])
-const columnOptions = ref([
-  { name: 'text', label: '任务名称' },
-  { name: 'start_date', label: '开始时间' },
-  { name: 'end_date', label: '完成时间' },
-  { name: 'duration', label: '工期' },
-  { name: 'status', label: '执行情况' },
-  { name: 'progress', label: '完成比例' },
-  { name: 'owner', label: '负责人' },
-  { name: 'stakeholder', label: '相关方' },
-  { name: 'predecessors', label: '前置任务' },
-  { name: 'description', label: '任务描述' }
-])
-
 // 新建任务表单数据
 const newTask = ref({
   text: '',
@@ -617,6 +603,161 @@ const editTask = ref({
   description: '',
   predecessors: []  // 前置任务列表
 })
+
+
+// 可显示的字段
+const visibleColumns = ref(['text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description'])
+
+const allColumns = [
+  {
+    name: "text",
+    label: "任务名称",
+    width: 280,
+    tree: true,
+    editor: {
+      type: "text",
+      map_to: "text"
+    }
+  },
+  {
+    name: "start_date",
+    label: "开始时间",
+    width: 100,
+    align: "center",
+    editor: {
+      type: "date",
+      map_to: "start_date"
+    }
+  },
+  {
+    name: "end_date",
+    label: "完成时间",
+    width: 100,
+    align: "center",
+    editor: {
+      type: "date",
+      map_to: "end_date"
+    }
+  },
+  {
+    name: "duration",
+    label: "工期",
+    width: 90,
+    align: "center",
+    editor: {
+      type: "number",
+      map_to: "duration",
+      min: 0,
+      max: 365
+    },
+    template: function (task) {
+      if (task.duration === 0) return "当天"
+      return task.duration + "天"
+    }
+  },
+  {
+    name: "status",
+    label: "执行情况",
+    width: 100,
+    align: "center",
+    editor: {
+      type: "select",
+      map_to: "status",
+      options: [
+        { key: "not_started", label: "未开始" },
+        { key: "in_progress", label: "进行中" },
+        { key: "completed", label: "已完成" },
+        { key: "on_hold", label: "已暂停" },
+        { key: "cancelled", label: "已取消" }
+      ]
+    },
+    template: function (task) {
+      const statusMap = {
+        'completed': '<span style="color: #67c23a;">✅ 已完成</span>',
+        'in_progress': '<span style="color: #409eff;">🔄 进行中</span>',
+        'not_started': '<span style="color: #909399;">📅 未开始</span>',
+        'on_hold': '<span style="color: #e6a23c;">⏸️ 暂停</span>',
+        'cancelled': '<span style="color: #f56c6c;">❌ 已取消</span>'
+      }
+      return statusMap[task.status] || '<span style="color: #909399;">未开始</span>'
+    }
+  },
+  {
+    name: "progress",
+    label: "完成比例",
+    width: 90,
+    align: "center",
+    editor: {
+      type: "number",
+      map_to: "progress",
+      min: 0,
+      max: 1
+    },
+    template: function (task) {
+      const percent = Math.round(task.progress * 100)
+      let color = '#f56c6c'
+      if (percent >= 80) color = '#67c23a'
+      else if (percent >= 50) color = '#e6a23c'
+      else if (percent >= 20) color = '#409eff'
+
+      return `<span style="color: ${color}; font-weight: bold;">${percent}%</span>`
+    }
+  },
+  {
+    name: "owner",
+    label: "负责人",
+    width: 90,
+    align: "center",
+    editor: {
+      type: "text",
+      map_to: "owner"
+    },
+    template: function (task) {
+      return task.owner || '<span style="color: #c0c4cc;">-</span>'
+    }
+  },
+  {
+    name: "stakeholder",
+    label: "相关方",
+    width: 100,
+    align: "center",
+    editor: {
+      type: "text",
+      map_to: "stakeholder"
+    },
+    template: function (task) {
+      return task.stakeholder || '<span style="color: #c0c4cc;">-</span>'
+    }
+  },
+  {
+    name: "predecessors",
+    label: "前置任务",
+    width: 150,
+    align: "center",
+    template: function (task) {
+      if (task.predecessors && task.predecessors.length > 0) {
+        const predecessorNames = task.predecessors.map(predId => {
+          const predTask = gantt.getTask(predId)
+          return predTask ? predTask.text : `任务${predId}`
+        }).join(', ')
+        return `<span style="color: #409eff;">${predecessorNames}</span>`
+      }
+      return '<span style="color: #c0c4cc;">-</span>'
+    }
+  },
+  {
+    name: "description",
+    label: "任务描述",
+    width: 200,
+    editor: {
+      type: "text",
+      map_to: "description"
+    },
+    template: function (task) {
+      return task.description || '<span style="color: #c0c4cc;">-</span>'
+    }
+  }
+]
 
 // 生命周期钩子
 onMounted(async () => {
@@ -723,7 +864,7 @@ const initGantt = () => {
     gantt.config.sort = true
     gantt.config.scrollY = "y"     // 启用垂直滚动
     gantt.config.scrollX = "x"     // 启用水平滚动
-    
+
     // 时间轴列宽配置
     gantt.config.min_column_width = 30  // 最小列宽（像素）
     gantt.config.subscales = []         // 子刻度配置
@@ -732,156 +873,7 @@ const initGantt = () => {
     setTimeScale(viewMode.value)
 
     // 列配置
-    gantt.config.columns = [
-      {
-        name: "text",
-        label: "任务名称",
-        width: 280,
-        tree: true,
-        editor: {
-          type: "text",
-          map_to: "text"
-        }
-      },
-      {
-        name: "start_date",
-        label: "开始时间",
-        width: 100,
-        align: "center",
-        editor: {
-          type: "date",
-          map_to: "start_date"
-        }
-      },
-      {
-        name: "end_date",
-        label: "完成时间",
-        width: 100,
-        align: "center",
-        editor: {
-          type: "date",
-          map_to: "end_date"
-        }
-      },
-      {
-        name: "duration",
-        label: "工期",
-        width: 90,
-        align: "center",
-        editor: {
-          type: "number",
-          map_to: "duration",
-          min: 0,
-          max: 365
-        },
-        template: function (task) {
-          if (task.duration === 0) return "当天"
-          return task.duration + "天"
-        }
-      },
-      {
-        name: "status",
-        label: "执行情况",
-        width: 100,
-        align: "center",
-        editor: {
-          type: "select",
-          map_to: "status",
-          options: [
-            {key: "not_started", label: "未开始"},
-            {key: "in_progress", label: "进行中"},
-            {key: "completed", label: "已完成"},
-            {key: "on_hold", label: "已暂停"},
-            {key: "cancelled", label: "已取消"}
-          ]
-        },
-        template: function (task) {
-          const statusMap = {
-            'completed': '<span style="color: #67c23a;">✅ 已完成</span>',
-            'in_progress': '<span style="color: #409eff;">🔄 进行中</span>',
-            'not_started': '<span style="color: #909399;">📅 未开始</span>',
-            'on_hold': '<span style="color: #e6a23c;">⏸️ 暂停</span>',
-            'cancelled': '<span style="color: #f56c6c;">❌ 已取消</span>'
-          }
-          return statusMap[task.status] || '<span style="color: #909399;">未开始</span>'
-        }
-      },
-      {
-        name: "progress",
-        label: "完成比例",
-        width: 90,
-        align: "center",
-        editor: {
-          type: "number",
-          map_to: "progress",
-          min: 0,
-          max: 1
-        },
-        template: function (task) {
-          const percent = Math.round(task.progress * 100)
-          let color = '#f56c6c'
-          if (percent >= 80) color = '#67c23a'
-          else if (percent >= 50) color = '#e6a23c'
-          else if (percent >= 20) color = '#409eff'
-
-          return `<span style="color: ${color}; font-weight: bold;">${percent}%</span>`
-        }
-      },
-      {
-        name: "owner",
-        label: "负责人",
-        width: 90,
-        align: "center",
-        editor: {
-          type: "text",
-          map_to: "owner"
-        },
-        template: function (task) {
-          return task.owner || '<span style="color: #c0c4cc;">-</span>'
-        }
-      },
-      {
-        name: "stakeholder",
-        label: "相关方",
-        width: 100,
-        align: "center",
-        editor: {
-          type: "text",
-          map_to: "stakeholder"
-        },
-        template: function (task) {
-          return task.stakeholder || '<span style="color: #c0c4cc;">-</span>'
-        }
-      },
-      {
-        name: "predecessors",
-        label: "前置任务",
-        width: 150,
-        align: "center",
-        template: function (task) {
-          if (task.predecessors && task.predecessors.length > 0) {
-            const predecessorNames = task.predecessors.map(predId => {
-              const predTask = gantt.getTask(predId)
-              return predTask ? predTask.text : `任务${predId}`
-            }).join(', ')
-            return `<span style="color: #409eff;">${predecessorNames}</span>`
-          }
-          return '<span style="color: #c0c4cc;">-</span>'
-        }
-      },
-      {
-        name: "description",
-        label: "任务描述",
-        width: 200,
-        editor: {
-          type: "text",
-          map_to: "description"
-        },
-        template: function (task) {
-          return task.description || '<span style="color: #c0c4cc;">-</span>'
-        }
-      }
-    ]
+    gantt.config.columns = Object.assign([], allColumns)
 
     // 任务类型配置
     gantt.config.types = {
@@ -1877,110 +1869,6 @@ const cancelEdit = () => {
 
 // 更新字段可见性
 const updateColumnVisibility = () => {
-  console.log('更新字段可见性，当前可见字段:', visibleColumns.value)
-  const allColumns = [
-    {
-      name: "text",
-      label: "任务名称",
-      width: 280,
-      tree: true
-    },
-    {
-      name: "start_date",
-      label: "开始时间",
-      width: 110,
-      align: "center"
-    },
-    {
-      name: "end_date",
-      label: "完成时间",
-      width: 110,
-      align: "center"
-    },
-    {
-      name: "duration",
-      label: "工期",
-      width: 90,
-      align: "center",
-      template: function (task) {
-        if (task.duration === 0) return "里程碑"
-        return task.duration + " 工作日"
-      }
-    },
-    {
-      name: "status",
-      label: "执行情况",
-      width: 100,
-      align: "center",
-      template: function (task) {
-        const statusMap = {
-          'completed': '<span style="color: #67c23a;">✅ 已完成</span>',
-          'in_progress': '<span style="color: #409eff;">🔄 进行中</span>',
-          'not_started': '<span style="color: #909399;">📅 未开始</span>',
-          'on_hold': '<span style="color: #e6a23c;">⏸️ 暂停</span>',
-          'cancelled': '<span style="color: #f56c6c;">❌ 已取消</span>'
-        }
-        return statusMap[task.status] || '<span style="color: #909399;">未开始</span>'
-      }
-    },
-    {
-      name: "progress",
-      label: "完成比例",
-      width: 90,
-      align: "center",
-      template: function (task) {
-        const percent = Math.round(task.progress * 100)
-        let color = '#f56c6c'
-        if (percent >= 80) color = '#67c23a'
-        else if (percent >= 50) color = '#e6a23c'
-        else if (percent >= 20) color = '#409eff'
-
-        return `<span style="color: ${color}; font-weight: bold;">${percent}%</span>`
-      }
-    },
-    {
-      name: "owner",
-      label: "负责人",
-      width: 90,
-      align: "center",
-      template: function (task) {
-        return task.owner || '<span style="color: #c0c4cc;">未分配</span>'
-      }
-    },
-    {
-      name: "stakeholder",
-      label: "相关方",
-      width: 100,
-      align: "center",
-      template: function (task) {
-        return task.stakeholder || '<span style="color: #c0c4cc;">-</span>'
-      }
-    },
-    {
-      name: "predecessors",
-      label: "前置任务",
-      width: 150,
-      align: "center",
-      template: function (task) {
-        if (task.predecessors && task.predecessors.length > 0) {
-          const predecessorNames = task.predecessors.map(predId => {
-            const predTask = gantt.getTask(predId)
-            return predTask ? predTask.text : `任务${predId}`
-          }).join(', ')
-          return `<span style="color: #409eff;">${predecessorNames}</span>`
-        }
-        return '<span style="color: #c0c4cc;">无</span>'
-      }
-    },
-    {
-      name: "description",
-      label: "任务描述",
-      width: 200,
-      template: function (task) {
-        return task.description || '<span style="color: #c0c4cc;">暂无描述</span>'
-      }
-    }
-  ]
 
   // 筛选可见列
   const filteredColumns = allColumns.filter(col => visibleColumns.value.includes(col.name))
@@ -1996,7 +1884,7 @@ const updateColumnVisibility = () => {
 
 // 计算属性：是否全部选中
 const isAllSelected = computed(() => {
-  return visibleColumns.value.length === columnOptions.value.length
+  return visibleColumns.value.length === allColumns.length
 })
 
 // 切换全选/全不选
@@ -2004,7 +1892,7 @@ const toggleAllColumns = () => {
   if (isAllSelected.value) {
     visibleColumns.value = []
   } else {
-    visibleColumns.value = columnOptions.value.map(column => column.name)
+    visibleColumns.value = allColumns.map(column => column.name)
   }
 }
 
@@ -2268,8 +2156,10 @@ const toggleStar = async () => {
   border-color: #409eff;
   box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
   resize: none;
-  min-width: 300px;  /* 设置最小宽度 */
-  max-width: 500px;  /* 设置最大宽度 */
+  min-width: 300px;
+  /* 设置最小宽度 */
+  max-width: 500px;
+  /* 设置最大宽度 */
 }
 
 .textarea-container {
@@ -2945,6 +2835,4 @@ const toggleStar = async () => {
     font-weight: 600;
   }
 }
-
-
 </style>
