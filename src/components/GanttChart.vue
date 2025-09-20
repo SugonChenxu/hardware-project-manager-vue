@@ -737,25 +737,43 @@ const initGantt = () => {
         name: "text",
         label: "任务名称",
         width: 280,
-        tree: true
+        tree: true,
+        editor: {
+          type: "text",
+          map_to: "text"
+        }
       },
       {
         name: "start_date",
         label: "开始时间",
         width: 100,
         align: "center",
+        editor: {
+          type: "date",
+          map_to: "start_date"
+        }
       },
       {
         name: "end_date",
         label: "完成时间",
         width: 100,
         align: "center",
+        editor: {
+          type: "date",
+          map_to: "end_date"
+        }
       },
       {
         name: "duration",
         label: "工期",
         width: 90,
         align: "center",
+        editor: {
+          type: "number",
+          map_to: "duration",
+          min: 0,
+          max: 365
+        },
         template: function (task) {
           if (task.duration === 0) return "当天"
           return task.duration + "天"
@@ -766,6 +784,17 @@ const initGantt = () => {
         label: "执行情况",
         width: 100,
         align: "center",
+        editor: {
+          type: "select",
+          map_to: "status",
+          options: [
+            {key: "not_started", label: "未开始"},
+            {key: "in_progress", label: "进行中"},
+            {key: "completed", label: "已完成"},
+            {key: "on_hold", label: "已暂停"},
+            {key: "cancelled", label: "已取消"}
+          ]
+        },
         template: function (task) {
           const statusMap = {
             'completed': '<span style="color: #67c23a;">✅ 已完成</span>',
@@ -782,6 +811,12 @@ const initGantt = () => {
         label: "完成比例",
         width: 90,
         align: "center",
+        editor: {
+          type: "number",
+          map_to: "progress",
+          min: 0,
+          max: 1
+        },
         template: function (task) {
           const percent = Math.round(task.progress * 100)
           let color = '#f56c6c'
@@ -797,6 +832,10 @@ const initGantt = () => {
         label: "负责人",
         width: 90,
         align: "center",
+        editor: {
+          type: "text",
+          map_to: "owner"
+        },
         template: function (task) {
           return task.owner || '<span style="color: #c0c4cc;">-</span>'
         }
@@ -806,6 +845,10 @@ const initGantt = () => {
         label: "相关方",
         width: 100,
         align: "center",
+        editor: {
+          type: "text",
+          map_to: "stakeholder"
+        },
         template: function (task) {
           return task.stakeholder || '<span style="color: #c0c4cc;">-</span>'
         }
@@ -830,6 +873,10 @@ const initGantt = () => {
         name: "description",
         label: "任务描述",
         width: 200,
+        editor: {
+          type: "text",
+          map_to: "description"
+        },
         template: function (task) {
           return task.description || '<span style="color: #c0c4cc;">-</span>'
         }
@@ -850,15 +897,13 @@ const initGantt = () => {
     gantt.config.work_time = false            // 禁用工作时间，如果启用则不能选则周末等
     gantt.config.correct_work_time = false    // 禁用调整工作时间
 
-    // 禁用内置编辑器
-    gantt.config.readonly = false            // 保持可编辑状态，但禁用内置编辑器
+    // 启用内联编辑功能
+    gantt.config.readonly = false            // 保持可编辑状态
     gantt.config.drag_links = true          // 启用拖拽创建依赖
-    gantt.config.details_on_dblclick = false // 禁用双击打开详情
-    // gantt.config.click_drag = {              // 配置点击拖拽行为
-    //   ignore: ".gantt_task_line, .gantt_task_link" // 忽略任务条和链接的拖拽
-    // }
+    gantt.config.details_on_dblclick = false // 禁用双击打开详情，使用自定义编辑对话框
+    gantt.config.inline_editors_date_format = "%Y-%m-%d"  // 日期编辑器格式
 
-    // 禁用内置弹窗和编辑器
+    // 禁用内置弹窗，使用自定义编辑对话框
     gantt.config.lightbox = {
       sections: []  // 清空所有内置编辑器配置
     }
