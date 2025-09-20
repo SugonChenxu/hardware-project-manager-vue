@@ -308,7 +308,7 @@
             <el-form-item label="父任务">
               <el-select v-model="newTask.parent" placeholder="选择父任务（可选）" style="width: 100%">
                 <el-option label="无" :value="0" />
-                <el-option v-for="task in tasks" :key="task.id" :label="task.text" :value="task.id" />
+                <el-option v-for="task in tasks" :key="task.id" :label="task.id + ' - ' + task.text" :value="task.id" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -317,7 +317,7 @@
         <el-form-item label="前置任务">
           <el-select v-model="newTask.predecessors" multiple placeholder="选择前置任务（可选）" style="width: 100%">
             <el-option v-for="task in availableTasksForPredecessors(newTask.id)" :key="task.id"
-              :label="`${task.text} (ID: ${task.id})`" :value="task.id" />
+              :label="`${task.id} - ${task.text}`" :value="task.id" />
           </el-select>
           <div style="color: #909399; font-size: 12px; margin-top: 4px;">
             选择的前置任务必须在此任务开始之前完成
@@ -412,8 +412,8 @@
             <el-form-item label="父任务">
               <el-select v-model="editTask.parent" placeholder="选择父任务（可选）" style="width: 100%">
                 <el-option label="无" :value="0" />
-                <el-option v-for="task in tasks.filter(t => t.id !== editTask.id)" :key="task.id" :label="task.text"
-                  :value="task.id" />
+                <el-option v-for="task in tasks.filter(t => t.id !== editTask.id)" :key="task.id"
+                  :label="task.id + ' - ' + task.text" :value="task.id" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -422,7 +422,7 @@
         <el-form-item label="前置任务">
           <el-select v-model="editTask.predecessors" multiple placeholder="选择前置任务（可选）" style="width: 100%">
             <el-option v-for="task in availableTasksForPredecessors(editTask.id)" :key="task.id"
-              :label="`${task.text} (ID: ${task.id})`" :value="task.id" />
+              :label="`${task.id} - ${task.text}`" :value="task.id" />
           </el-select>
           <div style="color: #909399; font-size: 12px; margin-top: 4px;">
             选择的前置任务必须在此任务开始之前完成
@@ -609,6 +609,11 @@ const editTask = ref({
 const visibleColumns = ref(['text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description'])
 
 const allColumns = [
+{
+    name: "id",
+    label: "ID",
+    width: 30,
+  },
   {
     name: "text",
     label: "任务名称",
