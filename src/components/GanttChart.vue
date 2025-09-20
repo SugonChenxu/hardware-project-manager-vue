@@ -174,6 +174,9 @@
                   <el-button size="small" type="text" @click="toggleAllColumns">
                     {{ isAllSelected ? '全不选' : '全选' }}
                   </el-button>
+                  <el-button size="small" type="text" @click="resetGridWidth" class="reset-width-btn">
+                    重置表格宽度
+                  </el-button>
                 </div>
                 <el-checkbox-group v-model="visibleColumns" class="column-checkboxes">
                   <el-checkbox v-for="column in allColumns" :key="column.name" :label="column.name">
@@ -226,7 +229,7 @@
     </div>
 
     <!-- 甘特图容器 -->
-    <div class="gantt-container">
+    <div class="gantt-container" :class="{ 'grid-resizing': isGridResizing }">
       <div ref="ganttContainer" class="gantt-chart"></div>
     </div>
 
@@ -538,6 +541,146 @@ const starring = ref(false) // 收藏操作加载状态
 // 版本号管理
 const webVersion = ref('')
 
+// Grid和Timeline分割线拖拽相关状态
+const isGridResizing = ref(false)
+const gridWidth = ref(1100) // 默认Grid宽度
+const startGridX = ref(0)
+const startGridWidth = ref(0)
+const minGridWidth = 300 // 最小Grid宽度
+const maxGridWidth = 1600 // 最大Grid宽度
+
+// 从localStorage加载Grid宽度设置
+const loadGridWidth = () => {
+  try {
+    const savedWidth = getItem('gantt_grid_width')
+    if (savedWidth) {
+      gridWidth.value = parseInt(savedWidth)
+    }
+  } catch (error) {
+    console.error('加载Grid宽度设置失败:', error)
+  }
+}
+
+// 保存Grid宽度设置到localStorage
+const saveGridWidth = () => {
+  try {
+    setItem('gantt_grid_width', gridWidth.value.toString())
+  } catch (error) {
+    console.error('保存Grid宽度设置失败:', error)
+  }
+}
+
+// 开始拖拽调整Grid宽度
+const startGridResize = (event) => {
+  event.preventDefault()
+  event.stopPropagation()
+  
+  isGridResizing.value = true
+  startGridX.value = event.clientX
+  startGridWidth.value = gridWidth.value
+  
+  // 添加全局事件监听
+  document.addEventListener('mousemove', handleGridResize)
+  document.addEventListener('mouseup', endGridResize)
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+}
+
+// 处理Grid宽度调整
+const handleGridResize = (event) => {
+  if (!isGridResizing.value) return
+  
+  const deltaX = event.clientX - startGridX.value
+  const newWidth = Math.max(minGridWidth, Math.min(maxGridWidth, startGridWidth.value + deltaX))
+  
+  gridWidth.value = newWidth
+  
+  // 立即更新甘特图Grid宽度
+  updateGanttGridWidth()
+}
+
+// 结束Grid宽度调整
+const endGridResize = () => {
+  if (isGridResizing.value) {
+    isGridResizing.value = false
+    
+    // 保存Grid宽度设置
+    saveGridWidth()
+    
+    // 移除全局事件监听
+    document.removeEventListener('mousemove', handleGridResize)
+    document.removeEventListener('mouseup', endGridResize)
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+  }
+}
+
+// 更新甘特图Grid宽度
+const updateGanttGridWidth = () => {
+  if (gantt && gantt.config) {
+    gantt.config.grid_width = gridWidth.value
+    
+    // 更新布局配置
+    gantt.config.layout = {
+      css: "gantt_container",
+      rows: [
+        {
+          cols: [
+            { view: "grid", id: "grid", width: gridWidth.value, scrollY: "scrollVer" },
+            {
+              rows: [
+                { view: "timeline", id: "timeline", scrollX: "scrollHor", scrollY: "scrollVer" },
+                { view: "scrollbar", scroll: "x", id: "scrollHor" }
+              ]
+            },
+            { view: "scrollbar", scroll: "y", id: "scrollVer" }
+          ]
+        }
+      ]
+    }
+    
+    // 重新渲染甘特图
+    if (gantt.render) {
+      gantt.render()
+    }
+  }
+}
+
+// 添加Grid分割线拖拽手柄
+const addGridResizeHandle = () => {
+  nextTick(() => {
+    // 移除旧的拖拽手柄
+    const existingHandle = document.querySelector('.grid-resize-handle')
+    if (existingHandle) {
+      existingHandle.remove()
+    }
+    
+    // 查找Grid容器
+    const gridContainer = document.querySelector('.gantt_grid')
+    if (!gridContainer) return
+    
+    // 创建拖拽手柄
+    const handle = document.createElement('div')
+    handle.className = 'grid-resize-handle'
+    handle.title = '拖拽调整表格宽度'
+    
+    // 添加事件监听
+    handle.addEventListener('mousedown', startGridResize)
+    
+    // 添加到Grid容器
+    gridContainer.style.position = 'relative'
+    gridContainer.appendChild(handle)
+  })
+}
+
+// 重置Grid宽度到默认值
+const resetGridWidth = () => {
+  gridWidth.value = 1100
+  saveGridWidth()
+  updateGanttGridWidth()
+  ElMessage.success('表格宽度已重置为默认值')
+}
+
 // 版本检查函数
 const checkVersionAndRefresh = async () => {
   try {
@@ -769,6 +912,9 @@ onMounted(async () => {
   // 首先进行版本检查，如果版本不匹配会自动刷新页面
   await checkVersionAndRefresh()
 
+  // 加载Grid宽度设置
+  loadGridWidth()
+
   // 获取URL参数
   const params = new URLSearchParams(window.location.search)
   let code = params.get('code')
@@ -793,6 +939,17 @@ onMounted(async () => {
 
   // 监听窗口尺寸变化
   window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  // 清理Grid拖拽事件监听器
+  if (isGridResizing.value) {
+    document.removeEventListener('mousemove', handleGridResize)
+    document.removeEventListener('mouseup', endGridResize)
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+  }
 })
 
 const contactService = () => {
@@ -861,7 +1018,7 @@ const initGantt = () => {
     gantt.config.autosize = false  // 关闭自动调整大小，使用固定高度
     gantt.config.row_height = 28
     gantt.config.task_height = 20
-    gantt.config.grid_width = 1100
+    gantt.config.grid_width = gridWidth.value
     gantt.config.drag_resize = true
     gantt.config.drag_move = true
     gantt.config.drag_progress = true
@@ -879,7 +1036,7 @@ const initGantt = () => {
       rows: [
         {
           cols: [
-            { view: "grid", id: "grid", width: 1100, scrollY: "scrollVer" },
+            { view: "grid", id: "grid", width: gridWidth.value, scrollY: "scrollVer" },
             {
               rows: [
                 { view: "timeline", id: "timeline", scrollX: "scrollHor", scrollY: "scrollVer" },
@@ -996,6 +1153,16 @@ const initGantt = () => {
 
     // 加载数据
     loadData()
+    
+    // 添加Grid分割线拖拽手柄
+    gantt.attachEvent("onGanttRender", () => {
+      addGridResizeHandle()
+    })
+    
+    // 初始添加拖拽手柄
+    setTimeout(() => {
+      addGridResizeHandle()
+    }, 500)
   })
 }
 
@@ -2389,7 +2556,7 @@ const toggleStar = async () => {
 /* 字段控制面板 */
 .column-control-panel {
   padding: 16px;
-  min-width: 180px;
+  min-width: 220px;
 }
 
 .panel-header {
@@ -2404,12 +2571,16 @@ const toggleStar = async () => {
   justify-content: space-between;
   margin-bottom: 12px;
   padding: 0 4px;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .panel-actions .el-button {
   padding: 4px 8px;
   font-size: 12px;
   color: #409eff;
+  flex: 1;
+  min-width: 80px;
 }
 
 .panel-actions .el-button:hover {
@@ -2424,6 +2595,15 @@ const toggleStar = async () => {
 .panel-actions .el-button.is-disabled:hover {
   color: #c0c4cc;
   background-color: transparent;
+}
+
+.panel-actions .reset-width-btn {
+  color: #e6a23c;
+}
+
+.panel-actions .reset-width-btn:hover {
+  color: #ebb563;
+  background-color: rgba(230, 162, 60, 0.1);
 }
 
 .column-checkboxes {
@@ -2662,6 +2842,62 @@ const toggleStar = async () => {
       transparent,
       transparent 99px,
       rgba(0, 0, 0, 0.02) 100px);
+}
+
+/* Grid分割线拖拽手柄样式 */
+:deep(.grid-resize-handle) {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 1000;
+  transition: background-color 0.2s ease;
+  border-right: 1px solid transparent;
+}
+
+:deep(.grid-resize-handle:hover) {
+  background-color: rgba(64, 158, 255, 0.1);
+  border-right-color: #409eff;
+}
+
+:deep(.grid-resize-handle::before) {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 20px;
+  background-color: #dcdfe6;
+  border-radius: 1px;
+  transition: background-color 0.2s ease;
+}
+
+:deep(.grid-resize-handle:hover::before) {
+  background-color: #409eff;
+}
+
+/* 拖拽时的视觉反馈 */
+.gantt-container.grid-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+.gantt-container.grid-resizing * {
+  cursor: col-resize !important;
+}
+
+.gantt-container.grid-resizing :deep(.gantt_grid) {
+  border-right: 2px solid #409eff;
+}
+
+/* Grid边框增强 */
+:deep(.gantt_grid) {
+  border-right: 1px solid #e4e7ed;
+  transition: border-color 0.2s ease;
 }
 
 /* 响应式设计 */
