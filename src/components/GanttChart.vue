@@ -609,7 +609,7 @@ const editTask = ref({
 const visibleColumns = ref(['text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description'])
 
 const allColumns = [
-{
+  {
     name: "id",
     label: "ID",
     width: 30,
@@ -862,7 +862,6 @@ const initGantt = () => {
     gantt.config.row_height = 28
     gantt.config.task_height = 20
     gantt.config.grid_width = 1100
-    gantt.config.grid_resize = true
     gantt.config.drag_resize = true
     gantt.config.drag_move = true
     gantt.config.drag_progress = true
@@ -873,6 +872,25 @@ const initGantt = () => {
     // 时间轴列宽配置
     gantt.config.min_column_width = 30  // 最小列宽（像素）
     gantt.config.subscales = []         // 子刻度配置
+
+    //自定义布局，只有甘特图timeline部分需要横向滚动条
+    gantt.config.layout = {
+      css: "gantt_container",
+      rows: [
+        {
+          cols: [
+            { view: "grid", id: "grid", width: 1100, scrollY: "scrollVer" },
+            {
+              rows: [
+                { view: "timeline", id: "timeline", scrollX: "scrollHor", scrollY: "scrollVer" },
+                { view: "scrollbar", scroll: "x", id: "scrollHor" }
+              ]
+            },
+            { view: "scrollbar", scroll: "y", id: "scrollVer" }
+          ]
+        }
+      ]
+    };
 
     // 时间刻度配置
     setTimeScale(viewMode.value)
