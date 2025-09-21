@@ -544,7 +544,7 @@ const webVersion = ref('')
 
 // Grid和Timeline分割线拖拽相关状态
 const isGridResizing = ref(false)
-const gridWidth = ref(1100) // 默认Grid宽度
+const gridWidth = ref(1330) // 默认Grid宽度
 const startGridX = ref(0)
 const startGridWidth = ref(0)
 const minGridWidth = 300 // 最小Grid宽度
@@ -676,7 +676,7 @@ const addGridResizeHandle = () => {
 
 // 重置Grid宽度到默认值
 const resetGridWidth = () => {
-  gridWidth.value = 1100
+  gridWidth.value = 1330
   saveGridWidth()
   updateGanttGridWidth()
   ElMessage.success('表格宽度已重置为默认值')
