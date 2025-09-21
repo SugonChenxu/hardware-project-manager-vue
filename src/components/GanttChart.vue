@@ -1157,6 +1157,19 @@ const initGantt = () => {
       return css
     }
 
+    // 时间轴列样式 - 周末区分
+    gantt.templates.timeline_cell_class = function (task, date) {
+      let css = ""
+      const day = date.getDay()
+      
+      // 周六 (6) 和周日 (0) 添加周末样式
+      if (day === 0 || day === 6) {
+        css += "gantt_saturday "
+      }
+      
+      return css
+    }
+
     // 事件监听
     gantt.attachEvent("onTaskClick", (id, e) => {
       currentTask.value = gantt.getTask(id)
@@ -1285,7 +1298,18 @@ const setTimeScale = (mode) => {
       }
       gantt.config.min_column_width = 30  // 默认视图：每天30像素
       gantt.config.subscales = [
-        { unit: 'day', step: 1, date: '%d' }
+        { unit: 'day', step: 1, date: '%d',  css: function (date) { 
+            let css = ""
+            const day = date.getDay()
+            
+            // 周六 (6) 和周日 (0) 添加周末样式
+            if (day === 0 || day === 6) {
+              css += "gantt_scale_saturday "
+            }
+            
+            return css
+          
+          } }
       ]
       break
     case 'month':
@@ -3001,6 +3025,27 @@ const toggleStar = async () => {
       transparent,
       transparent 99px,
       rgba(0, 0, 0, 0.02) 100px);
+}
+
+/* 周末样式 - 时间轴列 */
+:deep(.gantt_saturday) {
+  background: rgba(255, 193, 7, 0.08) !important;
+}
+
+/* 周末样式 - 时间刻度头部 */
+:deep(.gantt_scale_saturday) {
+  background: linear-gradient(to bottom, #fff3cd, #ffeaa7) !important;
+  color: #856404 !important;
+  font-weight: 700;
+}
+
+
+/* 周末样式增强 - 任务背景区域 */
+:deep(.gantt_task_bg.gantt_saturday) {
+  background: repeating-linear-gradient(90deg,
+      rgba(255, 193, 7, 0.05),
+      rgba(255, 193, 7, 0.05) 99px,
+      rgba(255, 193, 7, 0.15) 100px) !important;
 }
 
 /* Grid分割线拖拽手柄样式 */
