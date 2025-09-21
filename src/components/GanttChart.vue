@@ -750,7 +750,7 @@ const editTask = ref({
 
 
 // 可显示的字段
-const visibleColumns = ref(['text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description'])
+const visibleColumns = ref(['id', 'text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description'])
 
 const allColumns = [
   {
