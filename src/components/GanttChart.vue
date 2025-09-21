@@ -140,6 +140,14 @@
                   <Fold />
                 </el-icon>折叠全部
               </el-dropdown-item>
+              <el-dropdown-item command="toggleDragSort" divided>
+                <el-icon>
+                  <Sort />
+                </el-icon>{{ dragSortEnabled ? '禁用拖拽排序' : '启用拖拽排序' }}
+              </el-dropdown-item>
+              <el-dropdown-item disabled v-if="dragSortEnabled">
+                <span style="font-size: 11px; color: #909399;">💡 拖拽表格行可调整任务顺序</span>
+              </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -477,7 +485,7 @@ import * as XLSX from 'xlsx'
 dayjs.locale('zh-cn')
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
-  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare
+  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -541,6 +549,9 @@ const starring = ref(false) // 收藏操作加载状态
 
 // 版本号管理
 const webVersion = ref('')
+
+// 拖拽排序开关
+const dragSortEnabled = ref(true)
 
 // Grid和Timeline分割线拖拽相关状态
 const isGridResizing = ref(false)
@@ -985,6 +996,30 @@ watch(visibleColumns, () => {
   }
 }, { deep: true })
 
+// 监听拖拽排序开关变化
+watch(dragSortEnabled, (enabled) => {
+  if (gantt && gantt.config) {
+    if (enabled) {
+      gantt.config.order_branch = true
+      gantt.config.order_branch_free = true
+      // 如果任务数量较多，使用marker模式提升性能
+      if (tasks.value.length > 50) {
+        gantt.config.order_branch = "marker"
+      }
+      ElMessage.success('拖拽排序已启用')
+    } else {
+      gantt.config.order_branch = false
+      gantt.config.order_branch_free = false
+      ElMessage.success('拖拽排序已禁用')
+    }
+    
+    // 重新渲染甘特图以应用配置
+    if (gantt.render) {
+      gantt.render()
+    }
+  }
+})
+
 // 加载初始数据
 const loadInitialData = async (code = null) => {
   try {
@@ -1026,6 +1061,15 @@ const initGantt = () => {
     gantt.config.sort = true
     gantt.config.scrollY = "y"     // 启用垂直滚动
     gantt.config.scrollX = "x"     // 启用水平滚动
+
+    // 启用行拖动排序功能
+    gantt.config.order_branch = true        // 启用同级任务拖动排序
+    gantt.config.order_branch_free = true   // 启用跨级任务拖动排序
+
+    // 如果任务数量较多，使用marker模式提升性能
+    if (tasks.value.length > 50) {
+      gantt.config.order_branch = "marker"
+    }
 
     // 时间轴列宽配置
     gantt.config.min_column_width = 30  // 最小列宽（像素）
@@ -1124,6 +1168,50 @@ const initGantt = () => {
       const task = gantt.getTask(id)
       openEditDialog(task)
       return false  // 阻止默认行为
+    })
+
+    // 添加行拖动排序事件监听
+    gantt.attachEvent("onBeforeRowDragEnd", (id, parent, tindex) => {
+      console.log('拖动排序前:', { id, parent, tindex })
+      
+      // 检查是否启用拖拽排序
+      if (!dragSortEnabled.value) {
+        ElMessage.warning('拖拽排序功能已禁用')
+        return false
+      }
+      
+      // 获取被拖动的任务
+      const draggedTask = gantt.getTask(id)
+      
+      // 可以添加更多限制逻辑
+      // 例如：防止里程碑任务被拖拽到项目任务下面
+      if (draggedTask.type === 'milestone' && parent !== draggedTask.parent) {
+        ElMessage.warning('里程碑任务不能移动到其他父任务下')
+        return false
+      }
+      
+      return true  // 允许拖动
+    })
+
+    gantt.attachEvent("onRowDragEnd", (id, target) => {
+      console.log('拖动排序完成:', { id, target })
+      
+      // 更新本地任务数组的顺序
+      updateTaskOrderInArray(id, target)
+      
+      ElMessage.success('任务顺序已调整')
+    })
+
+    // 添加行拖动开始事件
+    gantt.attachEvent("onRowDragStart", (id, target, e) => {
+      console.log('开始拖动任务:', id)
+      
+      // 检查是否启用拖拽排序
+      if (!dragSortEnabled.value) {
+        return false
+      }
+      
+      return true
     })
 
     gantt.attachEvent("onAfterTaskUpdate", (id, task) => {
@@ -1760,6 +1848,59 @@ const removeTaskFromArray = (id) => {
   }
 }
 
+// 更新任务在数组中的顺序
+const updateTaskOrderInArray = (draggedTaskId, targetInfo) => {
+  try {
+    const draggedTaskIndex = tasks.value.findIndex(t => t.id == draggedTaskId)
+    if (draggedTaskIndex === -1) {
+      console.error('未找到被拖动的任务:', draggedTaskId)
+      return
+    }
+
+    // 移除被拖动的任务
+    const [draggedTask] = tasks.value.splice(draggedTaskIndex, 1)
+    
+    let targetIndex = 0
+    let isNext = false
+
+    // 解析target信息
+    if (typeof targetInfo === 'string' && targetInfo.startsWith('next:')) {
+      // target格式为 "next:targetId"，表示应该插入到目标任务之后
+      const targetId = targetInfo.substring(5) // 移除 "next:" 前缀
+      const targetTaskIndex = tasks.value.findIndex(t => t.id == targetId)
+      if (targetTaskIndex !== -1) {
+        targetIndex = targetTaskIndex + 1
+        isNext = true
+      }
+    } else {
+      // target为任务ID，表示应该插入到目标任务之前
+      const targetTaskIndex = tasks.value.findIndex(t => t.id == targetInfo)
+      if (targetTaskIndex !== -1) {
+        targetIndex = targetTaskIndex
+      }
+    }
+
+    // 确保索引在有效范围内
+    targetIndex = Math.max(0, Math.min(targetIndex, tasks.value.length))
+
+    // 插入到新位置
+    tasks.value.splice(targetIndex, 0, draggedTask)
+
+    console.log('任务顺序已更新:', {
+      draggedTaskId,
+      targetInfo,
+      targetIndex,
+      isNext,
+      totalTasks: tasks.value.length
+    })
+
+    // 触发响应式更新
+    tasks.value = [...tasks.value]
+  } catch (error) {
+    console.error('更新任务顺序失败:', error)
+    ElMessage.error('更新任务顺序失败')
+  }
+}
 
 // 获取可选择的前置任务列表
 const availableTasksForPredecessors = (currentTaskId) => {
@@ -1943,6 +2084,9 @@ const handleMoreCommand = (command) => {
       break
     case 'collapse':
       collapseAll()
+      break
+    case 'toggleDragSort':
+      dragSortEnabled.value = !dragSortEnabled.value
       break
   }
 }
@@ -2913,6 +3057,91 @@ const toggleStar = async () => {
 :deep(.gantt_grid) {
   border-right: 1px solid #e4e7ed;
   transition: border-color 0.2s ease;
+}
+
+/* 拖拽排序样式 */
+:deep(.gantt_row_drag) {
+  background: rgba(64, 158, 255, 0.1);
+  border: 1px dashed #409eff;
+}
+
+:deep(.gantt_row_drag_marker) {
+  background: #409eff;
+  height: 2px;
+  border-radius: 1px;
+}
+
+/* 拖拽时的行样式 */
+:deep(.gantt_row.gantt_selected) {
+  background: rgba(64, 158, 255, 0.1);
+}
+
+/* 拖拽目标位置指示器 */
+:deep(.gantt_drag_marker) {
+  background: #409eff;
+  height: 2px;
+  border-radius: 1px;
+  box-shadow: 0 1px 3px rgba(64, 158, 255, 0.3);
+}
+
+/* 拖拽时的鼠标样式 */
+:deep(.gantt_grid_data) {
+  cursor: grab;
+}
+
+:deep(.gantt_grid_data:active) {
+  cursor: grabbing;
+}
+
+/* 拖拽时禁用文本选择 */
+:deep(.gantt_row_drag) {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 拖拽时的行高亮 */
+:deep(.gantt_row.gantt_row_drag) {
+  background: rgba(64, 158, 255, 0.15);
+  border-left: 3px solid #409eff;
+  transition: all 0.2s ease;
+}
+
+/* 拖拽预览样式 */
+:deep(.gantt_drag_marker) {
+  background: linear-gradient(90deg, #409eff, #66b1ff);
+  height: 3px;
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.4);
+  animation: dragMarkerPulse 1s infinite;
+}
+
+@keyframes dragMarkerPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scaleY(1.2);
+  }
+}
+
+/* 拖拽时的任务文本样式 */
+:deep(.gantt_row_drag .gantt_cell) {
+  color: #409eff;
+  font-weight: 500;
+}
+
+/* 禁用拖拽时的样式 */
+:deep(.gantt_grid_data.drag-disabled) {
+  cursor: not-allowed;
+}
+
+:deep(.gantt_row.drag-disabled) {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 /* 响应式设计 */
