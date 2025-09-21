@@ -497,6 +497,7 @@ const locale = zhCn
 
 // 响应式数据
 const ganttContainer = ref()
+const currentTask = ref(null)  //当前选中的任务
 const fileInput = ref()
 const nameInput = ref()
 const codeInput = ref()
@@ -574,11 +575,11 @@ const saveGridWidth = () => {
 const startGridResize = (event) => {
   event.preventDefault()
   event.stopPropagation()
-  
+
   isGridResizing.value = true
   startGridX.value = event.clientX
   startGridWidth.value = gridWidth.value
-  
+
   // 添加全局事件监听
   document.addEventListener('mousemove', handleGridResize)
   document.addEventListener('mouseup', endGridResize)
@@ -589,12 +590,12 @@ const startGridResize = (event) => {
 // 处理Grid宽度调整
 const handleGridResize = (event) => {
   if (!isGridResizing.value) return
-  
+
   const deltaX = event.clientX - startGridX.value
   const newWidth = Math.max(minGridWidth, Math.min(maxGridWidth, startGridWidth.value + deltaX))
-  
+
   gridWidth.value = newWidth
-  
+
   // 立即更新甘特图Grid宽度
   updateGanttGridWidth()
 }
@@ -603,10 +604,10 @@ const handleGridResize = (event) => {
 const endGridResize = () => {
   if (isGridResizing.value) {
     isGridResizing.value = false
-    
+
     // 保存Grid宽度设置
     saveGridWidth()
-    
+
     // 移除全局事件监听
     document.removeEventListener('mousemove', handleGridResize)
     document.removeEventListener('mouseup', endGridResize)
@@ -619,7 +620,7 @@ const endGridResize = () => {
 const updateGanttGridWidth = () => {
   if (gantt && gantt.config) {
     gantt.config.grid_width = gridWidth.value
-    
+
     // 更新布局配置
     gantt.config.layout = {
       css: "gantt_container",
@@ -638,7 +639,7 @@ const updateGanttGridWidth = () => {
         }
       ]
     }
-    
+
     // 重新渲染甘特图
     if (gantt.render) {
       gantt.render()
@@ -654,19 +655,19 @@ const addGridResizeHandle = () => {
     if (existingHandle) {
       existingHandle.remove()
     }
-    
+
     // 查找Grid容器
     const gridContainer = document.querySelector('.gantt_grid')
     if (!gridContainer) return
-    
+
     // 创建拖拽手柄
     const handle = document.createElement('div')
     handle.className = 'grid-resize-handle'
     handle.title = '拖拽调整表格宽度'
-    
+
     // 添加事件监听
     handle.addEventListener('mousedown', startGridResize)
-    
+
     // 添加到Grid容器
     gridContainer.style.position = 'relative'
     gridContainer.appendChild(handle)
@@ -1114,8 +1115,7 @@ const initGantt = () => {
 
     // 事件监听
     gantt.attachEvent("onTaskClick", (id, e) => {
-      const task = gantt.getTask(id)
-      console.info(`点击任务: ${task.text}`)
+      currentTask.value = gantt.getTask(id)
       return true
     })
 
@@ -1153,12 +1153,12 @@ const initGantt = () => {
 
     // 加载数据
     loadData()
-    
+
     // 添加Grid分割线拖拽手柄
     gantt.attachEvent("onGanttRender", () => {
       addGridResizeHandle()
     })
-    
+
     // 初始添加拖拽手柄
     setTimeout(() => {
       addGridResizeHandle()
@@ -1358,7 +1358,7 @@ const addTask = () => {
     duration: 3,
     progress: 0,
     type: 'task',
-    parent: 0,
+    parent: currentTask.value ? currentTask.value.parent : 0,
     status: 'not_started',
     owner: '',
     stakeholder: '',
@@ -1392,6 +1392,21 @@ const createTask = () => {
   }
 
   gantt.addTask(task, newTask.value.parent)
+
+  if (currentTask.value) {
+    // 将新任务插入到tasks数组中选中任务的下一个位置
+    const taskIndex = tasks.value.findIndex(t => t.id == task.id)
+    if (taskIndex !== -1) {
+      // 从原位置移除
+      const [newTaskObj] = tasks.value.splice(taskIndex, 1)
+      // 插入到选中任务的下一个位置
+      tasks.value.splice(currentTask.value.$index + 1, 0, newTaskObj)
+
+      // 重新加载甘特图数据以更新显示顺序
+      gantt.clearAll()
+      loadData()
+    }
+  }
 
   // 根据前置任务创建链接
   createLinksFromPredecessors(task.id, task.predecessors)
