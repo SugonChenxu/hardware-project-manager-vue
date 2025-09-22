@@ -914,7 +914,13 @@ const allColumns = [
       map_to: "description"
     },
     template: function (task) {
-      return task.description || '<span style="color: #c0c4cc;">-</span>'
+      const description = task.description || ''
+      if (description) {
+        // 如果description长度超过20个字符，显示省略号并在title中显示完整内容
+        const displayText = description.length > 20 ? description.substring(0, 20) + '...' : description
+        return `<span title="${description.replace(/"/g, '&quot;')}">${displayText}</span>`
+      }
+      return '<span style="color: #c0c4cc;">-</span>'
     }
   }
 ]
@@ -1460,7 +1466,7 @@ const calculateEndDateForEdit = () => {
 
 // 添加任务
 const addTask = () => {
-  const startDate = new Date()
+  const startDate = currentTask.value? currentTask.value.start_date : new Date()  //如果选中了，则直接用选中任务的日期
   const endDate = new Date(startDate.getTime() + 3 * 24 * 60 * 60 * 1000) // 默认3天后
 
   newTask.value = {
