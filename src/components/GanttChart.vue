@@ -1132,27 +1132,27 @@ const initGantt = () => {
     }
 
     // 任务条颜色配置
-    gantt.templates.task_class = function (start, end, task) {
-      let css = ""
-      if (task.type === 'project') {
-        css += "gantt_project_task "
-      } else if (task.type === 'milestone') {
-        css += "gantt_milestone_task "
-      } else {
-        css += "gantt_regular_task "
-      }
+    // gantt.templates.task_class = function (start, end, task) {
+    //   let css = ""
+    //   if (task.type === 'project') {
+    //     css += "gantt_project_task "
+    //   } else if (task.type === 'milestone') {
+    //     css += "gantt_milestone_task "
+    //   } else {
+    //     css += "gantt_regular_task "
+    //   }
 
-      // 根据状态添加CSS类
-      if (task.status === 'completed') {
-        css += "gantt_completed "
-      } else if (task.status === 'in_progress') {
-        css += "gantt_in_progress "
-      } else if (task.status === 'on_hold') {
-        css += "gantt_on_hold "
-      }
+    //   // 根据状态添加CSS类
+    //   if (task.status === 'completed') {
+    //     css += "gantt_completed "
+    //   } else if (task.status === 'in_progress') {
+    //     css += "gantt_in_progress "
+    //   } else if (task.status === 'on_hold') {
+    //     css += "gantt_on_hold "
+    //   }
 
-      return css
-    }
+    //   return css
+    // }
 
     // 网格行样式
     gantt.templates.grid_row_class = function (start, end, task) {
@@ -1466,7 +1466,7 @@ const calculateEndDateForEdit = () => {
 
 // 添加任务
 const addTask = () => {
-  const startDate = currentTask.value? currentTask.value.start_date : new Date()  //如果选中了，则直接用选中任务的日期
+  const startDate = currentTask.value? currentTask.value.end_date : new Date()  //如果选中了，则直接用选中任务的结束日期
   const endDate = new Date(startDate.getTime() + 3 * 24 * 60 * 60 * 1000) // 默认3天后
 
   newTask.value = {
@@ -2918,68 +2918,6 @@ const toggleStar = async () => {
   background: #f9f9f9;
 }
 
-/* 任务条样式 */
-:deep(.gantt_task_line) {
-  border-radius: 4px;
-}
-
-:deep(.gantt_task_line.gantt_project) {
-  background: #67c23a;
-  border: 1px solid #5daf34;
-}
-
-:deep(.gantt_task_line.gantt_task) {
-  background: #409eff;
-  border: 1px solid #337ecc;
-}
-
-:deep(.gantt_task_line.gantt_milestone) {
-  background: #e6a23c;
-  border: 1px solid #cf9236;
-}
-
-/* 进度条样式 */
-:deep(.gantt_task_progress) {
-  background: rgba(255, 255, 255, 0.8);
-}
-
-/* 甘特图自定义任务样式 */
-:deep(.gantt_project_task) {
-  background: linear-gradient(135deg, #67c23a, #85ce61);
-  border: 2px solid #5daf34;
-  border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(103, 194, 58, 0.3);
-}
-
-:deep(.gantt_regular_task) {
-  background: linear-gradient(135deg, #409eff, #66b1ff);
-  border: 2px solid #337ecc;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.3);
-}
-
-:deep(.gantt_milestone_task) {
-  background: linear-gradient(135deg, #e6a23c, #ebb563);
-  border: 2px solid #cf9236;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(230, 162, 60, 0.3);
-}
-
-:deep(.gantt_completed) {
-  background: linear-gradient(135deg, #67c23a, #85ce61);
-  border-color: #5daf34;
-}
-
-:deep(.gantt_in_progress) {
-  background: linear-gradient(135deg, #409eff, #66b1ff);
-  border-color: #337ecc;
-}
-
-:deep(.gantt_on_hold) {
-  background: linear-gradient(135deg, #e6a23c, #ebb563);
-  border-color: #cf9236;
-}
-
 /* 项目行背景 */
 :deep(.gantt_project_row) {
   background: rgba(103, 194, 58, 0.05);
@@ -2996,12 +2934,6 @@ const toggleStar = async () => {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* 进度条样式 */
-:deep(.gantt_task_progress) {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 2px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-}
 
 /* 依赖线样式 */
 :deep(.gantt_link_arrow) {
@@ -3104,7 +3036,7 @@ const toggleStar = async () => {
   border-right: 2px solid #409eff;
 }
 
-/* Grid边框增强 */
+/* Grid最右边边框增强 */
 :deep(.gantt_grid) {
   border-right: 1px solid #e4e7ed;
   transition: border-color 0.2s ease;
