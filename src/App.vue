@@ -1,11 +1,11 @@
 <template>
   <div id="app">
-    <GanttChart />
+    <router-view />
   </div>
 </template>
 
 <script setup>
-import GanttChart from './components/GanttChart.vue'
+// Router会自动处理组件的渲染，不需要手动导入组件
 </script>
 
 <style>
@@ -19,7 +19,7 @@ html,
 body,
 #app {
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
 }
 
 #app {
