@@ -2169,6 +2169,7 @@ const createNewProject = () => {
     // 清空数据
     tasks.value = []
     links.value = []
+    currentTask.value = null
     gantt.clearAll()
     projectInfo.value = {
       code: `GANTT_${Date.now()}`,
