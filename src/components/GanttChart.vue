@@ -802,7 +802,7 @@ const allColumns = [
   {
     name: "duration",
     label: "工期",
-    width: 90,
+    width: 60,
     align: "center",
     editor: {
       type: "number",
