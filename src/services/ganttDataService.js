@@ -6,6 +6,7 @@
 import defaultData from '../data/gantt-data.json'
 import * as sysprojectapi from '../api/sysproject.js'
 import dayjs from 'dayjs'
+import { parseTime } from '../utils/index.js'
 
 /**
  * 加载甘特图数据
@@ -74,6 +75,27 @@ export const loadGanttData = async (code = null) => {
 }
 
 /**
+ * 处理任务数据，确保日期字段正确序列化
+ * @param {Array} tasks - 任务数组
+ * @returns {Array} 处理后的任务数组
+ */
+const processTasksForSerialization = (tasks) => {
+  return tasks.map(task => {
+    const processedTask = { ...task }
+    
+    // 处理日期字段，确保使用本地时区格式
+    if (processedTask.start_date) {
+      processedTask.start_date = parseTime(processedTask.start_date)
+    }
+    if (processedTask.end_date) {
+      processedTask.end_date = parseTime(processedTask.end_date)
+    }
+    
+    return processedTask
+  })
+}
+
+/**
  * 保存甘特图数据到项目
  * @param {Array} tasks - 任务数据
  * @param {Array} links - 依赖关系数据
@@ -82,8 +104,11 @@ export const loadGanttData = async (code = null) => {
  */
 export const saveGanttDataToProject = async (tasks, links, projectInfo = null) => {
   try {
+    // 处理任务数据，确保日期正确序列化
+    const processedTasks = processTasksForSerialization(tasks)
+    
     const ganttDataObj = {
-      tasks,
+      tasks: processedTasks,
       links,
       lastUpdateTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
     }
