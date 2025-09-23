@@ -2720,7 +2720,7 @@ const toggleStar = async () => {
 
 /* Outlook选择器 */
 .outlook-select {
-  width: 90px;
+  width: 120px;
   height: 32px;
 }
 
@@ -2741,6 +2741,16 @@ const toggleStar = async () => {
 .outlook-select:hover .el-input__wrapper {
   background-color: #f3f2f1;
   border-color: #c7c7c7;
+}
+
+/* 确保下拉菜单选项完整显示 */
+.outlook-select .el-select-dropdown {
+  min-width: 120px;
+}
+
+.outlook-select .el-select-dropdown__item {
+  padding: 0 12px;
+  white-space: nowrap;
 }
 
 /* 字段控制面板 */
@@ -3154,7 +3164,7 @@ const toggleStar = async () => {
   }
 
   .outlook-select {
-    width: 80px;
+    width: 100px;
   }
 
   .user-section {
