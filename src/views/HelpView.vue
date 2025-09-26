@@ -62,7 +62,7 @@
                             </div>
                             <p class="operation-desc">双击任务行可以打开详细编辑对话框，完善任务信息且可删除任务。</p>
                             <div class="steps-container">
-                                <img src="http://img.openauth.net.cn/2025-09-26-14-39-37.png" alt="双击任务行弹出详细修改" />
+                                <img class="operation-image" src="http://img.openauth.net.cn/2025-09-26-14-39-37.png" alt="双击任务行弹出详细修改" />
                             </div>
                             <div class="tip-card">
                                 <el-icon class="tip-icon"><InfoFilled /></el-icon>
@@ -77,7 +77,9 @@
                                 <h3>拖拽排序</h3>
                             </div>
                             <p class="operation-desc">通过拖拽调整任务顺序，优化项目计划安排。</p>
-                            <p class="operation-desc"><img src="http://img.openauth.net.cn/2025-09-26-14-46-54.png" alt="拖拽排序" /></p>
+                            <div class="image-container">
+                                <img class="operation-image" src="http://img.openauth.net.cn/2025-09-26-14-46-54.png" alt="拖拽排序" />
+                            </div>
                             <div class="steps-container">
                                 <div class="step-item">
                                     <span class="step-num">1</span>
@@ -105,7 +107,9 @@
                                 <h3>拖拽调整表格与甘特图宽度</h3>
                             </div>
                             <p class="operation-desc">拖拽调整表格与甘特图宽度，优化显示效果。</p>
-                            <p class="operation-desc"><img src="http://img.openauth.net.cn/2025-09-26-14-50-57.png" alt="拖拽调整表格宽度" /></p>
+                            <div class="image-container">
+                                <img class="operation-image" src="http://img.openauth.net.cn/2025-09-26-23-36-01.png" alt="拖拽调整表格宽度" />
+                            </div>
                             <div class="steps-container">
                                 <div class="step-item">
                                     <span class="step-num">1</span>
@@ -416,6 +420,24 @@ onUnmounted(() => {
 /* 步骤容器 */
 .steps-container {
     margin-bottom: 12px;
+}
+
+/* 图片容器 */
+.image-container {
+    margin: 12px 0;
+    text-align: center;
+}
+
+/* 操作演示图片 */
+.operation-image {
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    max-height: 400px;
+    border: 1px solid #e1e8ed;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #fff;
 }
 
 .step-item {
