@@ -205,6 +205,14 @@
           <span>导出</span>
         </el-button>
 
+        <!-- 帮助按钮 -->
+        <el-button class="outlook-btn" @click="openHelp">
+          <el-icon>
+            <QuestionFilled />
+          </el-icon>
+          <span>帮助</span>
+        </el-button>
+
         <!-- 客服联系按钮 -->
         <el-button class="outlook-btn" @click="contactService">
           <el-icon>
@@ -381,7 +389,7 @@ import * as XLSX from 'xlsx'
 dayjs.locale('zh-cn')
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
-  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort
+  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort, QuestionFilled
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -852,6 +860,11 @@ onUnmounted(() => {
 
 const contactService = () => {
   showContactDialog.value = true
+}
+
+const openHelp = () => {
+  // 在新标签页打开帮助页面
+  window.open('/help', '_blank')
 }
 
 const loadUserInfo = async () => {

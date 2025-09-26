@@ -8,6 +8,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import GanttChart from '../components/GanttChart.vue'
 import H5View from '../views/H5View.vue'
+import HelpView from '../views/HelpView.vue'
 
 const routes = [
   {
@@ -19,6 +20,11 @@ const routes = [
     path: '/h5',
     name: 'H5',
     component: H5View
+  },
+  {
+    path: '/help',
+    name: 'Help',
+    component: HelpView
   }
 ]
 
