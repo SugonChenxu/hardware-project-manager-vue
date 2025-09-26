@@ -182,8 +182,9 @@
                   <el-button size="small" type="text" @click="toggleAllColumns">
                     {{ isAllSelected ? '全不选' : '全选' }}
                   </el-button>
-                  <el-button size="small" type="text" @click="resetGridWidth" class="reset-width-btn">
-                    重置表格宽度
+                  <el-button size="small" type="text" @click="resetGridWidth" class="reset-width-btn" 
+                    title="根据当前可见列自动调整表格宽度">
+                    智能调整宽度
                   </el-button>
                 </div>
                 <el-checkbox-group v-model="visibleColumns" class="column-checkboxes">
@@ -561,6 +562,43 @@ const updateGanttGridWidth = () => {
   }
 }
 
+// 根据可见列调整Grid宽度
+const adjustGridWidthByColumns = (visibleCols) => {
+  if (!visibleCols || visibleCols.length === 0) {
+    // 如果没有可见列，设置最小宽度
+    gridWidth.value = minGridWidth
+    updateGanttGridWidth()
+    saveGridWidth()
+    return
+  }
+
+  // 计算所有可见列的总宽度，使用原始allColumns定义中的宽度
+  let totalWidth = 0
+  visibleCols.forEach(col => {
+    // 从原始allColumns定义中查找对应列的宽度
+    const originalCol = allColumns.find(originalCol => originalCol.name === col.name)
+    const colWidth = originalCol ? originalCol.width : (col.width || 100)
+    totalWidth += colWidth
+  })
+
+  // 添加一些额外的padding和滚动条宽度
+  const padding = 40 // 内边距和边框等
+  const scrollbarWidth = 20 // 垂直滚动条宽度
+  const calculatedWidth = totalWidth + padding + scrollbarWidth
+
+  // 确保在最小和最大宽度范围内
+  const newWidth = Math.max(minGridWidth, Math.min(maxGridWidth, calculatedWidth))
+  
+  // 只有当宽度变化足够大时才更新（避免频繁的微小调整）
+  if (Math.abs(newWidth - gridWidth.value) > 10) {
+    gridWidth.value = newWidth
+    updateGanttGridWidth()
+    saveGridWidth()
+    console.log(`Grid宽度调整: 可见列${visibleCols.length}个, 计算宽度${calculatedWidth}px, 实际设置${newWidth}px`)
+  }
+}
+
+
 // 添加Grid分割线拖拽手柄
 const addGridResizeHandle = () => {
   nextTick(() => {
@@ -588,12 +626,19 @@ const addGridResizeHandle = () => {
   })
 }
 
-// 重置Grid宽度到默认值
+// 重置Grid宽度到默认值（智能调整宽度）
 const resetGridWidth = () => {
-  gridWidth.value = 1330
-  saveGridWidth()
-  updateGanttGridWidth()
-  ElMessage.success('表格宽度已重置为默认值')
+  // 根据当前可见列自动计算合适的宽度
+  const visibleCols = allColumns.filter(col => visibleColumns.value.includes(col.name))
+  if (visibleCols.length > 0) {
+    adjustGridWidthByColumns(visibleCols)
+    ElMessage.success('表格宽度已根据可见列自动调整')
+  } else {
+    gridWidth.value = minGridWidth
+    saveGridWidth()
+    updateGanttGridWidth()
+    ElMessage.success('表格宽度已重置为最小值')
+  }
 }
 
 // 版本检查函数
@@ -996,8 +1041,8 @@ const initGantt = () => {
     // 时间刻度配置
     setTimeScale(viewMode.value)
 
-    // 列配置
-    gantt.config.columns = Object.assign([], allColumns)
+    // 列配置 - 使用深拷贝确保不修改原始定义
+    gantt.config.columns = allColumns.map(col => ({ ...col }))
 
     // 任务类型配置
     gantt.config.types = {
@@ -1018,34 +1063,15 @@ const initGantt = () => {
     gantt.config.drag_links = true          // 启用拖拽创建依赖
     gantt.config.details_on_dblclick = false // 禁用双击打开详情，使用自定义编辑对话框
     gantt.config.inline_editors_date_format = "%Y-%m-%d"  // 日期编辑器格式
+    
+    // 防止列宽度自动调整
+    gantt.config.fit_tasks = false          // 禁用任务自动适应
+    gantt.config.grid_elastic_columns = false // 禁用弹性列宽
 
     // 禁用内置弹窗，使用自定义编辑对话框
     gantt.config.lightbox = {
       sections: []  // 清空所有内置编辑器配置
     }
-
-    // 任务条颜色配置
-    // gantt.templates.task_class = function (start, end, task) {
-    //   let css = ""
-    //   if (task.type === 'project') {
-    //     css += "gantt_project_task "
-    //   } else if (task.type === 'milestone') {
-    //     css += "gantt_milestone_task "
-    //   } else {
-    //     css += "gantt_regular_task "
-    //   }
-
-    //   // 根据状态添加CSS类
-    //   if (task.status === 'completed') {
-    //     css += "gantt_completed "
-    //   } else if (task.status === 'in_progress') {
-    //     css += "gantt_in_progress "
-    //   } else if (task.status === 'on_hold') {
-    //     css += "gantt_on_hold "
-    //   }
-
-    //   return css
-    // }
 
     // 网格行样式
     gantt.templates.grid_row_class = function (start, end, task) {
@@ -1147,6 +1173,10 @@ const initGantt = () => {
       const containerHeight = ganttContainer.value.clientHeight
       gantt.setSizes()
       gantt.render()
+      
+      // 初始化完成后，根据可见列调整Grid宽度
+      const initialVisibleCols = allColumns.filter(col => visibleColumns.value.includes(col.name))
+      adjustGridWidthByColumns(initialVisibleCols)
     }, 100)
 
     // 加载数据
@@ -2104,10 +2134,16 @@ const cancelEdit = () => {
 // 更新字段可见性
 const updateColumnVisibility = () => {
 
-  // 筛选可见列
-  const filteredColumns = allColumns.filter(col => visibleColumns.value.includes(col.name))
+  // 筛选可见列，确保使用原始列定义的副本
+  const filteredColumns = allColumns
+    .filter(col => visibleColumns.value.includes(col.name))
+    .map(col => ({ ...col })) // 创建副本，避免修改原始定义
+  
   gantt.config.columns = filteredColumns
-  console.log('过滤后的列:', filteredColumns.map(col => col.name))
+  console.log('过滤后的列:', filteredColumns.map(col => `${col.name}(${col.width}px)`))
+
+  // 根据可见列数量动态调整Grid宽度
+  adjustGridWidthByColumns(filteredColumns)
 
   // 重新渲染甘特图
   if (gantt && gantt.render) {
