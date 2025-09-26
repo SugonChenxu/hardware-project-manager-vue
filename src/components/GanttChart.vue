@@ -179,12 +179,14 @@
             <el-dropdown-menu>
               <div class="column-control-panel">
                 <div class="panel-actions">
-                  <el-button size="small" type="text" @click="toggleAllColumns">
-                    {{ isAllSelected ? '全不选' : '全选' }}
+                  <el-button size="small" type="text" @click="selectAllColumns" title="列表">
+                    📊
                   </el-button>
-                  <el-button size="small" type="text" @click="resetGridWidth" class="reset-width-btn" 
-                    title="根据当前可见列自动调整表格宽度">
-                    智能调整宽度
+                  <el-button size="small" type="text" @click="selectHalfColumns" title="平衡">
+                    ↔️
+                  </el-button>
+                  <el-button size="small" type="text" @click="unselectAllColumns" title="甘特图">
+                    📈
                   </el-button>
                 </div>
                 <el-checkbox-group v-model="visibleColumns" class="column-checkboxes">
@@ -624,21 +626,6 @@ const addGridResizeHandle = () => {
     gridContainer.style.position = 'relative'
     gridContainer.appendChild(handle)
   })
-}
-
-// 重置Grid宽度到默认值（智能调整宽度）
-const resetGridWidth = () => {
-  // 根据当前可见列自动计算合适的宽度
-  const visibleCols = allColumns.filter(col => visibleColumns.value.includes(col.name))
-  if (visibleCols.length > 0) {
-    adjustGridWidthByColumns(visibleCols)
-    ElMessage.success('表格宽度已根据可见列自动调整')
-  } else {
-    gridWidth.value = minGridWidth
-    saveGridWidth()
-    updateGanttGridWidth()
-    ElMessage.success('表格宽度已重置为最小值')
-  }
 }
 
 // 版本检查函数
@@ -1175,7 +1162,7 @@ const initGantt = () => {
       gantt.render()
       
       // 初始化完成后，根据可见列调整Grid宽度
-      const initialVisibleCols = allColumns.filter(col => visibleColumns.value.includes(col.name))
+      const initialVisibleCols = visibleColumns.value.map(col => allColumns.find(c => c.name === col))
       adjustGridWidthByColumns(initialVisibleCols)
     }, 100)
 
@@ -2152,18 +2139,20 @@ const updateColumnVisibility = () => {
   }
 }
 
-// 计算属性：是否全部选中
-const isAllSelected = computed(() => {
-  return visibleColumns.value.length === allColumns.length
-})
 
-// 切换全选/全不选
-const toggleAllColumns = () => {
-  if (isAllSelected.value) {
-    visibleColumns.value = []
-  } else {
-    visibleColumns.value = allColumns.map(column => column.name)
-  }
+// 全选所有列
+const selectAllColumns = () => {
+  visibleColumns.value = allColumns.map(column => column.name)
+}
+
+// 选择核心列（任务名称、开始时间、结束时间）
+const selectHalfColumns = () => {
+  visibleColumns.value = ['id','text', 'start_date', 'end_date','owner','description']
+}
+
+// 全不选
+const unselectAllColumns = () => {
+  visibleColumns.value = []
 }
 
 // 检查收藏状态
@@ -2658,24 +2647,31 @@ const toggleStar = async () => {
 
 .panel-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 8px;
   margin-bottom: 12px;
-  padding: 0 4px;
-  flex-wrap: wrap;
-  gap: 4px;
+  padding: 8px 4px;
 }
 
 .panel-actions .el-button {
-  padding: 4px 8px;
-  font-size: 12px;
-  color: #409eff;
-  flex: 1;
-  min-width: 80px;
+  padding: 6px;
+  font-size: 16px;
+  color: inherit;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s;
+  border: 1px solid #e4e7ed;
 }
 
 .panel-actions .el-button:hover {
-  color: #66b1ff;
   background-color: rgba(64, 158, 255, 0.1);
+  border-color: #409eff;
+  transform: scale(1.05);
 }
 
 .panel-actions .el-button.is-disabled {
