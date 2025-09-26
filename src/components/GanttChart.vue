@@ -245,110 +245,6 @@
     <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv,.json" @change="handleFileUpload"
       style="display: none;" />
 
-    <!-- 新建任务对话框 -->
-    <el-dialog v-model="showTaskDialog" title="新建任务" width="800px">
-      <el-form :model="newTask" label-width="100px">
-        <el-form-item label="任务名称">
-          <el-input v-model="newTask.text" placeholder="请输入任务名称" />
-        </el-form-item>
-
-        <el-row :gutter="16">
-          <el-col :span="8">
-            <el-form-item label="开始时间">
-              <el-date-picker v-model="newTask.start_date" type="date" placeholder="选择开始时间" style="width: 100%"
-                @change="calculateDurationForNew" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="完成时间">
-              <el-date-picker v-model="newTask.end_date" type="date" placeholder="选择完成时间" style="width: 100%"
-                @change="calculateDurationForNew" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="工期(天)">
-              <el-input-number v-model="newTask.duration" :min="1" :max="365" :step="1" style="width: 100%"
-                @change="calculateEndDateForNew" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="完成进度">
-              <el-slider v-model="newTask.progress" :max="1" :step="0.1" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="任务类型">
-              <el-select v-model="newTask.type" style="width: 100%">
-                <el-option label="普通任务" value="task" />
-                <el-option label="项目组" value="project" />
-                <el-option label="里程碑" value="milestone" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="执行状态">
-              <el-select v-model="newTask.status" style="width: 100%">
-                <el-option label="未开始" value="not_started" />
-                <el-option label="进行中" value="in_progress" />
-                <el-option label="已完成" value="completed" />
-                <el-option label="已暂停" value="on_hold" />
-                <el-option label="已取消" value="cancelled" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="负责人">
-              <el-input v-model="newTask.owner" placeholder="请输入负责人" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="相关方">
-              <el-input v-model="newTask.stakeholder" placeholder="请输入相关方" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="父任务">
-              <el-select v-model="newTask.parent" placeholder="选择父任务（可选）" style="width: 100%">
-                <el-option label="无" :value="0" />
-                <el-option v-for="task in tasks" :key="task.id" :label="task.id + ' - ' + task.text" :value="task.id" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-form-item label="前置任务">
-          <el-select v-model="newTask.predecessors" multiple placeholder="选择前置任务（可选）" style="width: 100%">
-            <el-option v-for="task in availableTasksForPredecessors(newTask.id)" :key="task.id"
-              :label="`${task.id} - ${task.text}`" :value="task.id" />
-          </el-select>
-          <div style="color: #909399; font-size: 12px; margin-top: 4px;">
-            选择的前置任务必须在此任务开始之前完成
-          </div>
-        </el-form-item>
-
-        <el-row :gutter="16">
-        </el-row>
-
-        <el-form-item label="任务描述">
-          <el-input v-model="newTask.description" type="textarea" :rows="3" placeholder="请输入任务描述" />
-        </el-form-item>
-      </el-form>
-
-      <template #footer>
-        <el-button @click="showTaskDialog = false">取消</el-button>
-        <el-button type="primary" @click="createTask">创建任务</el-button>
-      </template>
-    </el-dialog>
-
     <!-- 编辑任务对话框 -->
     <el-dialog v-model="showEditDialog" title="编辑任务" width="800px">
       <el-form :model="editTask" label-width="100px">
@@ -511,7 +407,6 @@ const nameInput = ref()
 const codeInput = ref()
 const descriptionInput = ref()
 const viewMode = ref('default')
-const showTaskDialog = ref(false)
 const showEditDialog = ref(false)  // 编辑对话框显示状态
 const showLoginModal = ref(false)  // 登录模态框显示状态
 const userCenterVisible = ref(false)  // 个人中心对话框显示状态
@@ -726,21 +621,6 @@ const checkVersionAndRefresh = async () => {
     // 版本检查失败时，不进行刷新，避免影响正常使用
   }
 }
-// 新建任务表单数据
-const newTask = ref({
-  text: '',
-  start_date: new Date(),
-  end_date: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // 默认3天后
-  duration: 3,
-  progress: 0,
-  type: 'task',
-  parent: 0,
-  status: 'not_started',
-  owner: '',
-  stakeholder: '',
-  description: '',
-  predecessors: []  // 前置任务列表
-})
 
 // 编辑任务表单数据
 const editTask = ref({
@@ -1018,7 +898,7 @@ watch(dragSortEnabled, (enabled) => {
       gantt.config.order_branch_free = false
       ElMessage.success('拖拽排序已禁用')
     }
-    
+
     // 重新渲染甘特图以应用配置
     if (gantt.render) {
       gantt.render()
@@ -1167,12 +1047,12 @@ const initGantt = () => {
     gantt.templates.timeline_cell_class = function (task, date) {
       let css = ""
       const day = date.getDay()
-      
+
       // 周六 (6) 和周日 (0) 添加周末样式
       if (day === 0 || day === 6) {
         css += "gantt_saturday "
       }
-      
+
       return css
     }
 
@@ -1192,54 +1072,52 @@ const initGantt = () => {
     // 添加行拖动排序事件监听
     gantt.attachEvent("onBeforeRowDragEnd", (id, parent, tindex) => {
       console.log('拖动排序前:', { id, parent, tindex })
-      
+
       // 检查是否启用拖拽排序
       if (!dragSortEnabled.value) {
         ElMessage.warning('拖拽排序功能已禁用')
         return false
       }
-      
+
       // 获取被拖动的任务
       const draggedTask = gantt.getTask(id)
-      
+
       // 可以添加更多限制逻辑
       // 例如：防止里程碑任务被拖拽到项目任务下面
       if (draggedTask.type === 'milestone' && parent !== draggedTask.parent) {
         ElMessage.warning('里程碑任务不能移动到其他父任务下')
         return false
       }
-      
+
       return true  // 允许拖动
     })
 
     gantt.attachEvent("onRowDragEnd", (id, target) => {
       console.log('拖动排序完成:', { id, target })
-      
+
       // 更新本地任务数组的顺序
       updateTaskOrderInArray(id, target)
-      
+
       ElMessage.success('任务顺序已调整')
     })
 
     // 添加行拖动开始事件
     gantt.attachEvent("onRowDragStart", (id, target, e) => {
       console.log('开始拖动任务:', id)
-      
+
       // 检查是否启用拖拽排序
       if (!dragSortEnabled.value) {
         return false
       }
-      
+
       return true
     })
 
     gantt.attachEvent("onAfterTaskUpdate", (id, task) => {
-      ElMessage.success(`任务 "${task.text}" 已更新`)
       updateTaskInArray(task)
     })
 
     gantt.attachEvent("onAfterTaskAdd", (id, task) => {
-      ElMessage.success(`新增任务: ${task.text}`)
       addTaskToArray(task)
     })
 
@@ -1304,18 +1182,20 @@ const setTimeScale = (mode) => {
       }
       gantt.config.min_column_width = 30  // 默认视图：每天30像素
       gantt.config.subscales = [
-        { unit: 'day', step: 1, date: '%d',  css: function (date) { 
+        {
+          unit: 'day', step: 1, date: '%d', css: function (date) {
             let css = ""
             const day = date.getDay()
-            
+
             // 周六 (6) 和周日 (0) 添加周末样式
             if (day === 0 || day === 6) {
               css += "gantt_scale_saturday "
             }
-            
+
             return css
-          
-          } }
+
+          }
+        }
       ]
       break
     case 'month':
@@ -1396,45 +1276,12 @@ const syncPredecessorsWithLinks = () => {
 
   // 更新links数组
   links.value = newLinks
-
-  console.log('同步完成:', {
-    tasks: tasks.value.length,
-    links: links.value.length,
-    linksGenerated: newLinks.length
-  })
 }
 
 // 切换视图
 const changeView = (mode) => {
   setTimeScale(mode)
   gantt.render()
-}
-
-// 计算工期（基于开始时间和完成时间）- 新建任务
-const calculateDurationForNew = () => {
-  if (newTask.value.start_date && newTask.value.end_date) {
-    const startDate = new Date(newTask.value.start_date)
-    const endDate = new Date(newTask.value.end_date)
-
-    if (endDate > startDate) {
-      // 计算天数差异（包含小数）
-      const timeDiff = endDate.getTime() - startDate.getTime()
-      const daysDiff = timeDiff / (1000 * 60 * 60 * 24)
-      newTask.value.duration = Math.max(1, Math.round(daysDiff)) // 保留1位小数，最小0.1天
-    } else if (endDate <= startDate) {
-      // 如果结束时间不晚于开始时间，设置为最小工期
-      newTask.value.duration = 0.1
-    }
-  }
-}
-
-// 计算结束时间（基于开始时间和工期）- 新建任务
-const calculateEndDateForNew = () => {
-  if (newTask.value.start_date && newTask.value.duration) {
-    const startDate = new Date(newTask.value.start_date)
-    const endDate = new Date(startDate.getTime() + newTask.value.duration * 24 * 60 * 60 * 1000)
-    newTask.value.end_date = endDate
-  }
 }
 
 // 计算工期（基于开始时间和完成时间）- 编辑任务
@@ -1466,13 +1313,14 @@ const calculateEndDateForEdit = () => {
 
 // 添加任务
 const addTask = () => {
-  const startDate = currentTask.value? currentTask.value.end_date : new Date()  //如果选中了，则直接用选中任务的结束日期
+  const startDate = currentTask.value ? currentTask.value.end_date : new Date()  //如果选中了，则直接用选中任务的结束日期
   const endDate = new Date(startDate.getTime() + 3 * 24 * 60 * 60 * 1000) // 默认3天后
 
-  newTask.value = {
+  const task = {
+    id: getNextId(),
     text: '',
-    start_date: startDate,
-    end_date: endDate,
+    start_date: dayjs(startDate).format('YYYY-MM-DD'),
+    end_date: dayjs(endDate).format('YYYY-MM-DD'),
     duration: 3,
     progress: 0,
     type: 'task',
@@ -1483,33 +1331,8 @@ const addTask = () => {
     description: '',
     predecessors: []
   }
-  showTaskDialog.value = true
-}
 
-// 创建任务
-const createTask = () => {
-  if (!newTask.value.text) {
-    ElMessage.warning('请输入任务名称')
-    return
-  }
-
-  const task = {
-    id: getNextId(),
-    text: newTask.value.text,
-    start_date: dayjs(newTask.value.start_date).format('YYYY-MM-DD'),
-    end_date: dayjs(newTask.value.end_date).format('YYYY-MM-DD'),
-    duration: newTask.value.duration,
-    progress: newTask.value.progress,
-    type: newTask.value.type,
-    parent: newTask.value.parent,
-    status: newTask.value.status,
-    owner: newTask.value.owner,
-    stakeholder: newTask.value.stakeholder,
-    description: newTask.value.description,
-    predecessors: newTask.value.predecessors || []
-  }
-
-  gantt.addTask(task, newTask.value.parent)
+  gantt.addTask(task, currentTask.value ? currentTask.value.parent : 0)
 
   if (currentTask.value) {
     // 将新任务插入到tasks数组中选中任务的下一个位置
@@ -1525,11 +1348,29 @@ const createTask = () => {
       loadData()
     }
   }
+  //定位到最新插入的任务并聚焦文本列
+  gantt.showTask(task.id)
+  
+  // 聚焦文本列
+  setTimeout(() => {
+    const taskRow = document.querySelector(`.gantt_row[task_id="${task.id}"]`)
+    if (taskRow) {
+      const textCell = taskRow.querySelector('.gantt_cell:nth-child(2)')
+      if (textCell) {
+        textCell.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+        setTimeout(() => {
+          const input = document.querySelector('.gantt_grid input')
+          if (input) {
+            input.focus()
+            input.select()
+          }
+        }, 100)
+      }
+    }
+  }, 300)
 
   // 根据前置任务创建链接
   createLinksFromPredecessors(task.id, task.predecessors)
-
-  showTaskDialog.value = false
 }
 
 // 打开编辑任务对话框
@@ -1889,7 +1730,7 @@ const updateTaskOrderInArray = (draggedTaskId, targetInfo) => {
 
     // 移除被拖动的任务
     const [draggedTask] = tasks.value.splice(draggedTaskIndex, 1)
-    
+
     let targetIndex = 0
     let isNext = false
 
@@ -3112,10 +2953,13 @@ const toggleStar = async () => {
 }
 
 @keyframes dragMarkerPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scaleY(1);
   }
+
   50% {
     opacity: 0.8;
     transform: scaleY(1.2);
