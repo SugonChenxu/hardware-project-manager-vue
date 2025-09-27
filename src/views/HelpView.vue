@@ -209,7 +209,7 @@ import { ArrowLeft, InfoFilled, ChatDotSquare, Document } from '@element-plus/ic
 import ContactServiceDialog from '@/components/ContactServiceDialog.vue'
 
 const router = useRouter()
-const currentSection = ref('core-operations')
+const currentSection = ref('video')
 const showContactDialog = ref(false)
 
 const goBack = () => {
