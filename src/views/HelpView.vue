@@ -23,7 +23,13 @@
                 <div class="sidebar-content">
                     <h3 class="sidebar-title">📋 操作指南</h3>
                     <div class="nav-menu">
-                        <div class="nav-item" :class="{ active: currentSection === 'core-operations' }" @click="scrollToSection('core-operations')">
+                        <div class="nav-item" :class="{ active: currentSection === 'video' }"
+                            @click="scrollToSection('video')">
+                            <span class="nav-icon">🎥</span>
+                            <span class="nav-text">视频教程</span>
+                        </div>
+                        <div class="nav-item" :class="{ active: currentSection === 'core-operations' }"
+                            @click="scrollToSection('core-operations')">
                             <span class="nav-icon">⚡</span>
                             <span class="nav-text">操作说明</span>
                         </div>
@@ -32,14 +38,16 @@
                             <div class="nav-sub-item" @click="scrollToSection('drag-sort')">拖拽排序</div>
                             <div class="nav-sub-item" @click="scrollToSection('resize-table')">调整宽度</div>
                         </div>
-                        
-                       
-                        <div class="nav-item" :class="{ active: currentSection === 'shortcuts' }" @click="scrollToSection('shortcuts')">
+
+
+                        <div class="nav-item" :class="{ active: currentSection === 'shortcuts' }"
+                            @click="scrollToSection('shortcuts')">
                             <span class="nav-icon">⌨️</span>
                             <span class="nav-text">快捷键</span>
                         </div>
-                        
-                        <div class="nav-item" :class="{ active: currentSection === 'support' }" @click="scrollToSection('support')">
+
+                        <div class="nav-item" :class="{ active: currentSection === 'support' }"
+                            @click="scrollToSection('support')">
                             <span class="nav-icon">📞</span>
                             <span class="nav-text">获取帮助</span>
                         </div>
@@ -50,6 +58,19 @@
             <!-- 右侧内容区域 -->
             <div class="help-content">
                 <div class="content-container">
+                    <!-- 视频 -->
+                    <div id="video" class="content-section">
+                        <h2 class="section-title">🎥 视频教程</h2>
+                        <div class="shortcut-list">
+                            <div class="shortcut-item">
+                                <iframe width="100%" height="400"
+                                    src="//player.bilibili.com/player.html?isOutside=true&aid=115274992918453&bvid=BV1BenJzWEXq&cid=32669106525&p=1"
+                                    scrolling="no" border="0" frameborder="no" framespacing="0"
+                                    allowfullscreen="true"></iframe>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 核心操作 -->
                     <div id="core-operations" class="content-section">
                         <h2 class="section-title">⚡ 操作说明</h2>
@@ -62,10 +83,13 @@
                             </div>
                             <p class="operation-desc">双击任务行可以打开详细编辑对话框，完善任务信息且可删除任务。</p>
                             <div class="steps-container">
-                                <img class="operation-image" src="http://img.openauth.net.cn/2025-09-26-14-39-37.png" alt="双击任务行弹出详细修改" />
+                                <img class="operation-image" src="http://img.openauth.net.cn/2025-09-26-14-39-37.png"
+                                    alt="双击任务行弹出详细修改" />
                             </div>
                             <div class="tip-card">
-                                <el-icon class="tip-icon"><InfoFilled /></el-icon>
+                                <el-icon class="tip-icon">
+                                    <InfoFilled />
+                                </el-icon>
                                 <span>💡 小贴士：也可以直接单击单元格进行快速内联编辑</span>
                             </div>
                         </div>
@@ -78,7 +102,8 @@
                             </div>
                             <p class="operation-desc">通过拖拽调整任务顺序，优化项目计划安排。</p>
                             <div class="image-container">
-                                <img class="operation-image" src="http://img.openauth.net.cn/2025-09-26-14-46-54.png" alt="拖拽排序" />
+                                <img class="operation-image" src="http://img.openauth.net.cn/2025-09-26-14-46-54.png"
+                                    alt="拖拽排序" />
                             </div>
                             <div class="steps-container">
                                 <div class="step-item">
@@ -95,7 +120,9 @@
                                 </div>
                             </div>
                             <div class="tip-card">
-                                <el-icon class="tip-icon"><InfoFilled /></el-icon>
+                                <el-icon class="tip-icon">
+                                    <InfoFilled />
+                                </el-icon>
                                 <span>💡 小贴士：支持同级排序和跨级调整，里程碑任务有特殊限制</span>
                             </div>
                         </div>
@@ -108,7 +135,8 @@
                             </div>
                             <p class="operation-desc">拖拽调整表格与甘特图宽度，优化显示效果。</p>
                             <div class="image-container">
-                                <img class="operation-image" src="http://img.openauth.net.cn/2025-09-26-23-36-01.png" alt="拖拽调整表格宽度" />
+                                <img class="operation-image" src="http://img.openauth.net.cn/2025-09-26-23-36-01.png"
+                                    alt="拖拽调整表格宽度" />
                             </div>
                             <div class="steps-container">
                                 <div class="step-item">
@@ -125,7 +153,9 @@
                                 </div>
                             </div>
                             <div class="tip-card">
-                                <el-icon class="tip-icon"><InfoFilled /></el-icon>
+                                <el-icon class="tip-icon">
+                                    <InfoFilled />
+                                </el-icon>
                                 <span>💡 小贴士：可在字段控制面板点击"重置表格宽度"恢复默认</span>
                             </div>
                         </div>
@@ -152,13 +182,15 @@
                         <p class="support-desc">如果您在使用过程中遇到问题，可以通过以下方式获取帮助：</p>
                         <div class="support-methods">
                             <div class="support-card">
-                                <el-icon class="support-icon"><ChatDotSquare /></el-icon>
+                                <el-icon class="support-icon">
+                                    <ChatDotSquare />
+                                </el-icon>
                                 <div class="support-info">
                                     <h4>在线客服</h4>
                                     <p>点击页面右上角"客服"按钮在线咨询</p>
                                 </div>
                             </div>
-                            
+
                         </div>
                     </div>
                 </div>
@@ -183,7 +215,7 @@ const scrollToSection = (sectionId) => {
     currentSection.value = sectionId
     const element = document.getElementById(sectionId)
     if (element) {
-        element.scrollIntoView({ 
+        element.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
         })
@@ -194,7 +226,7 @@ const scrollToSection = (sectionId) => {
 const handleScroll = () => {
     const sections = ['core-operations', 'features', 'shortcuts', 'support']
     const scrollTop = document.documentElement.scrollTop || document.body.scrollTop
-    
+
     for (let i = sections.length - 1; i >= 0; i--) {
         const element = document.getElementById(sections[i])
         if (element && element.offsetTop - 100 <= scrollTop) {
@@ -603,7 +635,7 @@ kbd {
     .help-main {
         flex-direction: column;
     }
-    
+
     .help-sidebar {
         width: 100%;
         position: relative;
@@ -611,26 +643,26 @@ kbd {
         border-right: none;
         border-bottom: 1px solid #e1e8ed;
     }
-    
+
     .sidebar-content {
         padding: 16px;
     }
-    
+
     .nav-menu {
         flex-direction: row;
         flex-wrap: wrap;
         gap: 8px;
     }
-    
+
     .nav-item {
         margin-bottom: 0;
         white-space: nowrap;
     }
-    
+
     .nav-sub-items {
         display: none;
     }
-    
+
     .content-container {
         padding: 16px 20px;
     }
@@ -640,23 +672,23 @@ kbd {
     .header-content {
         padding: 8px 12px;
     }
-    
+
     .app-title {
         font-size: 16px;
     }
-    
+
     .content-container {
         padding: 12px 16px;
     }
-    
+
     .feature-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .shortcut-list {
         grid-template-columns: 1fr;
     }
-    
+
     .nav-menu {
         flex-direction: column;
     }
