@@ -2811,18 +2811,10 @@ const toggleStar = async () => {
   min-height: 28px;
 }
 
-:deep(.gantt_row:hover) {
-  background: #f9f9f9;
-}
-
 /* 项目行背景 */
 :deep(.gantt_project_row) {
   background: rgba(103, 194, 58, 0.05);
   font-weight: 600;
-}
-
-:deep(.gantt_project_row:hover) {
-  background: rgba(103, 194, 58, 0.1);
 }
 
 /* 任务文本增强 */
@@ -2897,10 +2889,6 @@ const toggleStar = async () => {
   border-right: 1px solid transparent;
 }
 
-:deep(.grid-resize-handle:hover) {
-  background-color: rgba(64, 158, 255, 0.1);
-  border-right-color: #409eff;
-}
 
 :deep(.grid-resize-handle::before) {
   content: '';
@@ -2951,10 +2939,6 @@ const toggleStar = async () => {
   border-radius: 1px;
 }
 
-/* 拖拽时的行样式 */
-:deep(.gantt_row.gantt_selected) {
-  background: rgba(64, 158, 255, 0.1);
-}
 
 /* 拖拽目标位置指示器 */
 :deep(.gantt_drag_marker) {
