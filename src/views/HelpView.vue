@@ -181,13 +181,13 @@
                         <h2 class="section-title">📞 获取帮助</h2>
                         <p class="support-desc">如果您在使用过程中遇到问题，可以通过以下方式获取帮助：</p>
                         <div class="support-methods">
-                            <div class="support-card">
+                            <div class="support-card" @click="showContactService">
                                 <el-icon class="support-icon">
                                     <ChatDotSquare />
                                 </el-icon>
                                 <div class="support-info">
                                     <h4>在线客服</h4>
-                                    <p>点击页面右上角"客服"按钮在线咨询</p>
+                                    <p>点击此处查看客服微信二维码</p>
                                 </div>
                             </div>
 
@@ -196,6 +196,9 @@
                 </div>
             </div>
         </div>
+        
+        <!-- 客服对话框 -->
+        <ContactServiceDialog v-model="showContactDialog" />
     </div>
 </template>
 
@@ -203,9 +206,11 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, InfoFilled, ChatDotSquare, Document } from '@element-plus/icons-vue'
+import ContactServiceDialog from '@/components/ContactServiceDialog.vue'
 
 const router = useRouter()
 const currentSection = ref('core-operations')
+const showContactDialog = ref(false)
 
 const goBack = () => {
     router.push('/')
@@ -220,6 +225,10 @@ const scrollToSection = (sectionId) => {
             block: 'start'
         })
     }
+}
+
+const showContactService = () => {
+    showContactDialog.value = true
 }
 
 // 监听滚动，更新当前激活的导航项
@@ -608,6 +617,15 @@ kbd {
     background: #fafbfc;
     border: 1px solid #e1e8ed;
     border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.support-card:hover {
+    background: #f0f2f5;
+    border-color: #409eff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.15);
 }
 
 .support-icon {
