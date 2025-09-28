@@ -5,7 +5,7 @@
       <!-- 左侧品牌区域 -->
       <div class="brand-section">
         <div class="app-logo">
-          <img class="logo-icon" src="/favicon-32x32.png" alt="星甘" />
+          <img class="logo-icon" src="/favicon-32x32.png" alt="星甘StarGantt" />
           <span class="app-name">星甘</span>
         </div>
         <div class="project-selector">
@@ -964,7 +964,7 @@ const loadInitialData = async (code = null) => {
     tasks.value = data.tasks
     links.value = data.links
     projectInfo.value = data.projectInfo
-    document.title = `${projectInfo.value.name} - 星甘`
+    document.title = `${projectInfo.value.name} - 星甘StarGantt|专业的项目进度管理工具 | 简洁易用的在线甘特图制作平台`
 
     // 检查收藏状态
     checkStarStatus()
@@ -1905,7 +1905,7 @@ const saveProject = async () => {
 
       // 更新页面标题
       if (projectInfo.value.name) {
-        document.title = `${projectInfo.value.name} - 星甘`
+        document.title = `${projectInfo.value.name} - 星甘StarGantt|专业的项目进度管理工具 | 简洁易用的在线甘特图制作平台`
       }
 
       // 重新检查收藏状态
