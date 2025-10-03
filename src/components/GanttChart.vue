@@ -1921,13 +1921,12 @@ const saveProject = async () => {
 
     ElMessage.success('项目保存成功')
   } catch (error) {
-    if (error.status === 401 || error.code === '401') {
+    if (error.status === 401 || error.code == '401') {
       ElMessage.error('请登录后保存')
       showLoginModal.value = true
-    } else if (error.code === 'ERR_NETWORK') {
-      ElMessage.error('网络连接失败，请检查网络连接')
-    } else if (error.code === 'ECONNABORTED') {
-      ElMessage.error('请求超时，请稍后重试')
+    } else if (error.code == '50010') { //等级不够，直接显示个人中心
+      ElMessage.error(error.message)
+      userCenterVisible.value = true
     } else {
       // 默认错误处理
       const errorMessage = error.message || error.msg || '保存项目失败，请重试'
