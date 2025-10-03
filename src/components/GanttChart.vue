@@ -54,9 +54,15 @@
                         @blur="confirmEdit('description')" @keyup.esc="cancelEdit" />
                     </div>
                   </div>
+                 
                   <div class="detail-row">
                     <span class="label">创建时间</span>
                     <span class="value readonly">{{ projectInfo?.createTime }}</span>
+                  </div>
+
+                  <div class="detail-row" v-if="projectInfo?.createUserId == userInfo?.id">
+                    <span class="label"> </span>
+                    <el-button type="danger" size="small" @click="deleteProject">删除</el-button>
                   </div>
                 </div>
               </el-dropdown-menu>
@@ -401,7 +407,7 @@ import {
   importFromJson,
   generateNewTaskId
 } from '../services/ganttDataService.js'
-import { star, unstar } from '../api/sysproject.js'
+import { star, unstar,del } from '../api/sysproject.js'
 import LoginModal from './LoginModal.vue'
 import { getToken, removeToken } from '../utils/auth.js'
 import { getWebVersion } from '../api/serverConf.js'
@@ -2227,6 +2233,28 @@ const toggleStar = async () => {
   } finally {
     starring.value = false
   }
+}
+
+
+//删除
+const deleteProject = async () => {
+  if(projectInfo.value == null || projectInfo.value.id == null){
+    ElMessage.warning('这是个临时项目，不能删除')
+    return
+  }
+  ElMessageBox.confirm('确定删除该项目吗？', '确认删除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    await del(projectInfo.value.id)
+    ElMessage.success('删除成功')
+    const newUrl = `${window.location.origin}${window.location.pathname}`
+    window.history.replaceState({}, '', newUrl)
+    window.location.reload()
+  }).catch(() => {
+    ElMessage.info('已取消删除')
+  })
 }
 
 
