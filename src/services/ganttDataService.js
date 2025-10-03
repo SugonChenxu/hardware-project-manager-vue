@@ -49,7 +49,8 @@ export const loadGanttData = async (code = null) => {
             description: projectData.description,
             createTime: projectData.createTime,
             createUserId: projectData.createUserId,
-            updateTime: projectData.updateTime
+            updateTime: projectData.updateTime,
+            createUserName: projectData.createUserName
           }
         }
       } 

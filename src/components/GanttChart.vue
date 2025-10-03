@@ -60,9 +60,10 @@
                     <span class="value readonly">{{ projectInfo?.createTime }}</span>
                   </div>
 
-                  <div class="detail-row" v-if="projectInfo?.createUserId == userInfo?.id">
-                    <span class="label"> </span>
-                    <el-button type="danger" size="small" @click="deleteProject">删除</el-button>
+                  <div class="detail-row" >
+                    <span class="label">创建人</span>
+                    <span class="value readonly">{{ projectInfo?.createUserName }}</span>
+                    <el-button type="danger" v-if="projectInfo?.createUserId == userInfo?.id" size="small" @click="deleteProject">删除</el-button>
                   </div>
                 </div>
               </el-dropdown-menu>
