@@ -971,7 +971,7 @@ const loadInitialData = async (code = null) => {
     tasks.value = data.tasks
     links.value = data.links
     projectInfo.value = data.projectInfo
-    document.title = `${projectInfo.value.name} - 星甘StarGantt|专业的项目进度管理工具 | 简洁易用的在线甘特图制作平台`
+    document.title = `${projectInfo.value.name} - 星甘StarGantt|简洁易用的在线甘特图制作平台|专业的项目进度管理工具`
 
     // 检查收藏状态
     checkStarStatus()
@@ -1912,7 +1912,7 @@ const saveProject = async () => {
 
       // 更新页面标题
       if (projectInfo.value.name) {
-        document.title = `${projectInfo.value.name} - 星甘StarGantt|专业的项目进度管理工具 | 简洁易用的在线甘特图制作平台`
+        document.title = `${projectInfo.value.name} - 星甘StarGantt|简洁易用的在线甘特图制作平台|专业的项目进度管理工具`
       }
 
       // 重新检查收藏状态
