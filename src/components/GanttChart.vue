@@ -54,16 +54,17 @@
                         @blur="confirmEdit('description')" @keyup.esc="cancelEdit" />
                     </div>
                   </div>
-                 
+
                   <div class="detail-row">
                     <span class="label">创建时间</span>
                     <span class="value readonly">{{ projectInfo?.createTime }}</span>
                   </div>
 
-                  <div class="detail-row" >
+                  <div class="detail-row">
                     <span class="label">创建人</span>
                     <span class="value readonly">{{ projectInfo?.createUserName }}</span>
-                    <el-button type="danger" v-if="projectInfo?.createUserId == userInfo?.id" size="small" @click="deleteProject">删除</el-button>
+                    <el-button type="danger" v-if="projectInfo?.createUserId == userInfo?.id" size="small"
+                      @click="deleteProject">删除</el-button>
                   </div>
                 </div>
               </el-dropdown-menu>
@@ -205,6 +206,9 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
+
+        <el-switch v-model="cascade" size="small" inline-prompt active-text="级联">
+        </el-switch>
 
         <div class="divider"></div>
 
@@ -406,9 +410,11 @@ import {
   saveGanttDataToProject,
   load,
   importFromJson,
-  generateNewTaskId
+  generateNewTaskId,
+  getAllSuccessors,
+  getAllPredecessors
 } from '../services/ganttDataService.js'
-import { star, unstar,del } from '../api/sysproject.js'
+import { star, unstar, del } from '../api/sysproject.js'
 import LoginModal from './LoginModal.vue'
 import { getToken, removeToken } from '../utils/auth.js'
 import { getWebVersion } from '../api/serverConf.js'
@@ -436,6 +442,7 @@ const saving = ref(false) // 保存按钮加载状态
 const tasks = ref([])
 const links = ref([])
 const loading = ref(true)
+const cascade = ref(true)  //级联
 
 // 项目信息
 const projectInfo = ref(null)
@@ -597,7 +604,7 @@ const adjustGridWidthByColumns = (visibleCols) => {
 
   // 确保在最小和最大宽度范围内
   const newWidth = Math.max(minGridWidth, Math.min(maxGridWidth, calculatedWidth))
-  
+
   // 只有当宽度变化足够大时才更新（避免频繁的微小调整）
   if (Math.abs(newWidth - gridWidth.value) > 10) {
     gridWidth.value = newWidth
@@ -1057,7 +1064,7 @@ const initGantt = () => {
     gantt.config.drag_links = true          // 启用拖拽创建依赖
     gantt.config.details_on_dblclick = false // 禁用双击打开详情，使用自定义编辑对话框
     gantt.config.inline_editors_date_format = "%Y-%m-%d"  // 日期编辑器格式
-    
+
     // 防止列宽度自动调整
     gantt.config.fit_tasks = false          // 禁用任务自动适应
     gantt.config.grid_elastic_columns = false // 禁用弹性列宽
@@ -1167,7 +1174,7 @@ const initGantt = () => {
       const containerHeight = ganttContainer.value.clientHeight
       gantt.setSizes()
       gantt.render()
-      
+
       // 初始化完成后，根据可见列调整Grid宽度
       const initialVisibleCols = visibleColumns.value.map(col => allColumns.find(c => c.name === col))
       adjustGridWidthByColumns(initialVisibleCols)
@@ -1387,7 +1394,7 @@ const addTask = () => {
   }
   //定位到最新插入的任务并聚焦文本列
   gantt.showTask(task.id)
-  
+
   // 聚焦文本列
   setTimeout(() => {
     const taskRow = document.querySelector(`.gantt_row[task_id="${task.id}"]`)
@@ -1487,16 +1494,17 @@ const updateTask = () => {
 
   try {
 
-    // 获取原任务的前置任务列表
+    // 获取原任务
     const originalTask = gantt.getTask(editTask.value.id)
-    const oldPredecessors = originalTask.predecessors || []
     const newPredecessors = updatedTask.predecessors || []
+
+    // 更新前置任务链接
+    updateTaskLinks(editTask.value.id, newPredecessors)
+
+    updateCascade(originalTask, updatedTask)
 
     // 更新甘特图中的任务
     gantt.updateTask(editTask.value.id, updatedTask)
-
-    // 更新前置任务链接
-    updateTaskLinks(editTask.value.id, oldPredecessors, newPredecessors)
 
     // 手动更新tasks数组中的数据
     updateTaskInArray(updatedTask)
@@ -1512,6 +1520,40 @@ const updateTask = () => {
     console.error('更新任务失败:', error)
     ElMessage.error('更新任务失败: ' + error.message)
   }
+}
+
+// 级联更新任务
+const updateCascade = (originalTask, updatedTask) => {
+  if (!cascade.value) return;
+
+  //如果改变了结束日期，则更新所有的后续任务开始和结束日期
+  if (originalTask.end_date !== updatedTask.end_date) {
+    //计算改变的日期差
+    const dateDiff = dayjs(updatedTask.end_date).diff(dayjs(originalTask.end_date), 'day')
+    let successors = getAllSuccessors(updatedTask.id, links.value)
+    successors.forEach(successorId => {
+      let task = tasks.value.find(t => t.id === successorId)
+      if (task) {
+        task.start_date = dayjs(task.start_date).add(dateDiff, 'day').toDate()
+        task.end_date = dayjs(task.end_date).add(dateDiff, 'day').toDate()
+      }
+    })
+  }
+
+  //如果改变了开始日期，则更新所有的前置任务开始和结束日期
+  if (originalTask.start_date !== updatedTask.start_date) {
+    //计算改变的日期差
+    const dateDiff = dayjs(updatedTask.start_date).diff(dayjs(originalTask.start_date), 'day')
+    let predecessors = getAllPredecessors(updatedTask.id, links.value)
+    predecessors.forEach(predecessorId => {
+      let task = tasks.value.find(t => t.id === predecessorId)
+      if (task) {
+        task.start_date = dayjs(task.start_date).add(dateDiff, 'day').toDate()
+        task.end_date = dayjs(task.end_date).add(dateDiff, 'day').toDate()
+      }
+    })
+  }
+
 }
 
 // 确认删除任务
@@ -1726,6 +1768,8 @@ const getNextId = () => {
 }
 
 const updateTaskInArray = (task) => {
+  // let originalTask = tasks.value.find(t => t.id == task.id)
+  // updateCascade(originalTask, task)
   const index = tasks.value.findIndex(t => t.id == task.id)
   console.log('更新任务数组:', { taskId: task.id, index, task })
 
@@ -1848,26 +1892,18 @@ const createLinksFromPredecessors = (taskId, predecessors) => {
 }
 
 // 更新任务链接
-const updateTaskLinks = (taskId, oldPredecessors, newPredecessors) => {
+const updateTaskLinks = (taskId, newPredecessors) => {
   // 删除旧的链接
-  oldPredecessors.forEach(predId => {
-    const linkToRemove = links.value.find(link =>
-      link.source === predId && link.target === taskId
-    )
-    if (linkToRemove) {
-      gantt.deleteLink(linkToRemove.id)
-      const linkIndex = links.value.findIndex(link => link.id === linkToRemove.id)
-      if (linkIndex !== -1) {
-        links.value.splice(linkIndex, 1)
-      }
+  let linkToRemoves = links.value.filter(link => link.target === taskId)
+  linkToRemoves.forEach(link => {
+    console.log('删除链接:', link)
+    gantt.deleteLink(link.id)
+    const linkIndex = links.value.findIndex(l => l.id === link.id)
+    if (linkIndex !== -1) {
+      links.value.splice(linkIndex, 1)
     }
   })
-
-  // 添加新的链接
-  const predecessorsToAdd = newPredecessors.filter(predId =>
-    !oldPredecessors.includes(predId)
-  )
-  createLinksFromPredecessors(taskId, predecessorsToAdd)
+  createLinksFromPredecessors(taskId, newPredecessors)
 }
 
 // 获取下一个链接ID
@@ -2131,7 +2167,7 @@ const updateColumnVisibility = () => {
   const filteredColumns = allColumns
     .filter(col => visibleColumns.value.includes(col.name))
     .map(col => ({ ...col })) // 创建副本，避免修改原始定义
-  
+
   gantt.config.columns = filteredColumns
   console.log('过滤后的列:', filteredColumns.map(col => `${col.name}(${col.width}px)`))
 
@@ -2153,7 +2189,7 @@ const selectAllColumns = () => {
 
 // 选择核心列（任务名称、开始时间、结束时间）
 const selectHalfColumns = () => {
-  visibleColumns.value = ['id','text', 'start_date', 'end_date','owner','description']
+  visibleColumns.value = ['id', 'text', 'start_date', 'end_date', 'owner', 'description']
 }
 
 // 全不选
@@ -2238,7 +2274,7 @@ const toggleStar = async () => {
 
 //删除
 const deleteProject = async () => {
-  if(projectInfo.value == null || projectInfo.value.id == null){
+  if (projectInfo.value == null || projectInfo.value.id == null) {
     ElMessage.warning('这是个临时项目，不能删除')
     return
   }

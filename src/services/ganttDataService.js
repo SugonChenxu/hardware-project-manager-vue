@@ -190,3 +190,96 @@ export const generateNewTaskId = (tasks) => {
   if (!tasks || tasks.length === 0) return 1
   return Math.max(...tasks.map(t => t.id)) + 1
 }
+
+/**
+ * 递归获取一个任务的所有前置任务id（包括前置任务的前置任务）
+ * @param {string|number} taskId - 任务ID
+ * @param {Array} links - 现有依赖关系列表
+ * @param {Set} visited - 已访问的任务ID集合，用于防止循环依赖
+ * @returns {Array} 所有前置任务ID的数组
+ */
+export const getAllPredecessors = (taskId, links, visited = new Set()) => {
+  if (!links || links.length === 0) return []
+  
+  // 防止循环依赖
+  if (visited.has(taskId)) {
+    console.warn(`检测到循环依赖，任务ID: ${taskId}`)
+    return []
+  }
+  
+  visited.add(taskId)
+  
+  // 获取直接前置任务
+  const directPredecessors = links
+    .filter(l => l.target === taskId)
+    .map(l => l.source)
+  
+  // 递归获取所有前置任务
+  const allPredecessors = new Set(directPredecessors)
+  
+  directPredecessors.forEach(predecessorId => {
+    const indirectPredecessors = getAllPredecessors(predecessorId, links, new Set(visited))
+    indirectPredecessors.forEach(id => allPredecessors.add(id))
+  })
+  
+  return Array.from(allPredecessors)
+}
+
+/**
+ * 获取一个任务的直接前置任务id（保持向后兼容）
+ * @param {string|number} taskId - 任务ID
+ * @param {Array} links - 现有依赖关系列表
+ * @returns {Array} 直接前置任务ID的数组
+ */
+export const getDirectPredecessors = (taskId, links) => {
+  if (!links || links.length === 0) return []
+  return links.filter(l => l.target === taskId).map(l => l.source)
+}
+
+/**
+ * 递归获取一个任务的所有后序任务id（包括后序任务的后序任务）
+ * @param {string|number} taskId - 任务ID
+ * @param {Array} links - 现有依赖关系列表
+ * @param {Set} visited - 已访问的任务ID集合，用于防止循环依赖
+ * @returns {Array} 所有后序任务ID的数组
+ */
+export const getAllSuccessors = (taskId, links, visited = new Set()) => {
+  if (!links || links.length === 0) return []
+  
+  // 防止循环依赖
+  if (visited.has(taskId)) {
+    console.warn(`检测到循环依赖，任务ID: ${taskId}`)
+    return []
+  }
+  
+  visited.add(taskId)
+  
+  // 获取直接后序任务
+  const directSuccessors = links
+    .filter(l => l.source === taskId)
+    .map(l => l.target)
+  
+  // 递归获取所有后序任务
+  const allSuccessors = new Set(directSuccessors)
+  
+  directSuccessors.forEach(successorId => {
+    const indirectSuccessors = getAllSuccessors(successorId, links, new Set(visited))
+    indirectSuccessors.forEach(id => allSuccessors.add(id))
+  })
+  
+  return Array.from(allSuccessors)
+}
+
+/**
+ * 获取一个任务的直接后序任务id
+ * @param {string|number} taskId - 任务ID
+ * @param {Array} links - 现有依赖关系列表
+ * @returns {Array} 直接后序任务ID的数组
+ */
+export const getDirectSuccessors = (taskId, links) => {
+  if (!links || links.length === 0) return []
+  return links.filter(l => l.source === taskId).map(l => l.target)
+}
+
+
+
