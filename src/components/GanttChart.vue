@@ -207,8 +207,10 @@
           </template>
         </el-dropdown>
 
-        <el-switch v-model="cascade" size="small" inline-prompt active-text="级联">
-        </el-switch>
+        <el-tooltip content="开启后，修改任务时间会自动调整有关联关系的任务时间" placement="bottom">
+          <el-switch v-model="cascade" size="small" inline-prompt active-text="关联调整">
+          </el-switch>
+        </el-tooltip>
 
         <div class="divider"></div>
 
@@ -1153,9 +1155,18 @@ const initGantt = () => {
       return true
     })
 
-    gantt.attachEvent("onAfterTaskUpdate", (id, task) => {
-      updateTaskInArray(task)
+    gantt.attachEvent("onBeforeTaskChanged", (id, mode, oldTask) => {
+      console.log(`onBeforeTaskChanged:`, id, mode)
+      let newTaskObj = tasks.value.find(t => t.id == oldTask.id)
+      updateCascade(oldTask, newTaskObj)
+      return true;
     })
+
+    gantt.attachEvent("onAfterTaskUpdate", (id, task) => {
+      //todo: 这个task是更新后的task，无法获取更新前的task,因此不能级联更新updateCascade
+      console.log(`onAfterTaskUpdate:`, id)
+    })
+
 
     gantt.attachEvent("onAfterTaskAdd", (id, task) => {
       addTaskToArray(task)
@@ -1506,9 +1517,6 @@ const updateTask = () => {
     // 更新甘特图中的任务
     gantt.updateTask(editTask.value.id, updatedTask)
 
-    // 手动更新tasks数组中的数据
-    updateTaskInArray(updatedTask)
-
     showEditDialog.value = false
     ElMessage.success('任务更新成功')
 
@@ -1532,10 +1540,10 @@ const updateCascade = (originalTask, updatedTask) => {
     const dateDiff = dayjs(updatedTask.end_date).diff(dayjs(originalTask.end_date), 'day')
     let successors = getAllSuccessors(updatedTask.id, links.value)
     successors.forEach(successorId => {
-      let task = tasks.value.find(t => t.id === successorId)
-      if (task) {
-        task.start_date = dayjs(task.start_date).add(dateDiff, 'day').toDate()
-        task.end_date = dayjs(task.end_date).add(dateDiff, 'day').toDate()
+      let index = tasks.value.findIndex(t => t.id === successorId)
+      if (index !== -1) {
+        tasks.value[index].start_date = dayjs(tasks.value[index].start_date).add(dateDiff, 'day').toDate()
+        tasks.value[index].end_date = dayjs(tasks.value[index].end_date).add(dateDiff, 'day').toDate()
       }
     })
   }
@@ -1546,13 +1554,17 @@ const updateCascade = (originalTask, updatedTask) => {
     const dateDiff = dayjs(updatedTask.start_date).diff(dayjs(originalTask.start_date), 'day')
     let predecessors = getAllPredecessors(updatedTask.id, links.value)
     predecessors.forEach(predecessorId => {
-      let task = tasks.value.find(t => t.id === predecessorId)
-      if (task) {
-        task.start_date = dayjs(task.start_date).add(dateDiff, 'day').toDate()
-        task.end_date = dayjs(task.end_date).add(dateDiff, 'day').toDate()
+      let index = tasks.value.findIndex(t => t.id === predecessorId)
+      if (index !== -1) {
+        tasks.value[index].start_date = dayjs(tasks.value[index].start_date).add(dateDiff, 'day').toDate()
+        tasks.value[index].end_date = dayjs(tasks.value[index].end_date).add(dateDiff, 'day').toDate()
       }
     })
   }
+
+  setTimeout(() => {
+    gantt.render()
+  }, 100)
 
 }
 
@@ -1765,28 +1777,6 @@ const handleJsonFile = (file) => {
 
 const getNextId = () => {
   return generateNewTaskId(tasks.value)
-}
-
-const updateTaskInArray = (task) => {
-  // let originalTask = tasks.value.find(t => t.id == task.id)
-  // updateCascade(originalTask, task)
-  const index = tasks.value.findIndex(t => t.id == task.id)
-  console.log('更新任务数组:', { taskId: task.id, index, task })
-
-  if (index !== -1) {
-    // 确保所有字段都被正确更新
-    tasks.value[index] = {
-      ...tasks.value[index],  // 保留原有字段
-      ...task  // 覆盖更新的字段
-    }
-
-    console.log('任务已更新:', tasks.value[index])
-
-    // 触发响应式更新
-    tasks.value = [...tasks.value]
-  } else {
-    console.error('未找到要更新的任务:', task.id)
-  }
 }
 
 const addTaskToArray = (task) => {
