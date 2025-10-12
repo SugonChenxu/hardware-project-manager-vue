@@ -1104,6 +1104,28 @@ const initGantt = () => {
       return true
     })
 
+    //拖动链接甘特图两个任务时建立关系
+    gantt.attachEvent("onAfterLinkAdd", function (id, link) {
+      console.log('onAfterLinkAdd:', id, link)
+      //判断link是否存在
+      if (links.value.find(l => l.id == id)) {
+        return
+      }
+
+      const newlink = {
+        id: getNextLinkId(),
+        source: parseInt(link.source),
+        target: parseInt(link.target),
+        type: "0"  // 完成-开始关系
+      }
+      //更新task的前置任务
+      const task = tasks.value.find(t => t.id == newlink.target)
+      task.predecessors.push(newlink.source)
+
+      // 添加到links数组
+      links.value.push(newlink)
+    })
+
     // 添加双击事件监听
     gantt.attachEvent("onTaskDblClick", (id, e) => {
       const task = gantt.getTask(id)

@@ -129,35 +129,13 @@
                 </el-icon>
               </td>
             </tr>
+            
             <tr>
-              <td class="feature-name">API接口</td>
-              <td class="feature-value">
-                <el-icon class="cross-icon">
-                  <Close />
-                </el-icon>
-              </td>
-              <td class="feature-value">
-                <el-icon class="cross-icon">
-                  <Close />
-                </el-icon>
-              </td>
-              <td class="feature-value">
-                <el-icon class="check-icon">
-                  <Check />
-                </el-icon>
-              </td>
-              <td class="feature-value">
-                <el-icon class="check-icon">
-                  <Check />
-                </el-icon>
-              </td>
-            </tr>
-            <tr>
-              <td class="feature-name">技术支持</td>
-              <td class="feature-value">社区支持</td>
-              <td class="feature-value">优先支持</td>
-              <td class="feature-value">专属支持</td>
-              <td class="feature-value">专属支持</td>
+              <td class="feature-name">其他服务</td>
+              <td class="feature-value"></td>
+              <td class="feature-value">专属客服</td>
+              <td class="feature-value">专属客服</td>
+              <td class="feature-value">全部源码<br></br>二次开发技术支持</td>
             </tr>
           </tbody>
         </table>
