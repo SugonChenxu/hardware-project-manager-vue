@@ -1120,7 +1120,9 @@ const initGantt = () => {
       }
       //更新task的前置任务
       const task = tasks.value.find(t => t.id == newlink.target)
-      task.predecessors.push(newlink.source)
+      if(task != null && task.predecessors != null && task.predecessors.indexOf(newlink.source) == -1){
+        task.predecessors.push(newlink.source)
+      }
 
       // 添加到links数组
       links.value.push(newlink)
