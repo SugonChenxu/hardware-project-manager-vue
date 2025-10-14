@@ -156,6 +156,18 @@
               <el-dropdown-item disabled v-if="dragSortEnabled">
                 <span style="font-size: 11px; color: #909399;">💡 拖拽表格行可调整任务顺序</span>
               </el-dropdown-item>
+              <el-dropdown-item command="markBackground" divided :disabled="!currentTask">
+                <el-icon>
+                  <svg viewBox="0 0 1024 1024" width="1em" height="1em">
+                    <path fill="currentColor"
+                      d="M928 160H96c-17.7 0-32 14.3-32 32v640c0 17.7 14.3 32 32 32h832c17.7 0 32-14.3 32-32V192c0-17.7-14.3-32-32-32zM888 792H136V232h752v560z" />
+                    <path fill="currentColor"
+                      d="M424 352c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V352z" />
+                    <path fill="currentColor"
+                      d="M664 352c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V352z" />
+                  </svg>
+                </el-icon>标记背景色
+              </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -386,6 +398,39 @@
 
     <!-- 客服联系对话框 -->
     <ContactServiceDialog v-model="showContactDialog" />
+
+    <!-- 背景色选择对话框 -->
+    <el-dialog v-model="showBackgroundColorDialog" title="标记背景色" width="400px" :close-on-click-modal="false">
+      <div class="background-color-selector">
+        <div class="current-task-info" v-if="currentTask">
+          <span class="task-label">当前任务：</span>
+          <span class="task-name">{{ currentTask.text }}</span>
+        </div>
+
+        <div class="color-options">
+          <div v-for="color in backgroundColors" :key="color.name" class="color-option"
+            @click="setTaskBackgroundColor(color.css)">
+            <div class="color-preview" :style="{
+              backgroundColor: color.value || '#ffffff',
+              border: color.value ? '1px solid #dcdfe6' : '2px dashed #dcdfe6'
+            }">
+              <div v-if="color.name !== '清除'" class="color-dot" :style="{ backgroundColor: color.color }"></div>
+              <el-icon v-else class="clear-icon">
+                <svg viewBox="0 0 1024 1024" width="1em" height="1em">
+                  <path fill="currentColor"
+                    d="M512 64a448 448 0 1 1 0 896 448 448 0 0 1 0-896zM288 312v-48a24 24 0 0 1 24-24h400a24 24 0 0 1 24 24v48a24 24 0 0 1-24 24H312a24 24 0 0 1-24-24z" />
+                </svg>
+              </el-icon>
+            </div>
+            <span class="color-name">{{ color.name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <el-button @click="showBackgroundColorDialog = false">取消</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -397,7 +442,7 @@ import UserCenter from './UserCenter.vue'
 import ContactServiceDialog from './ContactServiceDialog.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
-import { ElConfigProvider } from 'element-plus'
+import { ElConfigProvider, ElMessage, ElMessageBox } from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import * as XLSX from 'xlsx'
 
@@ -474,6 +519,16 @@ const webVersion = ref('')
 
 // 拖拽排序开关
 const dragSortEnabled = ref(true)
+
+// 背景色标记功能
+const showBackgroundColorDialog = ref(false)
+const backgroundColors = [
+  { name: '红色', css: 'gantt_custom_red', value: '#ffebee', color: '#f44336' },
+  { name: '黄色', css: 'gantt_custom_yellow', value: '#fffde7', color: '#ffeb3b' },
+  { name: '绿色', css: 'gantt_custom_green', value: '#e8f5e8', color: '#4caf50' },
+  { name: '蓝色', css: 'gantt_custom_blue', value: '#e3f2fd', color: '#2196f3' },
+  { name: '清除', css: '', value: '', color: '#ffffff' }
+]
 
 // Grid和Timeline分割线拖拽相关状态
 const isGridResizing = ref(false)
@@ -791,10 +846,9 @@ const allColumns = [
     },
     template: function (task) {
       const percent = Math.round(task.progress * 100)
-      let color = '#f56c6c'
-      if (percent >= 80) color = '#67c23a'
-      else if (percent >= 50) color = '#e6a23c'
-      else if (percent >= 20) color = '#409eff'
+      let color = '#909399'
+      if (percent == 100) color = '#67c23a'
+      else if (percent >= 10) color = '#409eff'
 
       return `<span style="color: ${color}; font-weight: bold;">${percent}%</span>`
     }
@@ -1082,6 +1136,10 @@ const initGantt = () => {
       if (task.type === 'project') {
         css += "gantt_project_row "
       }
+      // 添加背景色样式
+      if (task.backgroundColor) {
+        css += task.backgroundColor + ' '
+      }
       return css
     }
 
@@ -1120,7 +1178,7 @@ const initGantt = () => {
       }
       //更新task的前置任务
       const task = tasks.value.find(t => t.id == newlink.target)
-      if(task != null && task.predecessors != null && task.predecessors.indexOf(newlink.source) == -1){
+      if (task != null && task.predecessors != null && task.predecessors.indexOf(newlink.source) == -1) {
         task.predecessors.push(newlink.source)
       }
 
@@ -1328,6 +1386,7 @@ const loadData = () => {
     data: tasks.value,
     links: links.value
   })
+
 }
 
 // 同步前置任务和链接
@@ -1408,7 +1467,8 @@ const addTask = () => {
     owner: '',
     stakeholder: '',
     description: '',
-    predecessors: []
+    predecessors: [],
+    backgroundColor: ''
   }
 
   gantt.addTask(task, currentTask.value ? currentTask.value.parent : 0)
@@ -1499,7 +1559,8 @@ const openEditDialog = (task) => {
     owner: task.owner || '',
     stakeholder: task.stakeholder || '',
     description: task.description || '',
-    predecessors: task.predecessors || []
+    predecessors: task.predecessors || [],
+    backgroundColor: task.backgroundColor || ''
   }
   showEditDialog.value = true
 }
@@ -1524,7 +1585,8 @@ const updateTask = () => {
     owner: editTask.value.owner,
     stakeholder: editTask.value.stakeholder,
     description: editTask.value.description,
-    predecessors: editTask.value.predecessors || []
+    predecessors: editTask.value.predecessors || [],
+    backgroundColor: editTask.value.backgroundColor || ''
   }
 
   try {
@@ -1591,6 +1653,39 @@ const updateCascade = (originalTask, updatedTask) => {
   }, 100)
 
 }
+
+// 设置任务背景色
+const setTaskBackgroundColor = (colorValue) => {
+  if (!currentTask.value) {
+    ElMessage.warning('请先选择一个任务')
+    return
+  }
+
+  try {
+    // 更新任务的背景色属性
+    const task = gantt.getTask(currentTask.value.id)
+    task.backgroundColor = colorValue
+
+    // 更新甘特图中的任务
+    gantt.updateTask(currentTask.value.id, task)
+
+    // 更新本地任务数据
+    const taskIndex = tasks.value.findIndex(t => t.id === currentTask.value.id)
+    if (taskIndex !== -1) {
+      tasks.value[taskIndex].backgroundColor = colorValue
+    }
+
+
+    showBackgroundColorDialog.value = false
+
+    const colorName = backgroundColors.find(c => c.value === colorValue)?.name || '自定义'
+    ElMessage.success(`已设置任务背景色为${colorName}`)
+  } catch (error) {
+    console.error('设置背景色失败:', error)
+    ElMessage.error('设置背景色失败')
+  }
+}
+
 
 // 确认删除任务
 const confirmDeleteTask = () => {
@@ -2044,6 +2139,9 @@ const handleMoreCommand = (command) => {
       break
     case 'toggleDragSort':
       dragSortEnabled.value = !dragSortEnabled.value
+      break
+    case 'markBackground':
+      showBackgroundColorDialog.value = true
       break
   }
 }
@@ -2895,6 +2993,26 @@ const deleteProject = async () => {
   font-weight: 600;
 }
 
+:deep(.gantt_custom_red) {
+  background: #ffebee;
+  font-weight: 600;
+}
+
+:deep(.gantt_custom_yellow) {
+  background: #fffde7;
+  font-weight: 600;
+}
+
+:deep(.gantt_custom_green) {
+  background: #e8f5e8;
+  font-weight: 600;
+}
+
+:deep(.gantt_custom_blue) {
+  background: #e3f2fd;
+  font-weight: 600;
+}
+
 /* 任务文本增强 */
 :deep(.gantt_task_text) {
   font-weight: 500;
@@ -3110,6 +3228,84 @@ const deleteProject = async () => {
   .el-dialog__title {
     font-size: 16px;
     font-weight: 600;
+  }
+}
+
+/* 背景色选择器样式 */
+.background-color-selector {
+  .current-task-info {
+    margin-bottom: 20px;
+    padding: 12px;
+    background: #f5f7fa;
+    border-radius: 6px;
+
+    .task-label {
+      color: #606266;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+
+    .task-name {
+      color: #303133;
+      font-weight: 500;
+      font-size: 14px;
+    }
+  }
+
+  .color-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .color-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #f5f7fa;
+      transform: translateY(-2px);
+    }
+
+    .color-preview {
+      width: 60px;
+      height: 40px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+      position: relative;
+      transition: all 0.2s ease;
+
+      .color-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .clear-icon {
+        font-size: 20px;
+        color: #909399;
+      }
+    }
+
+    .color-name {
+      font-size: 12px;
+      color: #606266;
+      font-weight: 500;
+    }
+
+    &:hover .color-preview {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
   }
 }
 </style>
