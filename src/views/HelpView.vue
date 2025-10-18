@@ -166,12 +166,16 @@
                         <h2 class="section-title">⌨️ 快捷键</h2>
                         <div class="shortcut-list">
                             <div class="shortcut-item">
-                                <kbd>Esc</kbd>
-                                <span>取消编辑</span>
+                                <kbd>Ctrl+Q</kbd>
+                                <span>新建任务</span>
                             </div>
                             <div class="shortcut-item">
                                 <kbd>Ctrl + S</kbd>
                                 <span>保存项目</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>Ctrl + Z</kbd>
+                                <span>撤销</span>
                             </div>
                         </div>
                     </div>

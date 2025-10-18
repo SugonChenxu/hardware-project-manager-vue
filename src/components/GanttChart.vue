@@ -1156,6 +1156,26 @@ const initGantt = () => {
       return css
     }
 
+    gantt.plugins({
+        keyboard_navigation: true,
+        undo: true
+    });
+
+    // 添加快捷键ctrl+s保存项目
+    gantt.addShortcut("ctrl+s", function(e){ 
+        saveProject();
+    });
+
+    // 添加快捷键ctrl+z撤销
+    gantt.addShortcut("ctrl+z", function(e){ 
+        gantt.undo();
+    });
+
+    // 添加快捷键ctrl+q新建任务
+    gantt.addShortcut("ctrl+q", function(e){ 
+        addTask();
+    });
+
     // 事件监听
     gantt.attachEvent("onTaskClick", (id, e) => {
       currentTask.value = gantt.getTask(id)
