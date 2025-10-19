@@ -277,6 +277,45 @@
       <div ref="ganttContainer" class="gantt-chart"></div>
     </div>
 
+    <!-- 右键菜单 -->
+    <div v-if="contextMenuVisible" class="gantt-context-menu" :style="{ top: contextMenuY + 'px', left: contextMenuX + 'px' }" @click.stop>
+      <div class="context-menu-header" v-if="currentTask">
+        <span class="task-text">{{ currentTask.text }}</span>
+      </div>
+      <div class="context-menu-divider"></div>
+      
+      <!-- 背景色选择 -->
+      <div class="context-menu-section">
+        <div class="context-menu-title">标记背景色</div>
+        <div class="color-quick-select">
+          <div v-for="color in backgroundColors.filter(c => c.name !== '清除')" :key="color.name" 
+            class="color-quick-option" :title="color.name"
+            @click="setTaskBackgroundColor(color.css)">
+            <div class="color-indicator" :style="{ backgroundColor: color.color }"></div>
+          </div>
+          <div class="color-quick-option" title="清除" @click="setTaskBackgroundColor('')">
+            <el-icon class="clear-quick-icon">
+              <svg viewBox="0 0 1024 1024" width="1em" height="1em">
+                <path fill="currentColor"
+                  d="M512 64a448 448 0 1 1 0 896 448 448 0 0 1 0-896zM288 312v-48a24 24 0 0 1 24-24h400a24 24 0 0 1 24 24v48a24 24 0 0 1-24 24H312a24 24 0 0 1-24-24z" />
+              </svg>
+            </el-icon>
+          </div>
+        </div>
+      </div>
+      <div class="context-menu-divider"></div>
+      
+      <!-- 菜单项 -->
+      <div class="context-menu-item" @click="contextMenuOpenEditDialog">
+        <el-icon><Edit /></el-icon>
+        <span>编辑任务</span>
+      </div>
+      <div class="context-menu-item danger" @click="confirmDeleteTask">
+        <el-icon><Delete /></el-icon>
+        <span>删除任务</span>
+      </div>
+    </div>
+
     <!-- 隐藏的文件上传input -->
     <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv,.json" @change="handleFileUpload"
       style="display: none;" />
@@ -450,7 +489,7 @@ import * as XLSX from 'xlsx'
 dayjs.locale('zh-cn')
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
-  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort, QuestionFilled
+  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort, QuestionFilled, Delete
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -529,6 +568,12 @@ const backgroundColors = [
   { name: '蓝色', css: 'gantt_custom_blue', value: '#e3f2fd', color: '#2196f3' },
   { name: '清除', css: '', value: '', color: '#ffffff' }
 ]
+
+// 右键菜单状态
+const contextMenuVisible = ref(false)
+const contextMenuX = ref(0)
+const contextMenuY = ref(0)
+const contextTaskId = ref(null)
 
 // Grid和Timeline分割线拖拽相关状态
 const isGridResizing = ref(false)
@@ -1133,16 +1178,15 @@ const initGantt = () => {
     // 网格行样式
     gantt.templates.grid_row_class = function (start, end, task) {
       let css = ""
-      if (task.type === 'project') {
-        css += "gantt_project_row "
-      }
+      // if (task.type === 'project') {
+      //   css += "gantt_project_row "
+      // }
       // 添加背景色样式
       if (task.backgroundColor) {
         css += task.backgroundColor + ' '
       }
       return css
     }
-
     // 时间轴列样式 - 周末区分
     gantt.templates.timeline_cell_class = function (task, date) {
       let css = ""
@@ -1174,6 +1218,41 @@ const initGantt = () => {
     // 添加快捷键ctrl+q新建任务
     gantt.addShortcut("ctrl+q", function(e){ 
         addTask();
+    });
+
+    gantt.attachEvent("onContextMenu", function (id, linkId, e) {
+        // 如果右键点击的是任务（id存在）
+        if (id) {
+          const task = gantt.getTask(id)
+          if (task) {
+            currentTask.value = task
+            contextTaskId.value = id
+            
+            // 获取菜单位置
+            let x = e.clientX
+            let y = e.clientY
+            
+            contextMenuX.value = x
+            contextMenuY.value = y
+            contextMenuVisible.value = true
+            
+            // 菜单显示后调整位置，避免超出屏幕
+            nextTick(() => {
+              const menu = document.querySelector('.gantt-context-menu')
+              if (menu) {
+                if (x + menu.offsetWidth > window.innerWidth) {
+                  contextMenuX.value = x - menu.offsetWidth
+                }
+                if (y + menu.offsetHeight > window.innerHeight) {
+                  contextMenuY.value = y - menu.offsetHeight
+                }
+              }
+            })
+          }
+        }
+        
+        e.preventDefault()
+        return true;
     });
 
     // 事件监听
@@ -1305,6 +1384,11 @@ const initGantt = () => {
     setTimeout(() => {
       addGridResizeHandle()
     }, 500)
+
+    // 添加全局点击事件，关闭右键菜单
+    document.addEventListener('click', () => {
+      contextMenuVisible.value = false
+    })
   })
 }
 
@@ -1695,10 +1779,11 @@ const setTaskBackgroundColor = (colorValue) => {
       tasks.value[taskIndex].backgroundColor = colorValue
     }
 
-
+    // 关闭所有菜单
     showBackgroundColorDialog.value = false
+    contextMenuVisible.value = false
 
-    const colorName = backgroundColors.find(c => c.value === colorValue)?.name || '自定义'
+    const colorName = backgroundColors.find(c => c.css === colorValue || c.value === colorValue)?.name || '自定义'
     ElMessage.success(`已设置任务背景色为${colorName}`)
   } catch (error) {
     console.error('设置背景色失败:', error)
@@ -1706,11 +1791,16 @@ const setTaskBackgroundColor = (colorValue) => {
   }
 }
 
+// 从右键菜单打开编辑对话框
+const contextMenuOpenEditDialog = () => {
+  contextMenuVisible.value = false
+  openEditDialog(currentTask.value)
+}
 
 // 确认删除任务
 const confirmDeleteTask = () => {
   ElMessageBox.confirm(
-    `确定要删除任务"${editTask.value.text}"吗？此操作不可撤销。`,
+    `确定要删除任务"${editTask.value?.text || currentTask.value?.text}"吗？此操作不可撤销。`,
     '删除确认',
     {
       confirmButtonText: '确定删除',
@@ -1718,8 +1808,10 @@ const confirmDeleteTask = () => {
       type: 'warning',
     }
   ).then(() => {
-    gantt.deleteTask(editTask.value.id)
+    const taskId = editTask.value?.id || currentTask.value?.id
+    gantt.deleteTask(taskId)
     showEditDialog.value = false
+    contextMenuVisible.value = false
     ElMessage.success('任务删除成功')
   }).catch(() => {
     ElMessage.info('已取消删除')
@@ -3326,6 +3418,93 @@ const deleteProject = async () => {
     &:hover .color-preview {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
+  }
+}
+
+/* 右键菜单样式 */
+.gantt-context-menu {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  z-index: 1000;
+
+  .context-menu-header {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .context-menu-divider {
+    height: 1px;
+    background-color: #e4e7ed;
+    margin: 8px 0;
+  }
+
+  .context-menu-section {
+    margin-bottom: 16px;
+
+    .context-menu-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .color-quick-select {
+      display: flex;
+      gap: 8px;
+
+      .color-quick-option {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        transition: transform 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e4e7ed;
+
+        &:hover {
+          transform: scale(1.1);
+          border-color: #409eff;
+          box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
+        }
+
+        .color-indicator {
+          width: 100%;
+          height: 100%;
+          border-radius: 3px;
+        }
+
+        .clear-quick-icon {
+          font-size: 14px;
+          color: #909399;
+        }
+      }
+    }
+  }
+
+  .context-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #f5f7fa;
+    }
+
+    .el-icon {
+      margin-right: 8px;
+    }
+  }
+
+  .danger {
+    color: #f56c6c;
   }
 }
 </style>
