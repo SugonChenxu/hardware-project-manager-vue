@@ -1132,9 +1132,9 @@ const initGantt = () => {
     // 网格行样式
     gantt.templates.grid_row_class = function (start, end, task) {
       let css = ""
-      // if (task.type === 'project') {
-      //   css += "gantt_project_row "
-      // }
+      if (task.type === 'project') {
+        css += "gantt_project_row "
+      }
       // 添加背景色样式
       if (task.backgroundColor) {
         css += task.backgroundColor + ' '
@@ -1766,6 +1766,7 @@ const confirmDeleteTask = () => {
     contextMenuVisible.value = false
     ElMessage.success('任务删除成功')
   }).catch(() => {
+    contextMenuVisible.value = false
     ElMessage.info('已取消删除')
   })
 }
@@ -3050,7 +3051,7 @@ const deleteProject = async () => {
 
 /* 项目行背景 */
 :deep(.gantt_project_row) {
-  background: rgba(103, 194, 58, 0.05);
+  /* background: rgba(103, 194, 58, 0.05); */
   font-weight: 600;
 }
 
