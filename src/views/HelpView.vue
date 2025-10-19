@@ -36,6 +36,7 @@
                         <div class="nav-sub-items" v-show="currentSection === 'core-operations'">
                             <div class="nav-sub-item" @click="scrollToSection('double-click')">双击编辑</div>
                             <div class="nav-sub-item" @click="scrollToSection('drag-sort')">拖拽排序</div>
+                            <div class="nav-sub-item" @click="scrollToSection('change-color')">标记背景色</div>
                             <div class="nav-sub-item" @click="scrollToSection('resize-table')">调整宽度</div>
                         </div>
 
@@ -124,6 +125,25 @@
                                     <InfoFilled />
                                 </el-icon>
                                 <span>💡 小贴士：支持同级排序和跨级调整，里程碑任务有特殊限制</span>
+                            </div>
+                        </div>
+
+                        <!-- 标记背景色 -->
+                        <div id="change-color" class="operation-card">
+                            <div class="operation-header">
+                                <div class="operation-icon">🎨</div>
+                                <h3>标记背景色</h3>
+                            </div>
+                            <p class="operation-desc">针对选中的任务，可以标记背景色，以便与其他任务进行区分</p>
+                            <div class="steps-container">
+                                <img class="operation-image" src="http://img.openauth.net.cn/2025-10-19-14-30-09.png"
+                                    alt="标记背景色" />
+                            </div>
+                            <div class="tip-card">
+                                <el-icon class="tip-icon">
+                                    <InfoFilled />
+                                </el-icon>
+                                <span>💡 小贴士：点击任务行或甘特图区域，右键选择“标记背景色”</span>
                             </div>
                         </div>
 
