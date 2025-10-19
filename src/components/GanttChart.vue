@@ -1972,6 +1972,16 @@ const removeTaskFromArray = (id) => {
   if (index !== -1) {
     tasks.value.splice(index, 1)
   }
+
+  //删除links里面与id相关的链接
+  links.value = links.value.filter(l => l.source != id && l.target != id)
+
+  //删除前置任务
+  tasks.value.forEach(t => {
+    if (t.predecessors && t.predecessors.indexOf(id) !== -1) {
+      t.predecessors = t.predecessors.filter(p => p != id)
+    }
+  })
 }
 
 // 更新任务在数组中的顺序
