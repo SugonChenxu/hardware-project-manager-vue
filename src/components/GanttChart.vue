@@ -156,18 +156,6 @@
               <el-dropdown-item disabled v-if="dragSortEnabled">
                 <span style="font-size: 11px; color: #909399;">💡 拖拽表格行可调整任务顺序</span>
               </el-dropdown-item>
-              <el-dropdown-item command="markBackground" divided :disabled="!currentTask">
-                <el-icon>
-                  <svg viewBox="0 0 1024 1024" width="1em" height="1em">
-                    <path fill="currentColor"
-                      d="M928 160H96c-17.7 0-32 14.3-32 32v640c0 17.7 14.3 32 32 32h832c17.7 0 32-14.3 32-32V192c0-17.7-14.3-32-32-32zM888 792H136V232h752v560z" />
-                    <path fill="currentColor"
-                      d="M424 352c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V352z" />
-                    <path fill="currentColor"
-                      d="M664 352c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V352z" />
-                  </svg>
-                </el-icon>标记背景色
-              </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -438,38 +426,6 @@
     <!-- 客服联系对话框 -->
     <ContactServiceDialog v-model="showContactDialog" />
 
-    <!-- 背景色选择对话框 -->
-    <el-dialog v-model="showBackgroundColorDialog" title="标记背景色" width="400px" :close-on-click-modal="false">
-      <div class="background-color-selector">
-        <div class="current-task-info" v-if="currentTask">
-          <span class="task-label">当前任务：</span>
-          <span class="task-name">{{ currentTask.text }}</span>
-        </div>
-
-        <div class="color-options">
-          <div v-for="color in backgroundColors" :key="color.name" class="color-option"
-            @click="setTaskBackgroundColor(color.css)">
-            <div class="color-preview" :style="{
-              backgroundColor: color.value || '#ffffff',
-              border: color.value ? '1px solid #dcdfe6' : '2px dashed #dcdfe6'
-            }">
-              <div v-if="color.name !== '清除'" class="color-dot" :style="{ backgroundColor: color.color }"></div>
-              <el-icon v-else class="clear-icon">
-                <svg viewBox="0 0 1024 1024" width="1em" height="1em">
-                  <path fill="currentColor"
-                    d="M512 64a448 448 0 1 1 0 896 448 448 0 0 1 0-896zM288 312v-48a24 24 0 0 1 24-24h400a24 24 0 0 1 24 24v48a24 24 0 0 1-24 24H312a24 24 0 0 1-24-24z" />
-                </svg>
-              </el-icon>
-            </div>
-            <span class="color-name">{{ color.name }}</span>
-          </div>
-        </div>
-      </div>
-
-      <template #footer>
-        <el-button @click="showBackgroundColorDialog = false">取消</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -560,7 +516,6 @@ const webVersion = ref('')
 const dragSortEnabled = ref(true)
 
 // 背景色标记功能
-const showBackgroundColorDialog = ref(false)
 const backgroundColors = [
   { name: '红色', css: 'gantt_custom_red', value: '#ffebee', color: '#f44336' },
   { name: '黄色', css: 'gantt_custom_yellow', value: '#fffde7', color: '#ffeb3b' },
@@ -573,7 +528,6 @@ const backgroundColors = [
 const contextMenuVisible = ref(false)
 const contextMenuX = ref(0)
 const contextMenuY = ref(0)
-const contextTaskId = ref(null)
 
 // Grid和Timeline分割线拖拽相关状态
 const isGridResizing = ref(false)
@@ -1226,7 +1180,6 @@ const initGantt = () => {
           const task = gantt.getTask(id)
           if (task) {
             currentTask.value = task
-            contextTaskId.value = id
             
             // 获取菜单位置
             let x = e.clientX
@@ -1780,7 +1733,6 @@ const setTaskBackgroundColor = (colorValue) => {
     }
 
     // 关闭所有菜单
-    showBackgroundColorDialog.value = false
     contextMenuVisible.value = false
 
     const colorName = backgroundColors.find(c => c.css === colorValue || c.value === colorValue)?.name || '自定义'
@@ -2251,9 +2203,6 @@ const handleMoreCommand = (command) => {
       break
     case 'toggleDragSort':
       dragSortEnabled.value = !dragSortEnabled.value
-      break
-    case 'markBackground':
-      showBackgroundColorDialog.value = true
       break
   }
 }

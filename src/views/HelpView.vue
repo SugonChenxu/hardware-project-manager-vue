@@ -134,9 +134,9 @@
                                 <div class="operation-icon">🎨</div>
                                 <h3>标记背景色</h3>
                             </div>
-                            <p class="operation-desc">针对选中的任务，可以标记背景色，以便与其他任务进行区分</p>
+                            <p class="operation-desc">标记背景色，以便与其他任务进行区分或者对特殊任务进行标记</p>
                             <div class="steps-container">
-                                <img class="operation-image" src="http://img.openauth.net.cn/2025-10-19-14-30-09.png"
+                                <img class="operation-image" src="http://img.openauth.net.cn/2025-10-19-16-16-53.png"
                                     alt="标记背景色" />
                             </div>
                             <div class="tip-card">
