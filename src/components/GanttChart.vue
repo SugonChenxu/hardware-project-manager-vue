@@ -426,6 +426,14 @@
     <!-- 客服联系对话框 -->
     <ContactServiceDialog v-model="showContactDialog" />
 
+    <!-- 版本更新对话框 -->
+    <VersionUpdateDialog
+      v-model="showVersionUpdateDialog"
+      :update-message="`检测到新版本 ${versionUpdateInfo.serverVersion}，当前版本 ${versionUpdateInfo.localVersion}`"
+      :update-details="versionUpdateInfo.details"
+      :show-cancel-button="false"
+    />
+
   </div>
 </template>
 
@@ -435,6 +443,7 @@ import { gantt } from 'dhtmlx-gantt'
 import { getUserProfile } from '../api/login.js'
 import UserCenter from './UserCenter.vue'
 import ContactServiceDialog from './ContactServiceDialog.vue'
+import VersionUpdateDialog from './VersionUpdateDialog.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { ElConfigProvider, ElMessage, ElMessageBox } from 'element-plus'
@@ -698,6 +707,14 @@ const addGridResizeHandle = () => {
   })
 }
 
+// 版本更新对话框显示状态
+const showVersionUpdateDialog = ref(false)
+const versionUpdateInfo = ref({
+  localVersion: '',
+  serverVersion: '',
+  details: []
+})
+
 // 版本检查函数
 const checkVersionAndRefresh = async () => {
   try {
@@ -710,17 +727,23 @@ const checkVersionAndRefresh = async () => {
       // 获取本地存储的版本号
       const localVersion = getItem('webVersion')
 
-      // 如果本地版本为空或与服务器版本不同，强制刷新
+      // 如果本地版本为空或与服务器版本不同，显示更新对话框
       if (!localVersion || localVersion !== serverVersion) {
-        console.log('版本号不匹配，强制刷新页面')
-        console.log('本地版本:', localVersion)
-        console.log('服务器版本:', serverVersion)
+        // 设置版本更新信息
+        versionUpdateInfo.value = {
+          localVersion: localVersion || '未知',
+          serverVersion: serverVersion,
+          details: [
+            '✅ 增加右键快捷操作，可快速设置任务背景色、删除任务、编辑任务',
+            '✅ 增加版本更新检查，可自动检测并更新最新版本'
+          ]
+        }
 
+        // 显示版本更新对话框
+        showVersionUpdateDialog.value = true
+        
         // 更新本地存储的版本号
         setItem('webVersion', serverVersion)
-
-        // 强制刷新页面
-        window.location.reload(true)
         return
       }
 
