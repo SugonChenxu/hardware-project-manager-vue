@@ -755,7 +755,8 @@ const checkVersionAndRefresh = async () => {
           serverVersion: serverVersion,
           details: [
             '✅ 增加右键快捷操作，可快速设置任务背景色、删除任务、编辑任务',
-            '✅ 增加版本更新检查，可自动检测并更新最新版本'
+            '✅ 增加版本更新检查，可自动检测并更新最新版本',
+            '✅ 根据任务类型显示不同的图标（📋 普通任务、📁 项目组、🎯 里程碑）'
           ]
         }
 

@@ -23,6 +23,11 @@
                 <div class="sidebar-content">
                     <h3 class="sidebar-title">📋 操作指南</h3>
                     <div class="nav-menu">
+                        <div class="nav-item" :class="{ active: currentSection === 'concept' }"
+                            @click="scrollToSection('concept')">
+                            <span class="nav-icon">💡</span>
+                            <span class="nav-text">概念说明</span>
+                        </div>
                         <div class="nav-item" :class="{ active: currentSection === 'video' }"
                             @click="scrollToSection('video')">
                             <span class="nav-icon">🎥</span>
@@ -59,6 +64,32 @@
             <!-- 右侧内容区域 -->
             <div class="help-content">
                 <div class="content-container">
+                    <!-- 概念说明 -->
+                    <div id="concept" class="content-section">
+                        <h2 class="section-title">💡 概念说明</h2>
+
+                        <!-- 任务类型说明 -->
+                        <div id="task-types" class="operation-card">
+                            <div class="operation-header">
+                                <div class="operation-icon">📑</div>
+                                <h3>任务类型</h3>
+                            </div>
+                            <p class="operation-desc" style="margin-top: 15px;"><strong>📋 普通任务（Task）</strong></p>
+                            <p class="operation-desc" style="margin-left: 20px;">• 用于表示项目中的普通工作任务</p>
+                            <p class="operation-desc" style="margin-left: 20px;">• 可以设置任务的负责人、相关方、开始时间、结束时间、工期等</p>
+                            <p class="operation-desc" style="margin-left: 20px;">• 可以拖拽调整大小、移动位置、修改进度</p>
+
+                            <p class="operation-desc"><strong>📁 项目组（Project）</strong></p>
+                            <p class="operation-desc" style="margin-left: 20px;">• 用于管理一组相关的任务，通常包含多个子任务</p>
+                            <p class="operation-desc" style="margin-left: 20px;">• 不能拖动和调整大小，依赖于子任务，例如，如果用户拖动项目任务的子任务，任务将改变其持续时间。</p>
+                            
+                            <p class="operation-desc" style="margin-top: 15px;"><strong>🎯 里程碑（Milestone）</strong></p>
+                            <p class="operation-desc" style="margin-left: 20px;">• 用于表示项目中的重要节点或关键时间点</p>
+                            <p class="operation-desc" style="margin-left: 20px;">• 不能拖动和调整大小。零持续时间。忽略结束日期、持续时间和进度属性。</p>
+                            
+                            
+                        </div>
+                    </div>
                     <!-- 视频 -->
                     <div id="video" class="content-section">
                         <h2 class="section-title">🎥 视频教程</h2>
@@ -220,7 +251,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- 客服对话框 -->
         <ContactServiceDialog v-model="showContactDialog" />
     </div>
