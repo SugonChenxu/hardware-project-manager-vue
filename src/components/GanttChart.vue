@@ -271,6 +271,8 @@
         <span class="task-text">{{ currentTask.text }}</span>
       </div>
       <div class="context-menu-divider"></div>
+
+      
       
       <!-- 背景色选择 -->
       <div class="context-menu-section">
@@ -290,6 +292,24 @@
             </el-icon>
           </div>
         </div>
+      </div>
+      <div class="context-menu-divider"></div>
+      
+      <!-- 任务类型选择 -->
+      <div class="context-menu-item" @click.stop>
+        <el-dropdown @command="setTaskType" :hide-on-click="true" placement="right-start">
+          <span class="dropdown-item-text">
+            <el-icon><Edit /></el-icon>
+            修改任务类型
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="task">📋 普通任务</el-dropdown-item>
+              <el-dropdown-item command="project">📁 项目组</el-dropdown-item>
+              <el-dropdown-item command="milestone">🎯 里程碑</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
       <div class="context-menu-divider"></div>
       
@@ -1763,6 +1783,40 @@ const setTaskBackgroundColor = (colorValue) => {
   } catch (error) {
     console.error('设置背景色失败:', error)
     ElMessage.error('设置背景色失败')
+  }
+}
+
+// 设置任务类型
+const setTaskType = (newType) => {
+  if (!currentTask.value) {
+    ElMessage.warning('请先选择一个任务')
+    return
+  }
+
+  try {
+    // 更新任务的类型属性
+    const task = gantt.getTask(currentTask.value.id)
+    task.type = newType
+
+    // 更新甘特图中的任务
+    gantt.updateTask(currentTask.value.id, task)
+
+    // 更新本地任务数据
+    const taskIndex = tasks.value.findIndex(t => t.id === currentTask.value.id)
+    if (taskIndex !== -1) {
+      tasks.value[taskIndex].type = newType
+    }
+
+    // 关闭右键菜单
+    contextMenuVisible.value = false
+
+    // 重新渲染甘特图以更新任务显示
+    setTimeout(() => {
+      gantt.render()
+    }, 100)
+  } catch (error) {
+    console.error('修改任务类型失败:', error)
+    ElMessage.error('修改任务类型失败: ' + error.message)
   }
 }
 
@@ -3483,6 +3537,28 @@ const deleteProject = async () => {
 
     .el-icon {
       margin-right: 8px;
+    }
+
+    .dropdown-item-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      justify-content: space-between;
+
+      &::after {
+        content: '›';
+        font-size: 16px;
+        color: #909399;
+      }
+    }
+
+    .el-dropdown {
+      width: 100%;
+
+      :deep(.el-dropdown__caret-button) {
+        display: none;
+      }
     }
   }
 
