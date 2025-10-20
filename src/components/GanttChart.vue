@@ -810,6 +810,16 @@ const allColumns = [
     editor: {
       type: "text",
       map_to: "text"
+    },
+    template: function (task) {
+      // 根据任务类型添加 emoji
+      const emojiMap = {
+        'task': '📋',
+        'project': '📁',
+        'milestone': '🎯'
+      }
+      const emoji = emojiMap[task.type] || '📋'
+      return emoji + ' ' + task.text
     }
   },
   {
@@ -1195,6 +1205,19 @@ const initGantt = () => {
       }
 
       return css
+    }
+
+    // 去掉默认的文件夹和文件图标，只保留折叠按钮
+    gantt.templates.grid_folder = function (item) {
+      return "" // 去掉文件夹图标
+    }
+    
+    gantt.templates.grid_file = function (item) {
+      return "" // 去掉文件图标
+    }
+    
+    gantt.templates.grid_blank = function (item) {
+      return "" // 保持空白
     }
 
     gantt.plugins({
