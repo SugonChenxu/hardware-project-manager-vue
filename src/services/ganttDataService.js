@@ -25,6 +25,8 @@ export const loadGanttData = async (code = null) => {
         // 解析项目数据中的甘特图数据
         let tasks = []
         let links = []
+        let customColumns = []
+        let visibleColumns = []
         
         if (projectData.content) {
           try {
@@ -34,6 +36,8 @@ export const loadGanttData = async (code = null) => {
             
             tasks = ganttDataObj.tasks || []
             links = ganttDataObj.links || []
+            customColumns = ganttDataObj.customColumns || []
+            visibleColumns = ganttDataObj.visibleColumns || []
           } catch (error) {
             console.error('解析甘特图数据失败:', error)
           }
@@ -50,7 +54,9 @@ export const loadGanttData = async (code = null) => {
             createTime: projectData.createTime,
             createUserId: projectData.createUserId,
             updateTime: projectData.updateTime,
-            createUserName: projectData.createUserName
+            createUserName: projectData.createUserName,
+            customColumns: customColumns,
+            visibleColumns: visibleColumns
           }
         }
       } 
@@ -65,7 +71,9 @@ export const loadGanttData = async (code = null) => {
           code: `GANTT_${Date.now()}`,
           name: '未命名项目',
           description: '这是系统自动生成的一个演示项目，你可以在此基础上修改或者直接新建一个项目',
-          createTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
+          createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+          customColumns: [],
+          visibleColumns: [] //默认为空，调用方会自动添加默认值
         }
       }
     }
@@ -100,7 +108,7 @@ const processTasksForSerialization = (tasks) => {
  * 保存甘特图数据到项目
  * @param {Array} tasks - 任务数据
  * @param {Array} links - 依赖关系数据
- * @param {Object} projectInfo - 项目信息
+ * @param {Object} projectInfo - 项目信息（包含customColumns）
  * @returns {Promise<{success: boolean, data?: Object}>}
  */
 export const saveGanttDataToProject = async (tasks, links, projectInfo = null) => {
@@ -111,6 +119,8 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
     const ganttDataObj = {
       tasks: processedTasks,
       links,
+      customColumns: projectInfo?.customColumns || [],
+      visibleColumns: projectInfo?.visibleColumns || [],
       lastUpdateTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
     }
 

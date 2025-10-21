@@ -184,25 +184,43 @@
             </el-icon>
           </el-button>
           <template #dropdown>
-            <el-dropdown-menu>
-              <div class="column-control-panel">
-                <div class="panel-actions">
-                  <el-button size="small" type="text" @click="selectAllColumns" title="列表">
-                    📊
-                  </el-button>
-                  <el-button size="small" type="text" @click="selectHalfColumns" title="平衡">
-                    ↔️
-                  </el-button>
-                  <el-button size="small" type="text" @click="unselectAllColumns" title="甘特图">
-                    📈
-                  </el-button>
-                </div>
+            <el-dropdown-menu class="column-control-menu">
+              <div class="panel-actions">
+                <el-button size="small" type="text" @click="selectAllColumns" title="列表">📊</el-button>
+                <el-button size="small" type="text" @click="selectHalfColumns" title="平衡">↔️</el-button>
+                <el-button size="small" type="text" @click="unselectAllColumns" title="甘特图">📈</el-button>
+              </div>
+              <el-divider style="margin: 8px 0;" />
+              <div class="column-section">
+                <div class="section-title">基础列</div>
                 <el-checkbox-group v-model="visibleColumns" class="column-checkboxes">
                   <el-checkbox v-for="column in allColumns" :key="column.name" :label="column.name">
                     {{ column.label }}
                   </el-checkbox>
                 </el-checkbox-group>
               </div>
+              <template v-if="customColumns.length > 0">
+                <el-divider style="margin: 8px 0;" />
+                <div class="column-section">
+                  <div class="section-title">自定义列</div>
+                  <el-checkbox-group v-model="visibleColumns" class="column-checkboxes">
+                    <el-checkbox v-for="column in customColumns" :key="column.name" :label="column.name">
+                      <span class="custom-column-item">
+                        {{ column.label }}
+                        <el-button type="danger" size="small" link @click.stop="deleteCustomColumn(column.name)"
+                          style="margin-left: 4px;">🗑️</el-button>
+                      </span>
+                    </el-checkbox>
+                  </el-checkbox-group>
+                </div>
+              </template>
+              <el-divider style="margin: 8px 0;" />
+              <el-button size="small" type="text" @click="showAddColumnDialog = true" style="width: 100%;">
+                <el-icon>
+                  <Plus />
+                </el-icon>
+                <span>添加列</span>
+              </el-button>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -266,21 +284,21 @@
     </div>
 
     <!-- 右键菜单 -->
-    <div v-if="contextMenuVisible" class="gantt-context-menu" :style="{ top: contextMenuY + 'px', left: contextMenuX + 'px' }" @click.stop>
+    <div v-if="contextMenuVisible" class="gantt-context-menu"
+      :style="{ top: contextMenuY + 'px', left: contextMenuX + 'px' }" @click.stop>
       <div class="context-menu-header" v-if="currentTask">
         <span class="task-text">{{ currentTask.text }}</span>
       </div>
       <div class="context-menu-divider"></div>
 
-      
-      
+
+
       <!-- 背景色选择 -->
       <div class="context-menu-section">
         <div class="context-menu-title">标记背景色</div>
         <div class="color-quick-select">
-          <div v-for="color in backgroundColors.filter(c => c.name !== '清除')" :key="color.name" 
-            class="color-quick-option" :title="color.name"
-            @click="setTaskBackgroundColor(color.css)">
+          <div v-for="color in backgroundColors.filter(c => c.name !== '清除')" :key="color.name"
+            class="color-quick-option" :title="color.name" @click="setTaskBackgroundColor(color.css)">
             <div class="color-indicator" :style="{ backgroundColor: color.color }"></div>
           </div>
           <div class="color-quick-option" title="清除" @click="setTaskBackgroundColor('')">
@@ -294,12 +312,14 @@
         </div>
       </div>
       <div class="context-menu-divider"></div>
-      
+
       <!-- 任务类型选择 -->
       <div class="context-menu-item" @click.stop>
         <el-dropdown @command="setTaskType" :hide-on-click="true" placement="right-start">
           <span class="dropdown-item-text">
-            <el-icon><Edit /></el-icon>
+            <el-icon>
+              <Edit />
+            </el-icon>
             修改任务类型
           </span>
           <template #dropdown>
@@ -312,14 +332,18 @@
         </el-dropdown>
       </div>
       <div class="context-menu-divider"></div>
-      
+
       <!-- 菜单项 -->
       <div class="context-menu-item" @click="contextMenuOpenEditDialog">
-        <el-icon><Edit /></el-icon>
+        <el-icon>
+          <Edit />
+        </el-icon>
         <span>编辑任务</span>
       </div>
       <div class="context-menu-item danger" @click="confirmDeleteTask">
-        <el-icon><Delete /></el-icon>
+        <el-icon>
+          <Delete />
+        </el-icon>
         <span>删除任务</span>
       </div>
     </div>
@@ -419,7 +443,13 @@
           </div>
         </el-form-item>
 
-        <el-row :gutter="16">
+        <!-- 自定义列 -->
+        <el-row :gutter="16" v-if="customColumns.length > 0">
+          <el-col :span="12" v-for="column in customColumns" :key="column.name">
+            <el-form-item :label="column.label">
+              <el-input v-model="editTask[column.name]" :placeholder="`请输入${column.label}`" />
+            </el-form-item>
+          </el-col>
         </el-row>
 
         <el-form-item label="任务描述">
@@ -446,13 +476,39 @@
     <!-- 客服联系对话框 -->
     <ContactServiceDialog v-model="showContactDialog" />
 
+    <!-- 添加自定义列对话框 -->
+    <el-dialog v-model="showAddColumnDialog" title="添加自定义列" width="500px" :close-on-click-modal="false">
+      <el-form :model="newColumnForm" label-width="100px">
+        <el-form-item label="列名称" required>
+          <el-input v-model="newColumnForm.name" placeholder="请输入列名称（英文，如：budget）" maxlength="50" />
+          <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+            列名称用于数据存储，建议使用英文
+          </div>
+        </el-form-item>
+        <el-form-item label="显示名称" required>
+          <el-input v-model="newColumnForm.label" placeholder="请输入显示名称（如：预算）" maxlength="20" />
+        </el-form-item>
+        <el-form-item label="列宽度">
+          <el-input-number v-model="newColumnForm.width" :min="50" :max="500" :step="10" />
+        </el-form-item>
+        <el-form-item label="对齐方式">
+          <el-radio-group v-model="newColumnForm.align">
+            <el-radio label="left">左对齐</el-radio>
+            <el-radio label="center">居中</el-radio>
+            <el-radio label="right">右对齐</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showAddColumnDialog = false">取消</el-button>
+        <el-button type="primary" @click="addCustomColumn">确定</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 版本更新对话框 -->
-    <VersionUpdateDialog
-      v-model="showVersionUpdateDialog"
+    <VersionUpdateDialog v-model="showVersionUpdateDialog"
       :update-message="`检测到新版本 ${versionUpdateInfo.serverVersion}，当前版本 ${versionUpdateInfo.localVersion}`"
-      :update-details="versionUpdateInfo.details"
-      :show-cancel-button="false"
-    />
+      :update-details="versionUpdateInfo.details" :show-cancel-button="false" />
 
   </div>
 </template>
@@ -754,15 +810,16 @@ const checkVersionAndRefresh = async () => {
           localVersion: localVersion || '未知',
           serverVersion: serverVersion,
           details: [
+            '✅ 全新域名：http://stargantt.cn 你的进度我来守护',
             '✅ 增加右键快捷操作，可快速设置任务背景色、删除任务、编辑任务',
-            '✅ 增加版本更新检查，可自动检测并更新最新版本',
-            '✅ 根据任务类型显示不同的图标（📋 普通任务、📁 项目组、🎯 里程碑）'
+            '✅ 项目可增加自定义列，并可云端存储可见列',
+            '✅ 任务类型显示不同图标（📋 普通任务、📁 项目组、🎯 里程碑）'
           ]
         }
 
         // 显示版本更新对话框
         showVersionUpdateDialog.value = true
-        
+
         // 更新本地存储的版本号
         setItem('webVersion', serverVersion)
         return
@@ -794,9 +851,16 @@ const editTask = ref({
 })
 
 
-// 可显示的字段
-const visibleColumns = ref(['id', 'text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description'])
+// 可显示的字段（默认值）
+const defaultVisibleColumns = ['id', 'text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description']
 
+// 可显示的字段（会从projectInfo中加载）
+const visibleColumns = ref([...defaultVisibleColumns])
+
+// 自定义列
+const customColumns = ref([])
+
+// 基础列（不可修改）
 const allColumns = [
   {
     name: "id",
@@ -968,6 +1032,89 @@ const allColumns = [
   }
 ]
 
+// 合并所有列（基础列 + 自定义列）
+const getAllColumnsList = computed(() => {
+  return [...allColumns, ...customColumns.value]
+})
+
+// 添加自定义列对话框
+const showAddColumnDialog = ref(false)
+const newColumnForm = ref({
+  name: '',
+  label: '',
+  width: 100,
+  align: 'center'
+})
+
+// 添加自定义列
+const addCustomColumn = () => {
+  if (!newColumnForm.value.name || !newColumnForm.value.label) {
+    ElMessage.warning('请输入列名称和显示名称')
+    return
+  }
+
+  // 检查列名是否已存在
+  const exists = getAllColumnsList.value.some(col => col.name === newColumnForm.value.name)
+  if (exists) {
+    ElMessage.warning('该列名已存在')
+    return
+  }
+
+  // 添加自定义列
+  const customColumn = {
+    name: newColumnForm.value.name,
+    label: newColumnForm.value.label,
+    width: newColumnForm.value.width || 100,
+    align: newColumnForm.value.align || 'center',
+    editor: {
+      type: "text",
+      map_to: newColumnForm.value.name
+    },
+    template: function (task) {
+      return task[newColumnForm.value.name] || '<span style="color: #c0c4cc;">-</span>'
+    },
+    isCustom: true  // 标记为自定义列
+  }
+
+  customColumns.value.push(customColumn)
+  visibleColumns.value.push(newColumnForm.value.name)
+
+  ElMessage.success('自定义列添加成功')
+  showAddColumnDialog.value = false
+
+  // 重置表单
+  newColumnForm.value = {
+    name: '',
+    label: '',
+    width: 100,
+    align: 'center'
+  }
+
+  // 更新列显示
+  updateColumnVisibility()
+}
+
+// 删除自定义列
+const deleteCustomColumn = (columnName) => {
+  ElMessageBox.confirm('确定要删除此自定义列吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    const index = customColumns.value.findIndex(col => col.name === columnName)
+    if (index !== -1) {
+      customColumns.value.splice(index, 1)
+      // 从可见列中移除
+      const visibleIndex = visibleColumns.value.indexOf(columnName)
+      if (visibleIndex !== -1) {
+        visibleColumns.value.splice(visibleIndex, 1)
+      }
+      ElMessage.success('自定义列已删除')
+      updateColumnVisibility()
+    }
+  }).catch(() => { })
+}
+
 // 生命周期钩子
 onMounted(async () => {
   // 首先进行版本检查，如果版本不匹配会自动刷新页面
@@ -1087,6 +1234,32 @@ const loadInitialData = async (code = null) => {
     tasks.value = data.tasks
     links.value = data.links
     projectInfo.value = data.projectInfo
+
+    // 确保projectInfo有customColumns字段
+    if (!projectInfo.value.customColumns) {
+      projectInfo.value.customColumns = []
+    }
+
+    // 恢复自定义列（需要重新创建template函数）
+    if (projectInfo.value.customColumns.length > 0) {
+      customColumns.value = projectInfo.value.customColumns.map(col => ({
+        ...col,
+        template: function (task) {
+          return task[col.name] || '<span style="color: #c0c4cc;">-</span>'
+        }
+      }))
+    } else {
+      customColumns.value = []
+    }
+
+    // 恢复可见字段配置
+    if (projectInfo.value.visibleColumns && projectInfo.value.visibleColumns.length > 0) {
+      visibleColumns.value = projectInfo.value.visibleColumns
+    } else {
+      // 使用默认配置
+      visibleColumns.value = [...defaultVisibleColumns]
+    }
+
     document.title = `${projectInfo.value.name} - 星甘StarGantt|简洁易用的在线甘特图制作平台|专业的项目进度管理工具`
 
     // 检查收藏状态
@@ -1095,6 +1268,10 @@ const loadInitialData = async (code = null) => {
     ElMessage.error('数据加载失败，请刷新页面重试')
   } finally {
     loading.value = false
+    // 延迟执行，确保DOM已经渲染
+    nextTick(() => {
+      updateColumnVisibility()
+    })
   }
 }
 
@@ -1150,9 +1327,6 @@ const initGantt = () => {
 
     // 时间刻度配置
     setTimeScale(viewMode.value)
-
-    // 列配置 - 使用深拷贝确保不修改原始定义
-    gantt.config.columns = allColumns.map(col => ({ ...col }))
 
     // 任务类型配置
     gantt.config.types = {
@@ -1212,67 +1386,67 @@ const initGantt = () => {
     gantt.templates.grid_folder = function (item) {
       return "" // 去掉文件夹图标
     }
-    
+
     gantt.templates.grid_file = function (item) {
       return "" // 去掉文件图标
     }
-    
+
     gantt.templates.grid_blank = function (item) {
       return "" // 保持空白
     }
 
     gantt.plugins({
-        keyboard_navigation: true,
-        undo: true
+      keyboard_navigation: true,
+      undo: true
     });
 
     // 添加快捷键ctrl+s保存项目
-    gantt.addShortcut("ctrl+s", function(e){ 
-        saveProject();
+    gantt.addShortcut("ctrl+s", function (e) {
+      saveProject();
     });
 
     // 添加快捷键ctrl+z撤销
-    gantt.addShortcut("ctrl+z", function(e){ 
-        gantt.undo();
+    gantt.addShortcut("ctrl+z", function (e) {
+      gantt.undo();
     });
 
     // 添加快捷键ctrl+q新建任务
-    gantt.addShortcut("ctrl+q", function(e){ 
-        addTask();
+    gantt.addShortcut("ctrl+q", function (e) {
+      addTask();
     });
 
     gantt.attachEvent("onContextMenu", function (id, linkId, e) {
-        // 如果右键点击的是任务（id存在）
-        if (id) {
-          const task = gantt.getTask(id)
-          if (task) {
-            currentTask.value = task
-            
-            // 获取菜单位置
-            let x = e.clientX
-            let y = e.clientY
-            
-            contextMenuX.value = x
-            contextMenuY.value = y
-            contextMenuVisible.value = true
-            
-            // 菜单显示后调整位置，避免超出屏幕
-            nextTick(() => {
-              const menu = document.querySelector('.gantt-context-menu')
-              if (menu) {
-                if (x + menu.offsetWidth > window.innerWidth) {
-                  contextMenuX.value = x - menu.offsetWidth
-                }
-                if (y + menu.offsetHeight > window.innerHeight) {
-                  contextMenuY.value = y - menu.offsetHeight
-                }
+      // 如果右键点击的是任务（id存在）
+      if (id) {
+        const task = gantt.getTask(id)
+        if (task) {
+          currentTask.value = task
+
+          // 获取菜单位置
+          let x = e.clientX
+          let y = e.clientY
+
+          contextMenuX.value = x
+          contextMenuY.value = y
+          contextMenuVisible.value = true
+
+          // 菜单显示后调整位置，避免超出屏幕
+          nextTick(() => {
+            const menu = document.querySelector('.gantt-context-menu')
+            if (menu) {
+              if (x + menu.offsetWidth > window.innerWidth) {
+                contextMenuX.value = x - menu.offsetWidth
               }
-            })
-          }
+              if (y + menu.offsetHeight > window.innerHeight) {
+                contextMenuY.value = y - menu.offsetHeight
+              }
+            }
+          })
         }
-        
-        e.preventDefault()
-        return true;
+      }
+
+      e.preventDefault()
+      return true;
     });
 
     // 事件监听
@@ -1383,13 +1557,13 @@ const initGantt = () => {
 
     // 设置甘特图高度以支持滚动
     setTimeout(() => {
-      const containerHeight = ganttContainer.value.clientHeight
       gantt.setSizes()
       gantt.render()
 
       // 初始化完成后，根据可见列调整Grid宽度
-      const initialVisibleCols = visibleColumns.value.map(col => allColumns.find(c => c.name === col))
+      const initialVisibleCols = allColumns.filter(col => visibleColumns.value.includes(col.name))
       adjustGridWidthByColumns(initialVisibleCols)
+
     }, 100)
 
     // 加载数据
@@ -1594,6 +1768,11 @@ const addTask = () => {
     predecessors: [],
     backgroundColor: ''
   }
+
+  // 初始化自定义列字段
+  customColumns.value.forEach(col => {
+    task[col.name] = ''
+  })
 
   gantt.addTask(task, currentTask.value ? currentTask.value.parent : 0)
 
@@ -2201,6 +2380,24 @@ const getNextLinkId = () => {
 const saveProject = async () => {
   saving.value = true
   try {
+    // 确保projectInfo包含最新的配置
+    if (!projectInfo.value) {
+      projectInfo.value = {}
+    }
+
+    // 保存自定义列配置（只保存配置，不保存template函数）
+    projectInfo.value.customColumns = customColumns.value.map(col => ({
+      name: col.name,
+      label: col.label,
+      width: col.width,
+      align: col.align,
+      editor: col.editor,
+      isCustom: col.isCustom
+    }))
+
+    // 保存可见字段配置
+    projectInfo.value.visibleColumns = visibleColumns.value
+
     const result = await saveGanttDataToProject(tasks.value, links.value, projectInfo.value)
 
     // 更新项目信息
@@ -2448,13 +2645,12 @@ const cancelEdit = () => {
 // 更新字段可见性
 const updateColumnVisibility = () => {
 
-  // 筛选可见列，确保使用原始列定义的副本
-  const filteredColumns = allColumns
+  // 筛选可见列，确保使用原始列定义的副本（包含基础列和自定义列）
+  const filteredColumns = getAllColumnsList.value
     .filter(col => visibleColumns.value.includes(col.name))
     .map(col => ({ ...col })) // 创建副本，避免修改原始定义
 
   gantt.config.columns = filteredColumns
-  console.log('过滤后的列:', filteredColumns.map(col => `${col.name}(${col.width}px)`))
 
   // 根据可见列数量动态调整Grid宽度
   adjustGridWidthByColumns(filteredColumns)
@@ -2462,14 +2658,13 @@ const updateColumnVisibility = () => {
   // 重新渲染甘特图
   if (gantt && gantt.render) {
     gantt.render()
-    console.log('甘特图已重新渲染')
   }
 }
 
 
-// 全选所有列
+// 全选所有列（包括自定义列）
 const selectAllColumns = () => {
-  visibleColumns.value = allColumns.map(column => column.name)
+  visibleColumns.value = getAllColumnsList.value.map(column => column.name)
 }
 
 // 选择核心列（任务名称、开始时间、结束时间）
@@ -2983,8 +3178,22 @@ const deleteProject = async () => {
 
 /* 字段控制面板 */
 .column-control-panel {
-  padding: 16px;
+  padding: 10px;
   min-width: 220px;
+}
+
+.column-control-menu {
+  padding: 5px 0;
+  min-width: 220px;
+
+  :deep(.el-dropdown-menu__item) {
+    padding: 0;
+    background: transparent;
+
+    &:hover {
+      background: transparent;
+    }
+  }
 }
 
 .panel-header {
@@ -2997,63 +3206,94 @@ const deleteProject = async () => {
 .panel-actions {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding: 8px 4px;
+
+  padding: 5px 5px;
+
+  .el-button {
+    padding: 3px;
+    font-size: 18px;
+    color: inherit;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border: 1px solid #e4e7ed;
+
+    &:hover {
+      background-color: rgba(64, 158, 255, 0.1);
+      border-color: #409eff;
+      transform: scale(1.08);
+    }
+
+    &.is-disabled {
+      color: #c0c4cc;
+
+      &:hover {
+        color: #c0c4cc;
+        background-color: transparent;
+        transform: scale(1);
+      }
+    }
+
+    &.reset-width-btn {
+      color: #e6a23c;
+
+      &:hover {
+        color: #ebb563;
+        background-color: rgba(230, 162, 60, 0.1);
+      }
+    }
+  }
 }
 
-.panel-actions .el-button {
-  padding: 6px;
-  font-size: 16px;
-  color: inherit;
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  transition: all 0.2s;
-  border: 1px solid #e4e7ed;
+.column-section {
+  padding: 0 12px;
+  margin-bottom: 0;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
-.panel-actions .el-button:hover {
-  background-color: rgba(64, 158, 255, 0.1);
-  border-color: #409eff;
-  transform: scale(1.05);
-}
-
-.panel-actions .el-button.is-disabled {
-  color: #c0c4cc;
-}
-
-.panel-actions .el-button.is-disabled:hover {
-  color: #c0c4cc;
-  background-color: transparent;
-}
-
-.panel-actions .reset-width-btn {
-  color: #e6a23c;
-}
-
-.panel-actions .reset-width-btn:hover {
-  color: #ebb563;
-  background-color: rgba(230, 162, 60, 0.1);
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #606266;
+  margin-bottom: 8px;
+  padding: 4px 0;
+  letter-spacing: 0.5px;
 }
 
 .column-checkboxes {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+
+  .el-checkbox {
+    margin: 0;
+    height: 28px;
+    display: flex;
+    align-items: center;
+
+    :deep(.el-checkbox__label) {
+      font-size: 13px;
+      color: #323130;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 6px;
+    }
+  }
 }
 
-.column-checkboxes .el-checkbox {
-  margin: 0;
-}
-
-.column-checkboxes .el-checkbox__label {
-  font-size: 13px;
-  color: #323130;
+.custom-column-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* 用户区域 */
