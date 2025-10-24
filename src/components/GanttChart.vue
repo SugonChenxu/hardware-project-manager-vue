@@ -1081,7 +1081,7 @@ const addCustomColumn = () => {
   customColumns.value.push(customColumn)
   visibleColumns.value.push(columnName)
 
-  // 为所有现有任务初始化这个字段为空字符串
+  // 防止新加的字段内联编辑时显示undefined
   gantt.eachTask(function(task) {
     if (task[columnName] === undefined) {
       task[columnName] = ''
@@ -1688,15 +1688,6 @@ const loadData = () => {
   // 同步前置任务和链接
   syncPredecessorsWithLinks()
 
-  // 确保所有任务都有自定义列字段
-  tasks.value.forEach(task => {
-    customColumns.value.forEach(col => {
-      if (task[col.name] === undefined) {
-        task[col.name] = ''
-      }
-    })
-  })
-
   gantt.parse({
     data: tasks.value,
     links: links.value
@@ -1883,7 +1874,7 @@ const openEditDialog = (task) => {
     backgroundColor: task.backgroundColor || ''
   }
   
-  // 复制自定义列字段
+  //将自定义列字段复制到编辑任务表单
   customColumns.value.forEach(col => {
     editTask.value[col.name] = task[col.name] || ''
   })
@@ -1914,8 +1905,8 @@ const updateTask = () => {
     predecessors: editTask.value.predecessors || [],
     backgroundColor: editTask.value.backgroundColor || ''
   }
-  
-  // 包含自定义列字段
+
+  //将自定义列字段复制到更新任务表单
   customColumns.value.forEach(col => {
     updatedTask[col.name] = editTask.value[col.name] || ''
   })
