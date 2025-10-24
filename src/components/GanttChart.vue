@@ -178,7 +178,7 @@
             <el-icon>
               <Operation />
             </el-icon>
-            <span>字段</span>
+            <span>列设置</span>
             <el-icon class="dropdown-arrow">
               <ArrowDown />
             </el-icon>
@@ -192,24 +192,31 @@
               </div>
               <el-divider style="margin: 8px 0;" />
               <div class="column-section">
-                <div class="section-title">基础列</div>
-                <el-checkbox-group v-model="visibleColumns" class="column-checkboxes">
-                  <el-checkbox v-for="column in allColumns" :key="column.name" :label="column.name">
+                <div class="section-title">
+                  <span style="font-size: 11px; color: #909399; margin-left: 8px;">🖐️ 按住拖动排序</span>
+                </div>
+                <el-checkbox-group v-model="visibleColumns" class="column-checkboxes" ref="baseColumnsContainer">
+                  <el-checkbox v-for="column in sortedBaseColumns" :key="column.name" :label="column.name" 
+                    :data-column-name="column.name" class="draggable-column-item">
                     {{ column.label }}
+                    <span class="drag-handle">☰</span>
                   </el-checkbox>
                 </el-checkbox-group>
               </div>
               <template v-if="customColumns.length > 0">
                 <el-divider style="margin: 8px 0;" />
                 <div class="column-section">
-                  <div class="section-title">自定义列</div>
-                  <el-checkbox-group v-model="visibleColumns" class="column-checkboxes">
-                    <el-checkbox v-for="column in customColumns" :key="column.name" :label="column.name">
-                      <span class="custom-column-item">
-                        {{ column.label }}
-                        <el-button type="danger" size="small" link @click.stop="deleteCustomColumn(column.name)"
-                          style="margin-left: 4px;">🗑️</el-button>
-                      </span>
+                  <div class="section-title">
+                    自定义列
+                    <span style="font-size: 11px; color: #909399; margin-left: 8px;">🖐️ 按住拖动排序</span>
+                  </div>
+                  <el-checkbox-group v-model="visibleColumns" class="column-checkboxes" ref="customColumnsContainer">
+                    <el-checkbox v-for="column in sortedCustomColumns" :key="column.name" :label="column.name"
+                      :data-column-name="column.name" class="draggable-column-item">
+                      {{ column.label }}
+                      <span class="drag-handle">☰</span>
+                      <el-button type="danger" size="small" link @click.stop="deleteCustomColumn(column.name)"
+                        style="margin-left: 4px;">🗑️</el-button>
                     </el-checkbox>
                   </el-checkbox-group>
                 </div>
@@ -525,6 +532,7 @@ import 'dayjs/locale/zh-cn'
 import { ElConfigProvider, ElMessage, ElMessageBox } from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import * as XLSX from 'xlsx'
+import Sortable from 'sortablejs'
 
 // 设置dayjs为中文
 dayjs.locale('zh-cn')
@@ -557,6 +565,8 @@ const fileInput = ref()
 const nameInput = ref()
 const codeInput = ref()
 const descriptionInput = ref()
+const baseColumnsContainer = ref()
+const customColumnsContainer = ref()
 const viewMode = ref('default')
 const showEditDialog = ref(false)  // 编辑对话框显示状态
 const showLoginModal = ref(false)  // 登录模态框显示状态
@@ -1037,6 +1047,40 @@ const getAllColumnsList = computed(() => {
   return [...allColumns, ...customColumns.value]
 })
 
+// 根据 visibleColumns 顺序排序的基础列
+const sortedBaseColumns = computed(() => {
+  const columnOrder = visibleColumns.value
+  return [...allColumns].sort((a, b) => {
+    const indexA = columnOrder.indexOf(a.name)
+    const indexB = columnOrder.indexOf(b.name)
+    // 如果都不在visibleColumns中，保持原顺序
+    if (indexA === -1 && indexB === -1) return 0
+    // 如果a不在visibleColumns中，b在前
+    if (indexA === -1) return 1
+    // 如果b不在visibleColumns中，a在前
+    if (indexB === -1) return -1
+    // 都在visibleColumns中，按照visibleColumns的顺序
+    return indexA - indexB
+  })
+})
+
+// 根据 visibleColumns 顺序排序的自定义列
+const sortedCustomColumns = computed(() => {
+  const columnOrder = visibleColumns.value
+  return [...customColumns.value].sort((a, b) => {
+    const indexA = columnOrder.indexOf(a.name)
+    const indexB = columnOrder.indexOf(b.name)
+    // 如果都不在visibleColumns中，保持原顺序
+    if (indexA === -1 && indexB === -1) return 0
+    // 如果a不在visibleColumns中，b在前
+    if (indexA === -1) return 1
+    // 如果b不在visibleColumns中，a在前
+    if (indexB === -1) return -1
+    // 都在visibleColumns中，按照visibleColumns的顺序
+    return indexA - indexB
+  })
+})
+
 // 添加自定义列对话框
 const showAddColumnDialog = ref(false)
 const newColumnForm = ref({
@@ -1152,6 +1196,9 @@ onMounted(async () => {
 
   await loadInitialData(code)
   initGantt()
+
+  // 初始化拖拽排序
+  initColumnDragSort()
 
   // 监听窗口尺寸变化
   window.addEventListener('resize', handleResize)
@@ -2664,10 +2711,17 @@ const cancelEdit = () => {
 // 更新字段可见性
 const updateColumnVisibility = () => {
 
-  // 筛选可见列，确保使用原始列定义的副本（包含基础列和自定义列）
-  const filteredColumns = getAllColumnsList.value
-    .filter(col => visibleColumns.value.includes(col.name))
-    .map(col => ({ ...col })) // 创建副本，避免修改原始定义
+  // 按照 visibleColumns 的顺序来排列列
+  const filteredColumns = []
+  const allColumnsList = getAllColumnsList.value
+  
+  // 遍历 visibleColumns，按顺序添加到 filteredColumns
+  visibleColumns.value.forEach(columnName => {
+    const column = allColumnsList.find(col => col.name === columnName)
+    if (column) {
+      filteredColumns.push({ ...column }) // 创建副本，避免修改原始定义
+    }
+  })
 
   gantt.config.columns = filteredColumns
 
@@ -2678,6 +2732,109 @@ const updateColumnVisibility = () => {
   if (gantt && gantt.render) {
     gantt.render()
   }
+}
+
+// 初始化列拖拽排序
+const initColumnDragSort = () => {
+  nextTick(() => {
+    // 初始化基础列拖拽排序
+    if (baseColumnsContainer.value && baseColumnsContainer.value.$el) {
+      Sortable.create(baseColumnsContainer.value.$el, {
+        animation: 150,
+        handle: '.drag-handle',
+        draggable: '.draggable-column-item',
+        ghostClass: 'sortable-ghost',
+        onEnd: (evt) => {
+          // 获取所有基础列的名称
+          const baseColumnNames = allColumns.map(col => col.name)
+          // 获取拖拽后的DOM顺序
+          const items = Array.from(evt.to.children)
+          const newOrder = items.map(item => {
+            // 直接从元素上获取 data-column-name 属性
+            const columnName = item.getAttribute('data-column-name')
+            // 如果直接获取不到，尝试从子元素获取
+            if (!columnName) {
+              const checkbox = item.querySelector('[data-column-name]')
+              return checkbox ? checkbox.getAttribute('data-column-name') : null
+            }
+            return columnName
+          }).filter(name => name)
+          
+          // 更新 visibleColumns 的顺序
+          updateColumnsOrder(baseColumnNames, newOrder)
+        }
+      })
+    }
+
+    // 初始化自定义列拖拽排序
+    if (customColumnsContainer.value && customColumnsContainer.value.$el) {
+      Sortable.create(customColumnsContainer.value.$el, {
+        animation: 150,
+        handle: '.drag-handle',
+        draggable: '.draggable-column-item',
+        ghostClass: 'sortable-ghost',
+        onEnd: (evt) => {
+          // 获取所有自定义列的名称
+          const customColumnNames = customColumns.value.map(col => col.name)
+          // 获取拖拽后的DOM顺序
+          const items = Array.from(evt.to.children)
+          const newOrder = items.map(item => {
+            // 直接从元素上获取 data-column-name 属性
+            const columnName = item.getAttribute('data-column-name')
+            // 如果直接获取不到，尝试从子元素获取
+            if (!columnName) {
+              const checkbox = item.querySelector('[data-column-name]')
+              return checkbox ? checkbox.getAttribute('data-column-name') : null
+            }
+            return columnName
+          }).filter(name => name)
+          
+          // 更新 visibleColumns 的顺序
+          updateColumnsOrder(customColumnNames, newOrder)
+        }
+      })
+    }
+  })
+}
+
+// 更新列顺序
+const updateColumnsOrder = (columnGroup, newOrder) => {
+  // 创建新的 visibleColumns 数组
+  const newVisibleColumns = []
+  
+  // 首先添加不在当前拖拽组的列（保持原顺序）
+  visibleColumns.value.forEach(colName => {
+    if (!columnGroup.includes(colName)) {
+      newVisibleColumns.push(colName)
+    }
+  })
+  
+  // 然后按新顺序添加当前拖拽组的列
+  newOrder.forEach(colName => {
+    if (visibleColumns.value.includes(colName)) {
+      // 找到正确的插入位置（保持基础列和自定义列的分组）
+      const isCustom = customColumns.value.some(col => col.name === colName)
+      const isBase = allColumns.some(col => col.name === colName)
+      
+      if (isBase) {
+        // 基础列：插入到第一个自定义列之前
+        const firstCustomIndex = newVisibleColumns.findIndex(name => 
+          customColumns.value.some(col => col.name === name)
+        )
+        if (firstCustomIndex === -1) {
+          newVisibleColumns.push(colName)
+        } else {
+          newVisibleColumns.splice(firstCustomIndex, 0, colName)
+        }
+      } else if (isCustom) {
+        // 自定义列：添加到末尾
+        newVisibleColumns.push(colName)
+      }
+    }
+  })
+  
+  // 更新 visibleColumns
+  visibleColumns.value = newVisibleColumns
 }
 
 
@@ -3313,6 +3470,37 @@ const deleteProject = async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+/* 拖拽排序相关样式 */
+.draggable-column-item {
+  cursor: move;
+  transition: background-color 0.2s;
+  padding: 4px 8px;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: #f5f7fa;
+  }
+}
+
+.drag-handle {
+  display: inline-block;
+  cursor: grab;
+  color: #909399;
+  font-size: 14px;
+  margin-right: 4px;
+  user-select: none;
+  
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.sortable-ghost {
+  opacity: 0.5;
+  background: #ecf5ff;
+  border: 1px dashed #409eff;
 }
 
 /* 用户区域 */
