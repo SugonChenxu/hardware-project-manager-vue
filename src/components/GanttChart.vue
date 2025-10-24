@@ -1061,25 +1061,33 @@ const addCustomColumn = () => {
   }
 
   // 添加自定义列
+  // 使用局部变量保存列名，避免闭包问题
+  const columnName = newColumnForm.value.name
   const customColumn = {
-    name: newColumnForm.value.name,
+    name: columnName,
     label: newColumnForm.value.label,
     width: newColumnForm.value.width || 100,
     align: newColumnForm.value.align || 'center',
     editor: {
       type: "text",
-      map_to: newColumnForm.value.name
+      map_to: columnName
     },
     template: function (task) {
-      return task[newColumnForm.value.name] || '<span style="color: #c0c4cc;">-</span>'
+      return task[columnName] || '<span style="color: #c0c4cc;">-</span>'
     },
     isCustom: true  // 标记为自定义列
   }
 
   customColumns.value.push(customColumn)
-  visibleColumns.value.push(newColumnForm.value.name)
+  visibleColumns.value.push(columnName)
 
-  ElMessage.success('自定义列添加成功')
+  // 为所有现有任务初始化这个字段为空字符串
+  gantt.eachTask(function(task) {
+    if (task[columnName] === undefined) {
+      task[columnName] = ''
+    }
+  })
+
   showAddColumnDialog.value = false
 
   // 重置表单
@@ -1680,6 +1688,15 @@ const loadData = () => {
   // 同步前置任务和链接
   syncPredecessorsWithLinks()
 
+  // 确保所有任务都有自定义列字段
+  tasks.value.forEach(task => {
+    customColumns.value.forEach(col => {
+      if (task[col.name] === undefined) {
+        task[col.name] = ''
+      }
+    })
+  })
+
   gantt.parse({
     data: tasks.value,
     links: links.value
@@ -1865,6 +1882,12 @@ const openEditDialog = (task) => {
     predecessors: task.predecessors || [],
     backgroundColor: task.backgroundColor || ''
   }
+  
+  // 复制自定义列字段
+  customColumns.value.forEach(col => {
+    editTask.value[col.name] = task[col.name] || ''
+  })
+  
   showEditDialog.value = true
 }
 
@@ -1891,6 +1914,11 @@ const updateTask = () => {
     predecessors: editTask.value.predecessors || [],
     backgroundColor: editTask.value.backgroundColor || ''
   }
+  
+  // 包含自定义列字段
+  customColumns.value.forEach(col => {
+    updatedTask[col.name] = editTask.value[col.name] || ''
+  })
 
   try {
 
