@@ -27,7 +27,7 @@
                       </el-icon>
                     </div>
                     <el-input v-else v-model="editingValue" ref="nameInput" size="small" class="inline-edit-input"
-                      @keyup.enter="confirmEdit('name')" @keyup.esc="cancelEdit" />
+                      @keyup.enter="confirmEdit('name')" @blur="confirmEdit('name')" @keyup.esc="cancelEdit" />
                   </div>
                   <div class="detail-row">
                     <span class="label">编码</span>
@@ -1314,7 +1314,7 @@ const loadInitialData = async (code = null) => {
       visibleColumns.value = [...defaultVisibleColumns]
     }
 
-    document.title = `${projectInfo.value.name} - 星甘StarGantt|简洁易用的在线甘特图制作平台|专业的项目进度管理工具`
+    document.title = `${projectInfo.value.name} - 星甘StarGantt|开源免费的在线甘特图制作平台|专业的项目进度管理工具`
 
     // 检查收藏状态
     checkStarStatus()
@@ -2500,7 +2500,7 @@ const saveProject = async () => {
 
       // 更新页面标题
       if (projectInfo.value.name) {
-        document.title = `${projectInfo.value.name} - 星甘StarGantt|简洁易用的在线甘特图制作平台|专业的项目进度管理工具`
+        document.title = `${projectInfo.value.name} - 星甘StarGantt|开源免费的在线甘特图制作平台|专业的项目进度管理工具`
       }
 
       // 重新检查收藏状态
@@ -2722,7 +2722,7 @@ const startEdit = (fieldName) => {
 }
 
 // 确认编辑
-const confirmEdit = (fieldName) => {
+const confirmEdit = async (fieldName) => {
   if (!projectInfo.value) {
     projectInfo.value = {}
   }
@@ -2736,7 +2736,15 @@ const confirmEdit = (fieldName) => {
   originalValue.value = ''
 
   // 自动保存项目
-  saveProject()
+  await saveProject()
+  if(fieldName == 'code'){ //如果code变了，需要跳转
+    const newUrl = `${window.location.origin}${window.location.pathname}?code=${projectInfo.value.code}`
+      window.history.replaceState({}, '', newUrl)
+      window.location.reload()
+  }else if(fieldName == 'name'){ //如果name变了，需要更新页面标题
+    document.title = `${projectInfo.value.name} - 星甘StarGantt|开源免费的在线甘特图制作平台|专业的项目进度管理工具`
+    loadUserInfo() //重新加载用户信息,用于刷新项目列表
+  }
 }
 
 // 取消编辑
