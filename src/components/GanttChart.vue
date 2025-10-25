@@ -162,16 +162,21 @@
 
         <div class="divider"></div>
 
-        <el-select v-model="viewMode" class="outlook-select" size="default" @change="changeView">
-          <template #prefix>
-            <el-icon>
-              <Calendar />
+        <el-dropdown class="view-mode-dropdown" @command="changeView">
+          <el-button class="outlook-btn dropdown-btn">
+            <span>{{ viewModeLabel }}</span>
+            <el-icon class="dropdown-arrow">
+              <ArrowDown />
             </el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="default">📅 默认视图</el-dropdown-item>
+              <el-dropdown-item command="month">📆 月视图</el-dropdown-item>
+              <el-dropdown-item command="quarter">📊 季度视图</el-dropdown-item>
+            </el-dropdown-menu>
           </template>
-          <el-option label="默认视图" value="default" />
-          <el-option label="月视图" value="month" />
-          <el-option label="季度视图" value="quarter" />
-        </el-select>
+        </el-dropdown>
 
         <el-dropdown class="column-control">
           <el-button class="outlook-btn dropdown-btn">
@@ -186,7 +191,7 @@
           <template #dropdown>
             <el-dropdown-menu class="column-control-menu">
               <div class="panel-actions">
-                <el-button size="small" type="text" @click="selectAllColumns" title="列表">📊</el-button>
+                <el-button size="small" type="text" @click="selectAllColumns" title="列表">📄</el-button>
                 <el-button size="small" type="text" @click="selectHalfColumns" title="平衡">↔️</el-button>
                 <el-button size="small" type="text" @click="unselectAllColumns" title="甘特图">📈</el-button>
               </div>
@@ -553,6 +558,14 @@ const codeInput = ref()
 const descriptionInput = ref()
 const allColumnsContainer = ref()
 const viewMode = ref('default')
+const viewModeLabel = computed(() => {
+  const labels = {
+    default: '📅 默认视图',
+    month: '📆 月视图',
+    quarter: '📊 季度视图'
+  }
+  return labels[viewMode.value] || '📅 默认视图'
+})
 const showEditDialog = ref(false)  // 编辑对话框显示状态
 const showLoginModal = ref(false)  // 登录模态框显示状态
 const userCenterVisible = ref(false)  // 个人中心对话框显示状态
@@ -1746,6 +1759,7 @@ const syncPredecessorsWithLinks = () => {
 
 // 切换视图
 const changeView = (mode) => {
+  viewMode.value = mode
   setTimeScale(mode)
   gantt.render()
 }
