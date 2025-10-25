@@ -101,12 +101,26 @@
           </el-select>
         </div>
 
-        <el-button class="outlook-btn primary" @click="createNewProject">
-          <el-icon>
-            <FolderAdd />
-          </el-icon>
-          <span>新项目</span>
-        </el-button>
+        <el-button-group class="split-btn-group">
+          <el-button class="outlook-btn primary split-main" @click="createNewProject">
+            <el-icon>
+              <FolderAdd />
+            </el-icon>
+            <span>新项目</span>
+          </el-button>
+          <el-dropdown @command="handleProjectCommand" trigger="click">
+            <el-button class="outlook-btn primary split-dropdown">
+              <el-icon>
+                <ArrowDown />
+              </el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="copy">📋 复制项目</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </el-button-group>
 
         <el-button class="outlook-btn" @click="saveProject" :loading="saving">
           <el-icon>
@@ -201,14 +215,14 @@
                   <span style="font-size: 11px; color: #909399; margin-left: 8px;">🖐️ 按住☰拖动排序</span>
                 </div>
                 <el-checkbox-group v-model="visibleColumns" class="column-checkboxes" ref="allColumnsContainer">
-                  <el-checkbox v-for="column in sortedAllColumns" :key="column.name" :label="column.name" 
+                  <el-checkbox v-for="column in sortedAllColumns" :key="column.name" :label="column.name"
                     :data-column-name="column.name" :data-is-custom="column.isCustom ? 'true' : 'false'"
                     class="draggable-column-item">
                     {{ column.label }}
-                    <el-button v-if="column.isCustom" type="danger" size="small" link 
+                    <el-button v-if="column.isCustom" type="danger" size="small" link
                       @click.stop="deleteCustomColumn(column.name)" style="margin-left: 4px;">🗑️</el-button>
                     <span class="drag-handle">☰</span>
-                    
+
                   </el-checkbox>
                 </el-checkbox-group>
               </div>
@@ -540,7 +554,7 @@ import {
   getAllSuccessors,
   getAllPredecessors
 } from '../services/ganttDataService.js'
-import { star, unstar, del } from '../api/sysproject.js'
+import { star, unstar, del, copy } from '../api/sysproject.js'
 import LoginModal from './LoginModal.vue'
 import { getToken, removeToken } from '../utils/auth.js'
 import { getWebVersion } from '../api/serverConf.js'
@@ -820,7 +834,8 @@ const checkVersionAndRefresh = async () => {
           details: [
             '✅ 全新域名：http://stargantt.cn 你的进度我来守护',
             '✅ 增加右键快捷操作，可快速设置任务背景色、删除任务、编辑任务',
-            '✅ 全新【列设置】功能可增加自定义列，设置可见列、拖动排序'
+            '✅ 全新【列设置】功能可增加自定义列，设置可见列、拖动排序',
+            '✅ 新增【复制项目】功能，可复制当前项目为新项目'
           ]
         }
 
@@ -1049,7 +1064,7 @@ const sortedAllColumns = computed(() => {
   const columnOrder = visibleColumns.value
   // 合并所有列
   const allColumnsList = [...allColumns, ...customColumns.value]
-  
+
   // 按照 visibleColumns 的顺序排序
   return allColumnsList.sort((a, b) => {
     const indexA = columnOrder.indexOf(a.name)
@@ -1110,7 +1125,7 @@ const addCustomColumn = () => {
   visibleColumns.value.push(columnName)
 
   // 防止新加的字段内联编辑时显示undefined
-  gantt.eachTask(function(task) {
+  gantt.eachTask(function (task) {
     if (task[columnName] === undefined) {
       task[columnName] = ''
     }
@@ -1909,12 +1924,12 @@ const openEditDialog = (task) => {
     predecessors: task.predecessors || [],
     backgroundColor: task.backgroundColor || ''
   }
-  
+
   //将自定义列字段复制到编辑任务表单
   customColumns.value.forEach(col => {
     editTask.value[col.name] = task[col.name] || ''
   })
-  
+
   showEditDialog.value = true
 }
 
@@ -2609,7 +2624,44 @@ const handleDropdownVisibleChange = (visible) => {
   }
 }
 
-// 创建新项目
+// 处理项目命令
+const handleProjectCommand = async (command) => {
+  if (command === 'copy') {
+    await copyProject()
+  }
+}
+//复制项目
+const copyProject = async () => {
+  if (!projectInfo.value || !projectInfo.value.code) {
+    ElMessage.warning('当前项目不存在，无法复制')
+    return
+  }
+
+  try {
+
+    let copyres = await copy(projectInfo.value.id)
+    if (copyres.code == 200) {
+      const newUrl = `${window.location.origin}${window.location.pathname}?code=${copyres.data.code}`
+      window.history.replaceState({}, '', newUrl)
+      window.location.reload()
+    } else {
+      ElMessage.error(copyres.message)
+    }
+  } catch (error) {
+    if (error.status === 401 || error.code == '401') {
+      ElMessage.error('请登录后复制')
+      showLoginModal.value = true
+    } else if (error.code == '50010') { //等级不够，直接显示个人中心
+      ElMessage.error(error.message)
+      userCenterVisible.value = true
+    } else {
+      // 默认错误处理
+      const errorMessage = error.message || error.msg || '复制项目失败，请重试'
+      ElMessage.error(errorMessage)
+    }
+  }
+}
+
 const createNewProject = () => {
   ElMessageBox.confirm('创建新项目前，注意保存当前项目', '确认创建', {
     confirmButtonText: '确定',
@@ -2703,7 +2755,7 @@ const updateColumnVisibility = () => {
   // 按照 visibleColumns 的顺序来排列列
   const filteredColumns = []
   const allColumnsList = getAllColumnsList.value
-  
+
   // 遍历 visibleColumns，按顺序添加到 filteredColumns
   visibleColumns.value.forEach(columnName => {
     const column = allColumnsList.find(col => col.name === columnName)
@@ -2746,7 +2798,7 @@ const initColumnDragSort = () => {
             }
             return columnName
           }).filter(name => name)
-          
+
           // 更新 visibleColumns 的顺序
           updateColumnsOrder(newOrder)
         }
@@ -2759,21 +2811,21 @@ const initColumnDragSort = () => {
 const updateColumnsOrder = (newOrder) => {
   // 创建新的 visibleColumns 数组
   const newVisibleColumns = []
-  
+
   // 按新顺序添加所有可见的列
   newOrder.forEach(colName => {
     if (visibleColumns.value.includes(colName)) {
       newVisibleColumns.push(colName)
     }
   })
-  
+
   // 添加那些在 visibleColumns 中但不在 newOrder 中的列（保持原顺序）
   visibleColumns.value.forEach(colName => {
     if (!newVisibleColumns.includes(colName)) {
       newVisibleColumns.push(colName)
     }
   })
-  
+
   // 更新 visibleColumns
   visibleColumns.value = newVisibleColumns
 }
@@ -3227,6 +3279,41 @@ const deleteProject = async () => {
   color: white;
 }
 
+/* 分体按钮样式 */
+.split-btn-group {
+  display: flex;
+  height: 32px;
+}
+
+.split-btn-group .outlook-btn {
+  border-radius: 0;
+  margin: 0;
+}
+
+.split-btn-group .split-main {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  padding-right: 10px;
+}
+
+.split-btn-group .split-dropdown {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  min-width: 28px;
+  padding: 0 6px;
+  border-left: none;
+}
+
+.split-btn-group .split-dropdown .el-icon {
+  font-size: 12px;
+}
+
+.split-btn-group .outlook-btn.primary:hover {
+  background-color: #106ebe;
+  border-color: #106ebe;
+}
+
 .outlook-btn .el-icon {
   font-size: 14px;
 }
@@ -3419,7 +3506,7 @@ const deleteProject = async () => {
   transition: background-color 0.2s;
   padding: 4px 8px;
   border-radius: 4px;
-  
+
   &:hover {
     background-color: #f5f7fa;
   }
@@ -3432,7 +3519,7 @@ const deleteProject = async () => {
   font-size: 14px;
   margin-right: 4px;
   user-select: none;
-  
+
   &:active {
     cursor: grabbing;
   }
