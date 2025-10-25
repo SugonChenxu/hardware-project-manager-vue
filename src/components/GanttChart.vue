@@ -1564,8 +1564,12 @@ const initGantt = () => {
     })
 
     gantt.attachEvent("onAfterTaskUpdate", (id, task) => {
-      //todo: 这个task是更新后的task，无法获取更新前的task,因此不能级联更新updateCascade
-      console.log(`onAfterTaskUpdate:`, id)
+      // 甘特图里面更新后，更新响应式数组中的任务 
+      const index = tasks.value.findIndex(t => t.id == id)
+      if (index !== -1) {
+        tasks.value[index] = { ...tasks.value[index], ...task }
+        console.log('onAfterTaskUpdate:', tasks.value[index])
+      }
     })
 
 
