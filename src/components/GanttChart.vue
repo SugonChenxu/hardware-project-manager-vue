@@ -1595,6 +1595,7 @@ const initGantt = () => {
       // 甘特图里面更新后，更新响应式数组中的任务 
       const index = tasks.value.findIndex(t => t.id == id)
       if (index !== -1) {
+        updateCascade(tasks.value[index], task)
         tasks.value[index] = { ...tasks.value[index], ...task }
         console.log('onAfterTaskUpdate:', tasks.value[index])
       }
@@ -1993,8 +1994,11 @@ const updateTask = () => {
 const updateCascade = (originalTask, updatedTask) => {
   if (!cascade.value) return;
 
+  console.log('end_date changed:', originalTask.end_date, updatedTask.end_date);
+  console.log('start_date changed:', originalTask.start_date, updatedTask.start_date);
+
   //如果改变了结束日期，则更新所有的后续任务开始和结束日期
-  if (originalTask.end_date !== updatedTask.end_date) {
+  if (!dayjs(originalTask.end_date).isSame(updatedTask.end_date)) {
     //计算改变的日期差
     const dateDiff = dayjs(updatedTask.end_date).diff(dayjs(originalTask.end_date), 'day')
     let successors = getAllSuccessors(updatedTask.id, links.value)
@@ -2008,7 +2012,7 @@ const updateCascade = (originalTask, updatedTask) => {
   }
 
   //如果改变了开始日期，则更新所有的前置任务开始和结束日期
-  if (originalTask.start_date !== updatedTask.start_date) {
+  if (!dayjs(originalTask.start_date).isSame(updatedTask.start_date)) {
     //计算改变的日期差
     const dateDiff = dayjs(updatedTask.start_date).diff(dayjs(originalTask.start_date), 'day')
     let predecessors = getAllPredecessors(updatedTask.id, links.value)
