@@ -95,10 +95,8 @@
                         <h2 class="section-title">🎥 视频教程</h2>
                         <div class="shortcut-list">
                             <div class="shortcut-item">
-                                <iframe width="100%" height="400"
-                                    src="//player.bilibili.com/player.html?isOutside=true&aid=115274992918453&bvid=BV1BenJzWEXq&cid=32669106525&p=1"
-                                    scrolling="no" border="0" frameborder="no" framespacing="0"
-                                    allowfullscreen="true"></iframe>
+
+                                    <iframe width="100%" height="400" src="//player.bilibili.com/player.html?isOutside=true&aid=115442815471718&bvid=BV1mXskz5E2J&cid=33425195573&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
                             </div>
                         </div>
                     </div>
