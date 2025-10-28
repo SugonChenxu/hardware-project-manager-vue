@@ -272,10 +272,8 @@
       <div class="user-section">
         <el-dropdown @command="handleUserCommand" class="user-dropdown">
           <div class="user-info">
-            <el-avatar :size="28" :src="userInfo?.avatar" class="user-avatar">
-              <el-icon>
-                <User />
-              </el-icon>
+            <el-avatar :size="28" class="user-avatar">
+              {{ userInfo?.name ? userInfo.name.charAt(0) : '游' }}
             </el-avatar>
             <span class="user-name">{{ userInfo?.name || '游客' }}</span>
           </div>
