@@ -1595,6 +1595,16 @@ const initGantt = () => {
       // 甘特图里面更新后，更新响应式数组中的任务 
       const index = tasks.value.findIndex(t => t.id == id)
       if (index !== -1) {
+        if(task.progress > 0 && task.status == 'not_started'){
+          task.status = 'in_progress'
+        }
+        if(task.progress == 1){ //直接进度调整为100%，则状态调整为完成
+          task.status = 'completed'
+        }
+
+        if(task.progress <1 && task.status == 'completed'){ //直接选中完成，则百分比调整为100%
+          task.progress =1
+        }
         updateCascade(tasks.value[index], task)
         tasks.value[index] = { ...tasks.value[index], ...task }
         console.log('onAfterTaskUpdate:', tasks.value[index])
