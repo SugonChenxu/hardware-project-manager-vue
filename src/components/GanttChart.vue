@@ -1501,6 +1501,12 @@ const initGantt = () => {
       return true;
     });
 
+    gantt.attachEvent("onTaskLoading", function(task){
+        task.planned_start = gantt.date.parseDate(task.planned_start, "xml_date");
+        task.planned_end = gantt.date.parseDate(task.planned_end, "xml_date");
+        return true;
+    });
+
     // 事件监听
     gantt.attachEvent("onTaskClick", (id, e) => {
       currentTask.value = gantt.getTask(id)
@@ -1619,6 +1625,58 @@ const initGantt = () => {
       removeTaskFromArray(id)
     })
 
+    // 基线渲染
+    const renderCustomTaskLayer = () => {
+      // 遍历所有任务，渲染基线
+      gantt.eachTask((task) => {
+        const taskLine = ganttContainer.value.querySelector(`.gantt_task_line[task_id="${task.id}"]`)
+        if (!taskLine) return
+
+        // 移除旧的基线（如果存在）
+        const oldBaseline = taskLine.querySelector('.baseline')
+        if (oldBaseline) {
+          oldBaseline.remove()
+        }
+
+        // 如果任务有计划时间，则渲染基线
+        if (task.planned_start && task.planned_end) {
+          try {
+            // 将计划开始和结束日期都减去一天
+            const plannedStart = new Date(task.planned_start)
+            plannedStart.setDate(plannedStart.getDate() - 1)
+            const plannedEnd = new Date(task.planned_end)
+            plannedEnd.setDate(plannedEnd.getDate() - 1)
+            
+            const sizes = gantt.getTaskPosition(task, plannedStart, plannedEnd)
+            const el = document.createElement('div')
+            el.className = 'baseline'
+            el.style.position = 'absolute'
+            el.style.left = sizes.left + 'px'
+            el.style.width = sizes.width + 'px'
+            el.setAttribute('data-task-id', task.id)
+            taskLine.appendChild(el)
+          } catch (e) {
+            // 任务不在可见范围内或其他错误，跳过
+          }
+        }
+      })
+    }
+
+    // 在甘特图渲染后更新图层
+    gantt.attachEvent("onGanttRender", () => {
+      setTimeout(renderCustomTaskLayer, 0)
+    })
+
+    // 在任务更新后更新图层
+    gantt.attachEvent("onAfterTaskUpdate", () => {
+      setTimeout(renderCustomTaskLayer, 0)
+    })
+
+    // 在滚动后更新图层
+    gantt.attachEvent("onGanttScroll", () => {
+      renderCustomTaskLayer()
+    })
+
     // 初始化甘特图
     gantt.init(ganttContainer.value)
 
@@ -1631,6 +1689,8 @@ const initGantt = () => {
       const initialVisibleCols = allColumns.filter(col => visibleColumns.value.includes(col.name))
       adjustGridWidthByColumns(initialVisibleCols)
 
+      // 初始渲染自定义图层
+      renderCustomTaskLayer()
     }, 100)
 
     // 加载数据
@@ -1644,6 +1704,8 @@ const initGantt = () => {
     // 初始添加拖拽手柄
     setTimeout(() => {
       addGridResizeHandle()
+      // 确保图层在所有初始化完成后渲染
+      renderCustomTaskLayer()
     }, 500)
 
     // 添加全局点击事件，关闭右键菜单
@@ -4084,5 +4146,15 @@ const deleteProject = async () => {
   .danger {
     color: #f56c6c;
   }
+}
+
+:deep(.baseline) {
+  position: absolute;
+  border-radius: 2px;
+  opacity: 0.6;
+  height: 4px;
+  top: 18px;
+  background: #ffd180;
+  border: 1px solid rgb(255,153,0);
 }
 </style>
