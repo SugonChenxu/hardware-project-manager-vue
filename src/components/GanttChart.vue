@@ -129,6 +129,32 @@
           <span>保存</span>
         </el-button>
 
+        <el-dropdown @command="handleMoreCommand">
+          <el-button class="outlook-btn dropdown-btn">
+            <el-icon>
+              <MoreFilled />
+            </el-icon>
+            <span>更多</span>
+            <el-icon class="dropdown-arrow">
+              <ArrowDown />
+            </el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="export">
+                <el-icon>
+                  <Download />
+                </el-icon>导出
+              </el-dropdown-item>
+              <el-dropdown-item command="setBaseline">
+                <el-icon>
+                  <Aim />
+                </el-icon>设置基线
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+
 
 
         <div class="divider"></div>
@@ -243,13 +269,6 @@
         </el-tooltip>
 
         <div class="divider"></div>
-
-        <el-button class="outlook-btn" @click="exportData">
-          <el-icon>
-            <Download />
-          </el-icon>
-          <span>导出</span>
-        </el-button>
 
         <!-- 帮助按钮 -->
         <el-button class="outlook-btn" @click="openHelp">
@@ -541,7 +560,7 @@ import Sortable from 'sortablejs'
 dayjs.locale('zh-cn')
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
-  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort, QuestionFilled, Delete
+  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort, QuestionFilled, Delete, Aim
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -2657,6 +2676,12 @@ const handleMoreCommand = (command) => {
     case 'toggleDragSort':
       dragSortEnabled.value = !dragSortEnabled.value
       break
+    case 'export':
+      exportData()
+      break
+    case 'setBaseline':
+      setBaseline()
+      break
   }
 }
 
@@ -3024,7 +3049,27 @@ const deleteProject = async () => {
   })
 }
 
+// 设置基线
+const setBaseline = () => {
+  
+  ElMessageBox.confirm('确定设置当前进度为基线吗？', '确认设置', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    // 遍历所有任务，将当前的开始和结束时间保存到计划时间字段
+    gantt.eachTask((task) => {
+      task.planned_start = task.start_date
+      task.planned_end = task.end_date
+      gantt.updateTask(task.id)
+    })
 
+    renderCustomTaskLayer()
+    ElMessage.success('设置基线成功')
+  }).catch(() => {
+    ElMessage.info('已取消设置基线')
+  })
+}
 </script>
 
 <style scoped>
