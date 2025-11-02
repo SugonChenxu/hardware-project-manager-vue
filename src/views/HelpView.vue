@@ -133,7 +133,7 @@
                             </div>
                             <p class="operation-desc">设置当前进度为基线，基线不会影响任务的实际进度，只是用于对比和分析。</p>
                             <div class="steps-container">
-                                <img class="operation-image" src="http://img-openauth-net-cn-idvh73m.qiniudns.com/2025-11-03-02-08-40.png"
+                                <img class="operation-image" src="http://img.openauth.net.cn/2025-11-03-02-08-40.png"
                                     alt="设置基线" />
                             </div>
 
