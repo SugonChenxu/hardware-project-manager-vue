@@ -1520,10 +1520,10 @@ const initGantt = () => {
       return true;
     });
 
-    gantt.attachEvent("onTaskLoading", function(task){
-        task.planned_start = gantt.date.parseDate(task.planned_start, "xml_date");
-        task.planned_end = gantt.date.parseDate(task.planned_end, "xml_date");
-        return true;
+    gantt.attachEvent("onTaskLoading", function (task) {
+      task.planned_start = gantt.date.parseDate(task.planned_start, "xml_date");
+      task.planned_end = gantt.date.parseDate(task.planned_end, "xml_date");
+      return true;
     });
 
     // 事件监听
@@ -1618,15 +1618,15 @@ const initGantt = () => {
       // 甘特图里面更新后，更新响应式数组中的任务 
       const index = tasks.value.findIndex(t => t.id == id)
       if (index !== -1) {
-        if(task.progress > 0 && task.status == 'not_started'){
+        if (task.progress > 0 && task.status == 'not_started') {
           task.status = 'in_progress'
         }
-        if(task.progress == 1){ //直接进度调整为100%，则状态调整为完成
+        if (task.progress == 1) { //直接进度调整为100%，则状态调整为完成
           task.status = 'completed'
         }
 
-        if(task.progress <1 && task.status == 'completed'){ //直接选中完成，则百分比调整为100%
-          task.progress =1
+        if (task.progress < 1 && task.status == 'completed') { //直接选中完成，则百分比调整为100%
+          task.progress = 1
         }
         updateCascade(tasks.value[index], task)
         tasks.value[index] = { ...tasks.value[index], ...task }
@@ -1648,11 +1648,12 @@ const initGantt = () => {
     const renderCustomTaskLayer = () => {
       // 遍历所有任务，渲染基线
       gantt.eachTask((task) => {
+        //获取的是gantt_bars_area gantt_task_line
         const taskLine = ganttContainer.value.querySelector(`.gantt_task_line[task_id="${task.id}"]`)
         if (!taskLine) return
 
         // 移除旧的基线（如果存在）
-        const oldBaseline = taskLine.querySelector('.baseline')
+        const oldBaseline = taskLine.parentElement.querySelector(`.baseline[data-task-id="${task.id}"]`)
         if (oldBaseline) {
           oldBaseline.remove()
         }
@@ -1660,20 +1661,16 @@ const initGantt = () => {
         // 如果任务有计划时间，则渲染基线
         if (task.planned_start && task.planned_end) {
           try {
-            // 将计划开始和结束日期都减去一天
-            const plannedStart = new Date(task.planned_start)
-            plannedStart.setDate(plannedStart.getDate() - 1)
-            const plannedEnd = new Date(task.planned_end)
-            plannedEnd.setDate(plannedEnd.getDate() - 1)
-            
-            const sizes = gantt.getTaskPosition(task, plannedStart, plannedEnd)
+            const taskPosition = gantt.getTaskPosition(task, task.planned_start, task.planned_end)
+            console.log('taskid:', task.id, 'taskPosition:', taskPosition)
             const el = document.createElement('div')
             el.className = 'baseline'
             el.style.position = 'absolute'
-            el.style.left = sizes.left + 'px'
-            el.style.width = sizes.width + 'px'
+            el.style.top = taskPosition.top + 20 + 'px'
+            el.style.left = taskPosition.left + 'px'
+            el.style.width = taskPosition.width + 'px'
             el.setAttribute('data-task-id', task.id)
-            taskLine.appendChild(el)
+            taskLine.insertAdjacentElement('afterend', el)  //放在gantt_task_line后面同级
           } catch (e) {
             // 任务不在可见范围内或其他错误，跳过
           }
@@ -2836,11 +2833,11 @@ const confirmEdit = async (fieldName) => {
 
   // 自动保存项目
   await saveProject()
-  if(fieldName == 'code'){ //如果code变了，需要跳转
+  if (fieldName == 'code') { //如果code变了，需要跳转
     const newUrl = `${window.location.origin}${window.location.pathname}?code=${projectInfo.value.code}`
-      window.history.replaceState({}, '', newUrl)
-      window.location.reload()
-  }else if(fieldName == 'name'){ //如果name变了，需要更新页面标题
+    window.history.replaceState({}, '', newUrl)
+    window.location.reload()
+  } else if (fieldName == 'name') { //如果name变了，需要更新页面标题
     document.title = `${projectInfo.value.name} - 星甘StarGantt|开源免费的在线甘特图制作平台|专业的项目进度管理工具`
     loadUserInfo() //重新加载用户信息,用于刷新项目列表
   }
@@ -3051,25 +3048,32 @@ const deleteProject = async () => {
 
 // 设置基线
 const setBaseline = () => {
-  
+
   ElMessageBox.confirm('确定设置当前进度为基线吗？', '确认设置', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
     // 遍历所有任务，将当前的开始和结束时间保存到计划时间字段
-    gantt.eachTask((task) => {
+    // gantt.eachTask((task) => {
+    //   task.planned_start = task.start_date
+    //   task.planned_end = task.end_date
+    //   gantt.updateTask(task.id, task)
+    // })
+
+    tasks.value.forEach(task => {
       task.planned_start = task.start_date
       task.planned_end = task.end_date
-      gantt.updateTask(task.id)
     })
 
-    renderCustomTaskLayer()
+    setTimeout(renderCustomTaskLayer, 0);
+
     ElMessage.success('设置基线成功')
   }).catch(() => {
     ElMessage.info('已取消设置基线')
   })
 }
+
 </script>
 
 <style scoped>
@@ -4198,8 +4202,7 @@ const setBaseline = () => {
   border-radius: 2px;
   opacity: 0.6;
   height: 4px;
-  top: 18px;
   background: #ffd180;
-  border: 1px solid rgb(255,153,0);
+  border: 1px solid rgb(255, 153, 0);
 }
 </style>
