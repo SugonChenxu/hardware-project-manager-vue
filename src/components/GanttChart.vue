@@ -151,6 +151,11 @@
                   <Aim />
                 </el-icon>设置基线
               </el-dropdown-item>
+              <el-dropdown-item command="toggleBaseline">
+                <el-icon>
+                  <View />
+                </el-icon>{{ baselineVisible ? '隐藏基线' : '显示基线' }}
+              </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -472,6 +477,13 @@
           </div>
         </el-form-item>
 
+        <el-form-item label="基线开始时间">
+          <el-date-picker v-model="editTask.planned_start" type="date" placeholder="选择基线开始时间" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="基线完成时间">
+          <el-date-picker v-model="editTask.planned_end" type="date" placeholder="选择基线完成时间" style="width: 100%" />
+        </el-form-item>
+
         <!-- 自定义列 -->
         <el-row :gutter="16" v-if="customColumns.length > 0">
           <el-col :span="12" v-for="column in customColumns" :key="column.name">
@@ -560,7 +572,7 @@ import Sortable from 'sortablejs'
 dayjs.locale('zh-cn')
 import {
   Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
-  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort, QuestionFilled, Delete, Aim
+  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort, QuestionFilled, Delete, Aim, View
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -638,6 +650,9 @@ const webVersion = ref('')
 
 // 拖拽排序开关
 const dragSortEnabled = ref(true)
+
+// 基线显示开关
+const baselineVisible = ref(true)
 
 // 背景色标记功能
 const backgroundColors = [
@@ -849,7 +864,8 @@ const checkVersionAndRefresh = async () => {
           localVersion: localVersion || '未知',
           serverVersion: serverVersion,
           details: [
-            '✅ 全新域名：http://stargantt.cn 你的进度我来守护',
+            '✅ 全新域名：http://stargantt.cn 全力备案中',
+            '✅ 新增【设置基线】功能，创建项目计划的 “原始参照物”',
             '✅ 增加右键快捷操作，可快速设置任务背景色、删除任务、编辑任务',
             '✅ 全新【列设置】功能可增加自定义列，设置可见列、拖动排序',
             '✅ 新增【复制项目】功能，可复制当前项目为新项目'
@@ -886,6 +902,8 @@ const editTask = ref({
   owner: '',
   stakeholder: '',
   description: '',
+  planned_start: '',
+  planned_end: '',
   predecessors: []  // 前置任务列表
 })
 
@@ -1292,6 +1310,19 @@ watch(dragSortEnabled, (enabled) => {
   }
 })
 
+// 监听基线显示开关变化
+watch(baselineVisible, (visible) => {
+  if (gantt && gantt.render) {
+    if (visible) {
+      ElMessage.success('基线已显示')
+    } else {
+      ElMessage.success('基线已隐藏')
+    }
+    // 重新渲染基线图层
+    gantt.render()
+  }
+})
+
 // 加载初始数据
 const loadInitialData = async (code = null) => {
   try {
@@ -1658,15 +1689,19 @@ const initGantt = () => {
           oldBaseline.remove()
         }
 
+        // 如果基线显示开关关闭，则不渲染
+        if (!baselineVisible.value) {
+          return
+        }
+
         // 如果任务有计划时间，则渲染基线
         if (task.planned_start && task.planned_end) {
           try {
             const taskPosition = gantt.getTaskPosition(task, task.planned_start, task.planned_end)
-            console.log('taskid:', task.id, 'taskPosition:', taskPosition)
             const el = document.createElement('div')
             el.className = 'baseline'
             el.style.position = 'absolute'
-            el.style.top = taskPosition.top + 20 + 'px'
+            el.style.top = taskPosition.top + 21 + 'px'
             el.style.left = taskPosition.left + 'px'
             el.style.width = taskPosition.width + 'px'
             el.setAttribute('data-task-id', task.id)
@@ -1903,6 +1938,8 @@ const addTask = () => {
     text: '',
     start_date: dayjs(startDate).format('YYYY-MM-DD'),
     end_date: dayjs(endDate).format('YYYY-MM-DD'),
+    planned_start: '',
+    planned_end: '',
     duration: 3,
     progress: 0,
     type: 'task',
@@ -2000,6 +2037,8 @@ const openEditDialog = (task) => {
     text: task.text || '',
     start_date: startDate,
     end_date: endDate,
+    planned_start: task.planned_start || '',
+    planned_end: task.planned_end || '',
     duration: task.duration || 1,
     progress: task.progress || 0,
     type: task.type || 'task',
@@ -2032,6 +2071,8 @@ const updateTask = () => {
     text: editTask.value.text,
     start_date: editTask.value.start_date,
     end_date: editTask.value.end_date,
+    planned_start: editTask.value.planned_start,
+    planned_end: editTask.value.planned_end,
     duration: editTask.value.duration,
     progress: editTask.value.progress,
     type: editTask.value.type,
@@ -2673,6 +2714,9 @@ const handleMoreCommand = (command) => {
     case 'toggleDragSort':
       dragSortEnabled.value = !dragSortEnabled.value
       break
+    case 'toggleBaseline':
+      baselineVisible.value = !baselineVisible.value
+      break
     case 'export':
       exportData()
       break
@@ -3055,16 +3099,12 @@ const setBaseline = () => {
     type: 'warning'
   }).then(async () => {
     // 遍历所有任务，将当前的开始和结束时间保存到计划时间字段
-    // gantt.eachTask((task) => {
-    //   task.planned_start = task.start_date
-    //   task.planned_end = task.end_date
-    //   gantt.updateTask(task.id, task)
-    // })
-
     tasks.value.forEach(task => {
       task.planned_start = task.start_date
       task.planned_end = task.end_date
     })
+
+    baselineVisible.value = true
 
     setTimeout(renderCustomTaskLayer, 0);
 
@@ -4200,7 +4240,7 @@ const setBaseline = () => {
 :deep(.baseline) {
   position: absolute;
   border-radius: 2px;
-  opacity: 0.6;
+  /* opacity: 0.7; */
   height: 4px;
   background: #ffd180;
   border: 1px solid rgb(255, 153, 0);

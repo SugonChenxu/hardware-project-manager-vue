@@ -123,6 +123,31 @@
                                 <span>💡 小贴士：也可以直接单击单元格进行快速内联编辑</span>
                             </div>
                         </div>
+                        
+                        
+                        <!-- 设置基线 -->
+                        <div id="set-baseline" class="operation-card">
+                            <div class="operation-header">
+                                <div class="operation-icon">🎯</div>
+                                <h3>设置基线</h3>
+                            </div>
+                            <p class="operation-desc">设置当前进度为基线，基线不会影响任务的实际进度，只是用于对比和分析。</p>
+                            <div class="steps-container">
+                                <img class="operation-image" src="http://img-openauth-net-cn-idvh73m.qiniudns.com/2025-11-03-02-08-40.png"
+                                    alt="设置基线" />
+                            </div>
+
+                            <div class="steps-container">
+                                <div class="step-item">
+                                    <span class="step-num">1</span>
+                                    <span>点击工具栏 > 更多 > 设置基线，将当前任务时间设置为项目基准时间</span>
+                                </div>
+                                <div class="step-item">
+                                    <span class="step-num">2</span>
+                                    <span>点击工具栏 > 更多 > 显示/隐藏基线，控制是否显示基线</span>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- 拖拽排序 -->
                         <div id="drag-sort" class="operation-card">
