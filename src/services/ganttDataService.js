@@ -99,6 +99,12 @@ const processTasksForSerialization = (tasks) => {
     if (processedTask.end_date) {
       processedTask.end_date = parseTime(processedTask.end_date)
     }
+    if (processedTask.planned_start) {
+      processedTask.planned_start = parseTime(processedTask.planned_start)
+    }
+    if (processedTask.planned_end) {
+      processedTask.planned_end = parseTime(processedTask.planned_end)
+    }
     
     return processedTask
   })
