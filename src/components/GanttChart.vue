@@ -473,17 +473,25 @@
               :label="`${task.id} - ${task.text}`" :value="task.id" />
           </el-select>
           <div style="color: #909399; font-size: 12px; margin-top: 4px;">
-            选择的前置任务必须在此任务开始之前完成
+            💡 选择前置任务后产生关联关系，调整任务时间会相互影响
           </div>
         </el-form-item>
 
-        <el-form-item label="基线开始时间">
-          <el-date-picker v-model="editTask.planned_start" type="date" placeholder="选择基线开始时间" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="基线完成时间">
-          <el-date-picker v-model="editTask.planned_end" type="date" placeholder="选择基线完成时间" style="width: 100%" />
-        </el-form-item>
-
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="基线开始时间">
+              <el-date-picker v-model="editTask.planned_start" type="date" placeholder="选择基线开始时间" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="基线完成时间">
+              <el-date-picker v-model="editTask.planned_end" type="date" placeholder="选择基线完成时间" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <div style="color: #909399; font-size: 12px; margin-left: 100px; margin-top: -12px; margin-bottom: 12px;">
+          💡 非特殊情况不要单独修改基线时间。可以使用【更多>设置基线】功能统一设置项目基线
+        </div>
         <!-- 自定义列 -->
         <el-row :gutter="16" v-if="customColumns.length > 0">
           <el-col :span="12" v-for="column in customColumns" :key="column.name">
@@ -1705,6 +1713,13 @@ const initGantt = () => {
             el.style.left = taskPosition.left + 'px'
             el.style.width = taskPosition.width + 'px'
             el.setAttribute('data-task-id', task.id)
+
+            if (task.type == 'milestone') {
+              el.style.border = '1px solid #000'
+              el.style.borderRadius = '50%'
+              el.style.height = '10px'
+              el.style.width = '10px'
+            }
             taskLine.insertAdjacentElement('afterend', el)  //放在gantt_task_line后面同级
           } catch (e) {
             // 任务不在可见范围内或其他错误，跳过
