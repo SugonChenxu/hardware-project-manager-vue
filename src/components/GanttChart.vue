@@ -1683,51 +1683,6 @@ const initGantt = () => {
       removeTaskFromArray(id)
     })
 
-    // 基线渲染
-    const renderCustomTaskLayer = () => {
-      // 遍历所有任务，渲染基线
-      gantt.eachTask((task) => {
-        //获取的是gantt_bars_area gantt_task_line
-        const taskLine = ganttContainer.value.querySelector(`.gantt_task_line[task_id="${task.id}"]`)
-        if (!taskLine) return
-
-        // 移除旧的基线（如果存在）
-        const oldBaseline = taskLine.parentElement.querySelector(`.baseline[data-task-id="${task.id}"]`)
-        if (oldBaseline) {
-          oldBaseline.remove()
-        }
-
-        // 如果基线显示开关关闭，则不渲染
-        if (!baselineVisible.value) {
-          return
-        }
-
-        // 如果任务有计划时间，则渲染基线
-        if (task.planned_start && task.planned_end) {
-          try {
-            const taskPosition = gantt.getTaskPosition(task, task.planned_start, task.planned_end)
-            const el = document.createElement('div')
-            el.className = 'baseline'
-            el.style.position = 'absolute'
-            el.style.top = taskPosition.top + 21 + 'px'
-            el.style.left = taskPosition.left + 'px'
-            el.style.width = taskPosition.width + 'px'
-            el.setAttribute('data-task-id', task.id)
-
-            if (task.type == 'milestone') {
-              el.style.border = '1px solid #000'
-              el.style.borderRadius = '50%'
-              el.style.height = '10px'
-              el.style.width = '10px'
-            }
-            taskLine.insertAdjacentElement('afterend', el)  //放在gantt_task_line后面同级
-          } catch (e) {
-            // 任务不在可见范围内或其他错误，跳过
-          }
-        }
-      })
-    }
-
     // 在甘特图渲染后更新图层
     gantt.attachEvent("onGanttRender", () => {
       setTimeout(renderCustomTaskLayer, 0)
@@ -3105,6 +3060,51 @@ const deleteProject = async () => {
   })
 }
 
+// 基线渲染函数
+const renderCustomTaskLayer = () => {
+  // 遍历所有任务，渲染基线
+  gantt.eachTask((task) => {
+    //获取的是gantt_bars_area gantt_task_line
+    const taskLine = ganttContainer.value.querySelector(`.gantt_task_line[task_id="${task.id}"]`)
+    if (!taskLine) return
+
+    // 移除旧的基线（如果存在）
+    const oldBaseline = taskLine.parentElement.querySelector(`.baseline[data-task-id="${task.id}"]`)
+    if (oldBaseline) {
+      oldBaseline.remove()
+    }
+
+    // 如果基线显示开关关闭，则不渲染
+    if (!baselineVisible.value) {
+      return
+    }
+
+    // 如果任务有计划时间，则渲染基线
+    if (task.planned_start && task.planned_end) {
+      try {
+        const taskPosition = gantt.getTaskPosition(task, task.planned_start, task.planned_end)
+        const el = document.createElement('div')
+        el.className = 'baseline'
+        el.style.position = 'absolute'
+        el.style.top = taskPosition.top + 21 + 'px'
+        el.style.left = taskPosition.left + 'px'
+        el.style.width = taskPosition.width + 'px'
+        el.setAttribute('data-task-id', task.id)
+
+        if (task.type == 'milestone') {
+          el.style.border = '1px solid #000'
+          el.style.borderRadius = '50%'
+          el.style.height = '10px'
+          el.style.width = '10px'
+        }
+        taskLine.insertAdjacentElement('afterend', el)  //放在gantt_task_line后面同级
+      } catch (e) {
+        // 任务不在可见范围内或其他错误，跳过
+      }
+    }
+  })
+}
+
 // 设置基线
 const setBaseline = () => {
 
@@ -3124,8 +3124,6 @@ const setBaseline = () => {
     setTimeout(renderCustomTaskLayer, 0);
 
     ElMessage.success('设置基线成功')
-  }).catch(() => {
-    ElMessage.info('已取消设置基线')
   })
 }
 
