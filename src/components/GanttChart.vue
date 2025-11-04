@@ -1647,7 +1647,6 @@ const initGantt = () => {
     })
 
     gantt.attachEvent("onBeforeTaskChanged", (id, mode, oldTask) => {
-      console.log(`onBeforeTaskChanged:`, id, mode)
       let newTaskObj = tasks.value.find(t => t.id == oldTask.id)
       updateCascade(oldTask, newTaskObj)
       return true;
@@ -1657,19 +1656,11 @@ const initGantt = () => {
       // 甘特图里面更新后，更新响应式数组中的任务 
       const index = tasks.value.findIndex(t => t.id == id)
       if (index !== -1) {
-        if (task.progress > 0 && task.status == 'not_started') {
-          task.status = 'in_progress'
-        }
-        if (task.progress == 1) { //直接进度调整为100%，则状态调整为完成
-          task.status = 'completed'
-        }
-
-        if (task.progress < 1 && task.status == 'completed') { //直接选中完成，则百分比调整为100%
-          task.progress = 1
-        }
+        syncTaskProgressAndStatus(task)
+        //重新计算父级任务的progress
+        recalculateParentTaskProgress(task)
         updateCascade(tasks.value[index], task)
         tasks.value[index] = { ...tasks.value[index], ...task }
-        console.log('onAfterTaskUpdate:', tasks.value[index])
       }
     })
 
@@ -1734,6 +1725,32 @@ const initGantt = () => {
       contextMenuVisible.value = false
     })
   })
+}
+
+// 重新计算父级任务的progress
+const recalculateParentTaskProgress = (task) => {
+  const parentTask = tasks.value.find(t => t.id == task.parent)
+  if (parentTask) {
+    let childTasks = tasks.value.filter(t => t.parent == parentTask.id)
+    let childTasksProgress = childTasks.reduce((sum, t) => sum + Number(t.progress || 0), 0)
+    parentTask.progress = childTasksProgress / childTasks.length
+
+    syncTaskProgressAndStatus(parentTask)
+  }
+}
+
+// 同步任务进度和状态
+const syncTaskProgressAndStatus = (task) => {
+  if (task.progress > 0 && task.status == 'not_started') {
+    task.status = 'in_progress'
+  }
+  if (task.progress == 1) { //直接进度调整为100%，则状态调整为完成
+    task.status = 'completed'
+  }
+  
+  if (task.progress < 1 && task.status == 'completed') { //直接选中完成，则百分比调整为100%
+    task.progress = 1
+  }
 }
 
 // 计算本月第几周的函数
