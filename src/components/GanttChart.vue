@@ -573,7 +573,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { ElConfigProvider, ElMessage, ElMessageBox } from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import Sortable from 'sortablejs'
 
 // 设置dayjs为中文
@@ -872,7 +872,7 @@ const checkVersionAndRefresh = async () => {
           localVersion: localVersion || '未知',
           serverVersion: serverVersion,
           details: [
-            '✅ 全新域名：http://stargantt.cn 全力备案中',
+            '✅ 全新域名：http://stargantt.cn 你的进度星甘守护',
             '✅ 新增【设置基线】功能，创建项目计划的 “原始参照物”',
             '✅ 增加右键快捷操作，可快速设置任务背景色、删除任务、编辑任务',
             '✅ 全新【列设置】功能可增加自定义列，设置可见列、拖动排序',
@@ -2254,128 +2254,270 @@ const collapseAll = () => {
 }
 
 // 导出Excel数据
-const exportData = () => {
+const exportData = async () => {
   try {
-    // 准备Excel数据
-    const excelData = []
+    // 创建工作簿
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('甘特图')
 
-    // 添加表头
-    const headers = [
-      '任务ID',
-      '任务名称',
-      '开始时间',
-      '完成时间',
-      '工期(天)',
-      '完成进度(%)',
-      '任务类型',
-      '执行状态',
-      '负责人',
-      '相关方',
-      '父任务',
-      '前置任务',
-      '任务描述'
-    ]
-    excelData.push(headers)
+    // 状态映射
+    const statusMap = {
+      'completed': '已完成',
+      'in_progress': '进行中',
+      'not_started': '未开始',
+      'on_hold': '已暂停',
+      'cancelled': '已取消'
+    }
 
-    // 添加任务数据
+    // 获取所有任务的日期范围
+    let minDate = null
+    let maxDate = null
     tasks.value.forEach(task => {
-      // 获取父任务名称
-      const parentTask = task.parent ? tasks.value.find(t => t.id === task.parent) : null
-      const parentTaskName = parentTask ? parentTask.text : '无'
-
-      // 获取前置任务名称
-      const predecessorNames = task.predecessors && task.predecessors.length > 0
-        ? task.predecessors.map(predId => {
-          const predTask = tasks.value.find(t => t.id === predId)
-          return predTask ? predTask.text : `任务${predId}`
-        }).join(', ')
-        : '无'
-
-      // 状态映射
-      const statusMap = {
-        'completed': '已完成',
-        'in_progress': '进行中',
-        'not_started': '未开始',
-        'on_hold': '已暂停',
-        'cancelled': '已取消'
+      if (task.start_date) {
+        const startDate = dayjs(task.start_date)
+        if (!minDate || startDate.isBefore(minDate)) {
+          minDate = startDate
+        }
       }
-
-      // 任务类型映射
-      const typeMap = {
-        'task': '普通任务',
-        'project': '项目组',
-        'milestone': '里程碑'
+      if (task.end_date) {
+        const endDate = dayjs(task.end_date)
+        if (!maxDate || endDate.isAfter(maxDate)) {
+          maxDate = endDate
+        }
       }
-
-      const row = [
-        task.id,
-        task.text || '',
-        task.start_date || '',
-        task.end_date || '',
-        task.duration || 0,
-        Math.round((task.progress || 0) * 100),
-        typeMap[task.type] || '普通任务',
-        statusMap[task.status] || '未开始',
-        task.owner || '',
-        task.stakeholder || '',
-        parentTaskName,
-        predecessorNames,
-        task.description || ''
-      ]
-      excelData.push(row)
     })
 
-    // 创建工作簿
-    const wb = XLSX.utils.book_new()
+    // 如果没有任务日期，使用默认范围
+    if (!minDate) minDate = dayjs()
+    if (!maxDate) maxDate = dayjs().add(30, 'day')
 
-    // 创建工作表
-    const ws = XLSX.utils.aoa_to_sheet(excelData)
+    // 生成日期列表（按天）
+    const dateColumns = []
+    let currentDate = minDate
+    while (currentDate.isBefore(maxDate) || currentDate.isSame(maxDate, 'day')) {
+      dateColumns.push(currentDate)
+      currentDate = currentDate.add(1, 'day')
+    }
 
-    // 设置列宽
-    const colWidths = [
-      { wch: 8 },   // 任务ID
-      { wch: 30 },  // 任务名称
-      { wch: 12 },  // 开始时间
-      { wch: 12 },  // 完成时间
-      { wch: 10 },  // 工期
-      { wch: 12 },  // 完成进度
-      { wch: 10 },  // 任务类型
-      { wch: 10 },  // 执行状态
-      { wch: 10 },  // 负责人
-      { wch: 10 },  // 相关方
-      { wch: 15 },  // 父任务
-      { wch: 20 },  // 前置任务
-      { wch: 30 }   // 任务描述
+    // 定义列结构
+    const leftColumns = [
+      { header: '序号', key: 'index', width: 6 },
+      { header: '项目名称', key: 'name', width: 30 },
+      { header: '计划开始时间', key: 'startDate', width: 12 },
+      { header: '计划完成时间', key: 'endDate', width: 12 },
+      { header: '天数', key: 'duration', width: 6 },
+      { header: '已完成', key: 'progress', width: 8 },
+      { header: '责任', key: 'owner', width: 10 },
+      { header: '执行状态', key: 'status', width: 10 },
+      { header: '备注', key: 'remark', width: 20 }
     ]
-    ws['!cols'] = colWidths
 
-    // 设置表头样式
-    const headerStyle = {
-      font: { bold: true, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "4472C4" } },
-      alignment: { horizontal: "center", vertical: "center" }
+    // 添加左侧列和日期列
+    const columns = [...leftColumns]
+    dateColumns.forEach((date, index) => {
+      columns.push({
+        header: date.format('M-D'),
+        key: `date_${index}`,
+        width: 3
+      })
+    })
+    worksheet.columns = columns
+
+    // 设置第一行（年月）
+    const firstRow = worksheet.getRow(1)
+    let currentMonth = null
+    let monthStartCol = leftColumns.length + 1
+    
+    dateColumns.forEach((date, index) => {
+      const col = leftColumns.length + 1 + index
+      const month = date.format('YYYY-M')
+      
+      if (month !== currentMonth) {
+        if (currentMonth !== null) {
+          // 合并前一个月的单元格
+          worksheet.mergeCells(1, monthStartCol, 1, col - 1)
+          const cell = worksheet.getCell(1, monthStartCol)
+          cell.value = dayjs(currentMonth, 'YYYY-M').format('YYYY年M月')
+          cell.alignment = { horizontal: 'center', vertical: 'middle' }
+          cell.font = { bold: true, size: 10 }
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF5B9BD5' }
+          }
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+          }
+        }
+        currentMonth = month
+        monthStartCol = col
+      }
+    })
+    
+    // 处理最后一个月
+    if (currentMonth !== null) {
+      const lastCol = leftColumns.length + dateColumns.length
+      worksheet.mergeCells(1, monthStartCol, 1, lastCol)
+      const cell = worksheet.getCell(1, monthStartCol)
+      cell.value = dayjs(currentMonth, 'YYYY-M').format('YYYY年M月')
+      cell.alignment = { horizontal: 'center', vertical: 'middle' }
+      cell.font = { bold: true, size: 10 }
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF5B9BD5' }
+      }
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } }
+      }
     }
 
-    // 应用表头样式
-    for (let i = 0; i < headers.length; i++) {
-      const cellRef = XLSX.utils.encode_cell({ r: 0, c: i })
-      if (!ws[cellRef]) ws[cellRef] = {}
-      ws[cellRef].s = headerStyle
-    }
+    // 设置第二行（日期）
+    const secondRow = worksheet.getRow(2)
+    dateColumns.forEach((date, index) => {
+      const cell = secondRow.getCell(leftColumns.length + 1 + index)
+      cell.value = date.date()
+      cell.alignment = { horizontal: 'center', vertical: 'middle' }
+      cell.font = { size: 9 }
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE7F3F8' }
+      }
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } }
+      }
+    })
 
-    // 添加工作表到工作簿
-    const sheetName = projectInfo.value?.name ? `${projectInfo.value.name}-任务列表` : '甘特图任务列表'
-    XLSX.utils.book_append_sheet(wb, ws, sheetName)
+    // 设置左侧表头（合并1-2行）
+    leftColumns.forEach((col, index) => {
+      worksheet.mergeCells(1, index + 1, 2, index + 1)
+      const cell = worksheet.getCell(1, index + 1)
+      cell.value = col.header
+      cell.alignment = { horizontal: 'center', vertical: 'middle' }
+      cell.font = { bold: true, size: 10 }
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF5B9BD5' }
+      }
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } }
+      }
+    })
+
+    // 添加任务数据
+    tasks.value.forEach((task, taskIndex) => {
+      const rowIndex = taskIndex + 3
+      const row = worksheet.getRow(rowIndex)
+      
+      // 左侧数据
+      row.getCell(1).value = taskIndex + 1
+      row.getCell(2).value = task.text || ''
+      row.getCell(3).value = task.start_date || ''
+      row.getCell(4).value = task.end_date || ''
+      row.getCell(5).value = task.duration || 0
+      row.getCell(6).value = `${Math.round((task.progress || 0) * 100)}%`
+      row.getCell(7).value = task.owner || ''
+      row.getCell(8).value = statusMap[task.status] || '未开始'
+      row.getCell(9).value = task.description || ''
+
+      // 设置左侧单元格样式
+      for (let i = 1; i <= leftColumns.length; i++) {
+        const cell = row.getCell(i)
+        cell.alignment = { horizontal: i === 2 ? 'left' : 'center', vertical: 'middle' }
+        cell.font = { size: 9 }
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFDCDCDC' } },
+          left: { style: 'thin', color: { argb: 'FFDCDCDC' } },
+          bottom: { style: 'thin', color: { argb: 'FFDCDCDC' } },
+          right: { style: 'thin', color: { argb: 'FFDCDCDC' } }
+        }
+      }
+
+      // 绘制甘特图条形图
+      if (task.start_date && task.end_date) {
+        const taskStart = dayjs(task.start_date)
+        const taskEnd = dayjs(task.end_date)
+        
+        dateColumns.forEach((date, dateIndex) => {
+          const cell = row.getCell(leftColumns.length + 1 + dateIndex)
+          
+          // 判断当前日期是否在任务范围内
+          if ((date.isAfter(taskStart) || date.isSame(taskStart, 'day')) && 
+              (date.isBefore(taskEnd) || date.isSame(taskEnd, 'day'))) {
+            
+            // 根据进度显示不同颜色
+            let fillColor = 'FFE7E6E6' // 默认浅灰色（未开始）
+            
+            if (task.status === 'completed') {
+              fillColor = 'FFA5D6A7' // 绿色（已完成）
+            } else if (task.status === 'in_progress') {
+              fillColor = 'FFEF9A9A' // 红色（进行中）
+            } else if (task.type === 'milestone') {
+              fillColor = 'FFFFEB3B' // 黄色（里程碑）
+            }
+            
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: fillColor }
+            }
+          }
+          
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFDCDCDC' } },
+            left: { style: 'thin', color: { argb: 'FFDCDCDC' } },
+            bottom: { style: 'thin', color: { argb: 'FFDCDCDC' } },
+            right: { style: 'thin', color: { argb: 'FFDCDCDC' } }
+          }
+        })
+      } else {
+        // 如果没有日期，也要设置边框
+        dateColumns.forEach((date, dateIndex) => {
+          const cell = row.getCell(leftColumns.length + 1 + dateIndex)
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFDCDCDC' } },
+            left: { style: 'thin', color: { argb: 'FFDCDCDC' } },
+            bottom: { style: 'thin', color: { argb: 'FFDCDCDC' } },
+            right: { style: 'thin', color: { argb: 'FFDCDCDC' } }
+          }
+        })
+      }
+    })
+
+    // 冻结窗格（冻结前9列和前2行）
+    worksheet.views = [
+      { state: 'frozen', xSplit: leftColumns.length, ySplit: 2 }
+    ]
 
     // 生成文件名
     const fileName = `${projectInfo.value?.name || '甘特图'}-${dayjs().format('YYYY-MM-DD')}.xlsx`
 
     // 导出文件
-    XLSX.writeFile(wb, fileName)
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileName
+    link.click()
+    window.URL.revokeObjectURL(url)
 
     ElMessage.success(`Excel文件导出成功：${fileName}`)
   } catch (error) {
-    console.error('导出Excel数据失败:', error)
     ElMessage.error('Excel导出失败，请重试')
   }
 }
