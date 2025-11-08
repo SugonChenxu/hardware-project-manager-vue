@@ -190,7 +190,10 @@ export const exportGanttToExcel = async (options) => {
                 if (fieldName === 'id') {
                     cell.value = taskIndex + 1
                 } else if (fieldName === 'text') {
-                    cell.value = task.text || ''
+                    // 根据层级添加缩进
+                    const level = task.$level || 0
+                    const indent = '  '.repeat(level)
+                    cell.value = indent + (task.text || '')
                 } else if (fieldName === 'start_date') {
                     cell.value = task.start_date || ''
                 } else if (fieldName === 'end_date') {
