@@ -873,6 +873,7 @@ const checkVersionAndRefresh = async () => {
           serverVersion: serverVersion,
           details: [
             '✅ 全新域名：http://stargantt.cn 你的进度星甘守护',
+            '✅ 重构导出功能，可导出带有甘特图的Excel文件👍',
             '✅ 新增【设置基线】功能，创建项目计划的 “原始参照物”',
             '✅ 增加右键快捷操作，可快速设置任务背景色、删除任务、编辑任务',
             '✅ 全新【列设置】功能可增加自定义列，设置可见列、拖动排序',
