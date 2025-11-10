@@ -96,7 +96,7 @@
                         <div class="shortcut-list">
                             <div class="shortcut-item">
 
-                                    <iframe width="100%" height="400" src="//player.bilibili.com/player.html?isOutside=true&aid=115442815471718&bvid=BV1mXskz5E2J&cid=33425195573&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+                                    <iframe width="100%" height="400" src="//player.bilibili.com/player.html?isOutside=true&aid=115519956983595&bvid=BV1txkXBeExv&cid=33861929667&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
                             </div>
                         </div>
                     </div>
