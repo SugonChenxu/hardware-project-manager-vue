@@ -408,7 +408,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="工期(天)">
-              <el-input-number v-model="editTask.duration" :min="1" :max="365" :step="1" style="width: 100%"
+              <el-input-number v-model="editTask.duration" :min="1" :max="3650" :step="1" style="width: 100%"
                 @change="calculateEndDateForEdit" />
             </el-form-item>
           </el-col>
@@ -445,7 +445,13 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="负责人">
-              <el-input v-model="editTask.owner" placeholder="请输入负责人" />
+              <el-select v-model="editTask.owner" multiple filterable allow-create default-first-option
+                :reserve-keyword="false" placeholder="请选择或输入负责人" style="width: 100%">
+                <el-option v-for="item in projectOwners" :key="item" :label="item" :value="item" />
+              </el-select>
+              <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+                💡 可选择已有负责人或输入新负责人，支持多选
+              </div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -563,7 +569,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, computed, h, createApp, defineComponent, getCurrentInstance } from 'vue'
 import { gantt } from 'dhtmlx-gantt'
 import { getUserProfile } from '../api/login.js'
 import UserCenter from './UserCenter.vue'
@@ -571,7 +577,7 @@ import ContactServiceDialog from './ContactServiceDialog.vue'
 import VersionUpdateDialog from './VersionUpdateDialog.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
-import { ElConfigProvider, ElMessage, ElMessageBox } from 'element-plus'
+import { ElConfigProvider, ElMessage, ElMessageBox, ElSelect, ElOption } from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import Sortable from 'sortablejs'
 import { exportGanttToExcel } from '../utils/exportExcel.js'
@@ -599,6 +605,8 @@ import { getItem, setItem } from '../utils/storage.js'
 
 // 中文语言包
 const locale = zhCn
+
+const vm = getCurrentInstance()
 
 // 响应式数据
 const ganttContainer = ref()
@@ -873,7 +881,8 @@ const checkVersionAndRefresh = async () => {
           serverVersion: serverVersion,
           details: [
             '✅ 全新域名：http://stargantt.cn 你的进度星甘守护',
-            '✅ 重构导出功能，可导出带有甘特图的Excel文件👍',
+            '✅ 新增负责人列表，可多选、自由添加👍',
+            '✅ 重构导出功能，可导出带有甘特图的Excel文件',
             '✅ 新增【设置基线】功能，创建项目计划的 “原始参照物”',
             '✅ 增加右键快捷操作，可快速设置任务背景色、删除任务、编辑任务',
             '✅ 全新【列设置】功能可增加自定义列，设置可见列、拖动排序',
@@ -916,6 +925,9 @@ const editTask = ref({
   predecessors: []  // 前置任务列表
 })
 
+// 项目中已有的负责人列表
+const projectOwners = ref([])
+
 
 // 可显示的字段（默认值）
 const defaultVisibleColumns = ['id', 'text', 'start_date', 'end_date', 'duration', 'status', 'progress', 'owner', 'stakeholder', 'predecessors', 'description']
@@ -926,6 +938,7 @@ const visibleColumns = ref([...defaultVisibleColumns])
 // 自定义列
 const customColumns = ref([])
 
+var ownerEditor = { type: "custom_editor", map_to: "owner" };
 // 基础列（不可修改）
 const allColumns = [
   {
@@ -982,7 +995,7 @@ const allColumns = [
       type: "number",
       map_to: "duration",
       min: 0,
-      max: 365
+      max: 3650
     },
     template: function (task) {
       if (task.duration === 0) return "当天"
@@ -1041,10 +1054,7 @@ const allColumns = [
     label: "负责人",
     width: 90,
     align: "center",
-    editor: {
-      type: "text",
-      map_to: "owner"
-    },
+    editor: ownerEditor,
     template: function (task) {
       return task.owner || '<span style="color: #c0c4cc;">-</span>'
     }
@@ -1373,6 +1383,9 @@ const loadInitialData = async (code = null) => {
 
     document.title = `${projectInfo.value.name} - 星甘StarGantt|开源免费的在线甘特图制作平台|专业的项目进度管理工具`
 
+    // 更新项目负责人列表
+    updateProjectOwners()
+
     // 检查收藏状态
     checkStarStatus()
   } catch (error) {
@@ -1690,6 +1703,106 @@ const initGantt = () => {
       renderCustomTaskLayer()
     })
 
+    const editorInstances = new Map()
+
+    gantt.config.editor_types.custom_editor = {
+      show: function (id, column, config, placeholder) {
+        const task = gantt.getTask(id)
+        const currentValue = task.owner ? task.owner.split(',').map(v => v.trim()).filter(v => v) : []
+        const selectedValues = ref([...currentValue])
+
+        const container = document.createElement('div')
+        container.style.width = '100%'
+        container.setAttribute('data-editor-id', id)
+        placeholder.innerHTML = ''
+        placeholder.appendChild(container)
+
+        const OwnerSelect = defineComponent({
+          setup() {
+            return () => h(ElSelect, {
+              modelValue: selectedValues.value,
+              multiple: true,
+              filterable: true,
+              allowCreate: true,
+              reserveKeyword: false,
+              placeholder: '请选择或输入负责人',
+              style: { width: '200px' },
+              'onUpdate:modelValue': (val) => { selectedValues.value = val }
+            }, () => projectOwners.value.map(item => h(ElOption, { key: item, label: item, value: item })))
+          }
+        })
+
+        const app = createApp(OwnerSelect)
+        if (vm && vm.appContext) {
+          app._context = vm.appContext
+        }
+        app.mount(container)
+
+        editorInstances.set(id, { app, container, selectedValues })
+      },
+      hide: function () {
+        gantt.render()
+      },
+      set_value: function (value, id, column, node) {
+        const instance = editorInstances.get(id)
+        if (!instance) return
+        const values = value ? value.split(',').map(v => v.trim()).filter(v => v) : []
+        instance.selectedValues.value = values
+      },
+      get_value: function (id, column, node) {
+        const task = gantt.getTask(id)
+        const instance = editorInstances.get(id)
+        if (!instance) {
+          return task.owner || ''
+        }
+        const values = instance.selectedValues.value
+
+        //如果有新加的项，添加到项目负责人列表中
+        values.forEach(value => {
+          if (!projectOwners.value.includes(value)) {
+            projectOwners.value.push(value)
+          }
+        })
+
+        task.owner = values.join(',')
+        return task.owner
+      },
+      is_changed: function (value, id, column, node) {
+        return true
+      },
+      is_valid: function (value, id, column, node) {
+        return true
+      },
+      save: function (id, column, node) {
+        const instance = editorInstances.get(id)
+        if (instance) {
+          instance.app.unmount()
+          editorInstances.delete(id)
+        }
+      },
+      focus: function (node) {
+        let targetContainer = null
+        let targetId = null
+        if (node && node.hasAttribute && node.hasAttribute('data-editor-id')) {
+          targetId = node.getAttribute('data-editor-id')
+          targetContainer = node
+        } else if (node) {
+          const container = node.querySelector('[data-editor-id]')
+          if (container) {
+            targetId = container.getAttribute('data-editor-id')
+            targetContainer = container
+          }
+        }
+        if (targetId && targetContainer) {
+          const inputEl = targetContainer.querySelector('input')
+          if (inputEl) {
+            inputEl.focus()
+          }
+        }
+      }
+    }
+
+
     // 初始化甘特图
     gantt.init(ganttContainer.value)
 
@@ -1748,7 +1861,7 @@ const syncTaskProgressAndStatus = (task) => {
   if (task.progress == 1) { //直接进度调整为100%，则状态调整为完成
     task.status = 'completed'
   }
-  
+
   if (task.progress < 1 && task.status == 'completed') { //直接选中完成，则百分比调整为100%
     task.progress = 1
   }
@@ -1852,6 +1965,9 @@ const loadData = () => {
     data: tasks.value,
     links: links.value
   })
+
+  // 更新项目负责人列表
+  updateProjectOwners()
 
 }
 
@@ -1984,6 +2100,9 @@ const addTask = () => {
 
   // 根据前置任务创建链接
   createLinksFromPredecessors(task.id, task.predecessors)
+
+  // 更新项目负责人列表
+  updateProjectOwners()
 }
 
 // 打开编辑任务对话框
@@ -2020,6 +2139,17 @@ const openEditDialog = (task) => {
     endDate = new Date(startDate.getTime() + duration * 24 * 60 * 60 * 1000)
   }
 
+  // 处理负责人数据，将逗号分隔的字符串转换为数组
+  let ownerValue = task.owner || ''
+  let ownerArray = []
+  if (typeof ownerValue === 'string' && ownerValue.includes(',')) {
+    ownerArray = ownerValue.split(',').map(owner => owner.trim()).filter(owner => owner)
+  } else if (Array.isArray(ownerValue)) {
+    ownerArray = ownerValue
+  } else if (ownerValue) {
+    ownerArray = [ownerValue]
+  }
+
   editTask.value = {
     id: task.id,
     text: task.text || '',
@@ -2032,7 +2162,7 @@ const openEditDialog = (task) => {
     type: task.type || 'task',
     parent: task.parent || 0,
     status: task.status || 'not_started',
-    owner: task.owner || '',
+    owner: ownerArray,
     stakeholder: task.stakeholder || '',
     description: task.description || '',
     predecessors: task.predecessors || [],
@@ -2054,6 +2184,12 @@ const updateTask = () => {
     return
   }
 
+  // 处理负责人数据，将数组转换为逗号分隔的字符串
+  let ownerValue = editTask.value.owner
+  if (Array.isArray(ownerValue)) {
+    ownerValue = ownerValue.join(', ')
+  }
+
   const updatedTask = {
     id: editTask.value.id,
     text: editTask.value.text,
@@ -2066,7 +2202,7 @@ const updateTask = () => {
     type: editTask.value.type,
     parent: editTask.value.parent,
     status: editTask.value.status,
-    owner: editTask.value.owner,
+    owner: ownerValue,
     stakeholder: editTask.value.stakeholder,
     description: editTask.value.description,
     predecessors: editTask.value.predecessors || [],
@@ -2091,6 +2227,9 @@ const updateTask = () => {
 
     // 更新甘特图中的任务
     gantt.updateTask(editTask.value.id, updatedTask)
+
+    // 更新项目负责人列表
+    updateProjectOwners()
 
     showEditDialog.value = false
     ElMessage.success('任务更新成功')
@@ -2863,6 +3002,31 @@ const selectHalfColumns = () => {
 // 全不选
 const unselectAllColumns = () => {
   visibleColumns.value = []
+}
+
+// 更新项目负责人列表
+const updateProjectOwners = () => {
+  const ownersSet = new Set()
+
+  // 遍历所有任务，收集负责人信息
+  tasks.value.forEach(task => {
+    if (task.owner) {
+      // 如果负责人是字符串且包含逗号，说明是多个负责人
+      if (typeof task.owner === 'string' && task.owner.includes(',')) {
+        const owners = task.owner.split(',').map(owner => owner.trim()).filter(owner => owner)
+        owners.forEach(owner => ownersSet.add(owner))
+      } else if (Array.isArray(task.owner)) {
+        // 如果负责人是数组
+        task.owner.forEach(owner => ownersSet.add(owner))
+      } else {
+        // 单个负责人
+        ownersSet.add(task.owner)
+      }
+    }
+  })
+
+  // 更新projectOwners数组
+  projectOwners.value = Array.from(ownersSet).sort()
 }
 
 // 检查收藏状态
