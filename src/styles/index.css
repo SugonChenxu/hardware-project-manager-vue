@@ -1,0 +1,1166 @@
+.gantt-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f7fa;
+}
+
+/* Outlook风格工具栏 */
+.outlook-toolbar {
+  display: flex;
+  align-items: stretch;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  height: 40px;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* 品牌区域 */
+.brand-section {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  padding: 0 16px;
+  border-right: 1px solid #dee2e6;
+  min-width: 260px;
+  height: 100%;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 12px;
+}
+
+.logo-icon {
+  width: 20px;
+  height: 20px;
+  color: #0078d4;
+}
+
+.app-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #323130;
+}
+
+.project-selector {
+  flex: 1;
+}
+
+.project-info {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  position: relative;
+  justify-content: center;
+  height: 32px;
+}
+
+.project-info:hover {
+  background-color: #f3f2f1;
+}
+
+.project-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #323130;
+  line-height: 1.1;
+}
+
+.project-meta {
+  font-size: 11px;
+  color: #605e5c;
+  line-height: 1.1;
+  margin-top: 1px;
+}
+
+.dropdown-arrow {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #605e5c;
+}
+
+/* 项目下拉菜单 */
+.project-menu {
+  min-width: 320px;
+}
+
+.project-details {
+  padding: 16px;
+  border-bottom: 1px solid #edebe9;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-row .label {
+  color: #605e5c;
+  font-weight: 500;
+}
+
+.detail-row .value {
+  color: #323130;
+  font-weight: 400;
+}
+
+.detail-row .value.readonly {
+  color: #909399;
+}
+
+/* 可编辑字段样式 */
+.editable-field {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  min-height: 28px;
+}
+
+.editable-field:hover {
+  background-color: #f5f7fa;
+  border-color: #e4e7ed;
+}
+
+.editable-field .value.editable {
+  flex: 1;
+  color: #409eff;
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
+  max-width: 300px;
+  line-height: 1.4;
+}
+
+.editable-field .edit-icon {
+  font-size: 12px;
+  color: #c0c4cc;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.editable-field:hover .edit-icon {
+  opacity: 1;
+}
+
+/* 内联编辑输入框样式 */
+.inline-edit-input,
+.inline-edit-textarea {
+  margin-top: 4px;
+}
+
+.inline-edit-input :deep(.el-input__wrapper) {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.inline-edit-textarea :deep(.el-textarea__inner) {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+  resize: none;
+  min-width: 300px;
+  /* 设置最小宽度 */
+  max-width: 500px;
+  /* 设置最大宽度 */
+}
+
+.textarea-container {
+  margin-top: 4px;
+}
+
+.edit-hint {
+  font-size: 11px;
+  color: #909399;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.project-actions {
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* 操作区域 */
+.action-section {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  padding: 0 12px;
+  gap: 4px;
+  height: 100%;
+}
+
+/* 项目切换区域 */
+.project-switch-section {
+  margin-right: 8px;
+}
+
+.project-selector {
+  width: 200px;
+  height: 32px;
+}
+
+.project-selector :deep(.el-input) {
+  height: 32px;
+}
+
+.project-selector :deep(.el-input__wrapper) {
+  border-radius: 3px;
+  border: 1px solid #d1d1d1;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  padding-left: 32px;
+}
+
+.project-selector :deep(.el-input__wrapper):hover {
+  border-color: #c7c7c7;
+  background: #f3f2f1;
+}
+
+.project-selector :deep(.el-input__wrapper.is-focus) {
+  border-color: #0078d4;
+  box-shadow: 0 0 0 1px #0078d4;
+}
+
+.project-selector :deep(.el-input__inner) {
+  height: 30px;
+  line-height: 30px;
+  font-size: 13px;
+  color: #323130;
+}
+
+.project-selector :deep(.el-input__prefix) {
+  left: 8px;
+  color: #605e5c;
+}
+
+.project-selector :deep(.el-select__caret) {
+  color: #605e5c;
+  font-size: 12px;
+}
+
+/* 项目选项样式 */
+.project-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #323130;
+  line-height: 1.2;
+}
+
+.project-code {
+  font-size: 11px;
+  color: #605e5c;
+  line-height: 1.2;
+}
+
+/* Outlook按钮样式 */
+.outlook-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 11px;
+  color: #323130;
+  gap: 4px;
+  min-width: 50px;
+}
+
+.outlook-btn:hover {
+  background-color: #f3f2f1;
+  border-color: #c7c7c7;
+  color: #323130;
+}
+
+.outlook-btn.primary {
+  background-color: #0078d4;
+  border-color: #0078d4;
+  color: white;
+}
+
+.outlook-btn.checked {
+  background-color: #e3f2fd;
+  /* border-color: #0078d4; */
+  color: #0078d4;
+}
+
+.outlook-btn.checked:hover {
+  background-color: #bbdefb;
+  /* border-color: #0078d4; */
+  color: #0078d4;
+}
+
+.outlook-btn.primary:hover {
+  background-color: #106ebe;
+  border-color: #106ebe;
+  color: white;
+}
+
+.outlook-btn.starred {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+  color: white;
+}
+
+.outlook-btn.starred:hover {
+  background-color: #f78989;
+  border-color: #f78989;
+  color: white;
+}
+
+/* 分体按钮样式 */
+.split-btn-group {
+  display: flex;
+  height: 32px;
+}
+
+.split-btn-group .outlook-btn {
+  border-radius: 0;
+  margin: 0;
+}
+
+.split-btn-group .split-main {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  padding-right: 10px;
+}
+
+.split-btn-group .split-dropdown {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  min-width: 28px;
+  padding: 0 6px;
+  border-left: none;
+}
+
+.split-btn-group .split-dropdown .el-icon {
+  font-size: 12px;
+}
+
+.split-btn-group .outlook-btn.primary:hover {
+  background-color: #106ebe;
+  border-color: #106ebe;
+}
+
+.outlook-btn .el-icon {
+  font-size: 14px;
+}
+
+.outlook-btn span {
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.dropdown-btn {
+  position: relative;
+}
+
+.dropdown-btn .dropdown-arrow {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  font-size: 8px;
+}
+
+/* 分隔线 */
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: #d1d1d1;
+  margin: 0 8px;
+  align-self: center;
+}
+
+/* Outlook选择器 */
+.outlook-select {
+  width: 120px;
+  height: 32px;
+}
+
+.outlook-select .el-input__wrapper {
+  height: 32px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+
+.outlook-select .el-input__inner {
+  font-size: 11px;
+  height: 30px;
+  line-height: 30px;
+}
+
+.outlook-select:hover .el-input__wrapper {
+  background-color: #f3f2f1;
+  border-color: #c7c7c7;
+}
+
+/* 确保下拉菜单选项完整显示 */
+.outlook-select .el-select-dropdown {
+  min-width: 120px;
+}
+
+.outlook-select .el-select-dropdown__item {
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+/* 字段控制面板 */
+.column-control-panel {
+  padding: 10px;
+  min-width: 220px;
+}
+
+.column-control-menu {
+  padding: 5px 0;
+  min-width: 220px;
+
+  :deep(.el-dropdown-menu__item) {
+    padding: 0;
+    background: transparent;
+
+    &:hover {
+      background: transparent;
+    }
+  }
+}
+
+.panel-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: #323130;
+  margin-bottom: 12px;
+}
+
+.panel-actions {
+  display: flex;
+  justify-content: center;
+
+  padding: 5px 5px;
+
+  .el-button {
+    padding: 3px;
+    font-size: 18px;
+    color: inherit;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border: 1px solid #e4e7ed;
+
+    &:hover {
+      background-color: rgba(64, 158, 255, 0.1);
+      border-color: #409eff;
+      transform: scale(1.08);
+    }
+
+    &.is-disabled {
+      color: #c0c4cc;
+
+      &:hover {
+        color: #c0c4cc;
+        background-color: transparent;
+        transform: scale(1);
+      }
+    }
+
+    &.reset-width-btn {
+      color: #e6a23c;
+
+      &:hover {
+        color: #ebb563;
+        background-color: rgba(230, 162, 60, 0.1);
+      }
+    }
+  }
+}
+
+.column-section {
+  padding: 0 12px;
+  margin-bottom: 0;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #606266;
+  margin-bottom: 8px;
+  padding: 4px 0;
+  letter-spacing: 0.5px;
+}
+
+.column-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .el-checkbox {
+    margin: 0;
+    height: 28px;
+    display: flex;
+    align-items: center;
+
+    :deep(.el-checkbox__label) {
+      font-size: 13px;
+      color: #323130;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 6px;
+    }
+  }
+}
+/* 拖拽排序相关样式 */
+.draggable-column-item {
+  cursor: move;
+  transition: background-color 0.2s;
+  padding: 4px 8px;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: #f5f7fa;
+  }
+}
+
+.drag-handle {
+  display: inline-block;
+  cursor: grab;
+  color: #909399;
+  font-size: 14px;
+  margin-right: 4px;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+/* 用户区域 */
+.user-section {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  padding: 0 12px;
+  border-left: 1px solid #dee2e6;
+  min-width: 120px;
+  height: 100%;
+}
+
+.user-dropdown {
+  width: 100%;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  width: 100%;
+  height: 32px;
+}
+
+.user-info:hover {
+  background-color: #f3f2f1;
+}
+
+.user-avatar {
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: 12px;
+  color: #323130;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gantt-container {
+  flex: 1;
+  padding: 3px;
+  overflow: hidden;
+  height: calc(100vh - 48px);
+  /* 减去顶部工具栏的高度 */
+}
+
+.gantt-chart {
+  height: 100%;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  overflow: auto;
+  /* 允许滚动 */
+}
+
+/* 甘特图样式定制 */
+:deep(.gantt_grid) {
+  border-right: 1px solid #e4e7ed;
+}
+
+:deep(.gantt_grid_head_cell) {
+  background: #f5f7fa;
+  border-bottom: 2px solid #e4e7ed;
+  font-weight: 600;
+  color: #303133;
+}
+
+:deep(.gantt_cell) {
+  border-right: 1px solid #e4e7ed;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 4px 6px;
+}
+
+:deep(.gantt_row) {
+  min-height: 28px;
+}
+
+/* 项目行背景 */
+:deep(.gantt_project_row) {
+  /* background: rgba(103, 194, 58, 0.05); */
+  font-weight: 600;
+}
+
+:deep(.gantt_custom_red) {
+  background: #ffebee;
+  font-weight: 600;
+}
+
+:deep(.gantt_custom_yellow) {
+  background: #fffde7;
+  font-weight: 600;
+}
+
+:deep(.gantt_custom_green) {
+  background: #e8f5e8;
+  font-weight: 600;
+}
+
+:deep(.gantt_custom_blue) {
+  background: #e3f2fd;
+  font-weight: 600;
+}
+
+/* 任务文本增强 */
+:deep(.gantt_task_text) {
+  font-weight: 500;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 依赖线样式 */
+:deep(.gantt_link_arrow) {
+  border-color: #409eff;
+}
+
+:deep(.gantt_line_wrapper div) {
+  background: #409eff;
+  border-radius: 1px;
+}
+
+/* 时间刻度样式 */
+:deep(.gantt_scale_line) {
+  border-bottom: 2px solid #e4e7ed;
+  background: linear-gradient(to bottom, #fafafa, #f5f7fa);
+}
+
+:deep(.gantt_scale_cell) {
+  border-right: 1px solid #e4e7ed;
+  font-weight: 600;
+  color: #303133;
+}
+
+/* 网格增强 */
+:deep(.gantt_task_bg) {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 99px,
+    rgba(0, 0, 0, 0.02) 100px
+  );
+}
+
+/* 周末样式 - 时间轴列 */
+:deep(.gantt_saturday) {
+  background: rgba(255, 193, 7, 0.08) !important;
+}
+
+/* 周末样式 - 时间刻度头部 */
+:deep(.gantt_scale_saturday) {
+  background: linear-gradient(to bottom, #fff3cd, #ffeaa7) !important;
+  color: #856404 !important;
+  font-weight: 700;
+}
+
+/* 周末样式增强 - 任务背景区域 */
+:deep(.gantt_task_bg.gantt_saturday) {
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 193, 7, 0.05),
+    rgba(255, 193, 7, 0.05) 99px,
+    rgba(255, 193, 7, 0.15) 100px
+  ) !important;
+}
+
+/* Grid分割线拖拽手柄样式 */
+:deep(.grid-resize-handle) {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 1000;
+  transition: background-color 0.2s ease;
+  border-right: 1px solid transparent;
+}
+
+:deep(.grid-resize-handle::before) {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 20px;
+  background-color: #dcdfe6;
+  border-radius: 1px;
+  transition: background-color 0.2s ease;
+}
+
+:deep(.grid-resize-handle:hover::before) {
+  background-color: #409eff;
+}
+
+/* 拖拽时的视觉反馈 */
+.gantt-container.grid-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+.gantt-container.grid-resizing * {
+  cursor: col-resize !important;
+}
+
+.gantt-container.grid-resizing :deep(.gantt_grid) {
+  border-right: 2px solid #409eff;
+}
+
+/* Grid最右边边框增强 */
+:deep(.gantt_grid) {
+  border-right: 1px solid #e4e7ed;
+  transition: border-color 0.2s ease;
+}
+
+/* 拖拽排序样式 */
+:deep(.gantt_row_drag) {
+  background: rgba(64, 158, 255, 0.1);
+  border: 1px dashed #409eff;
+}
+
+:deep(.gantt_row_drag_marker) {
+  background: #409eff;
+  height: 2px;
+  border-radius: 1px;
+}
+
+/* 拖拽目标位置指示器 */
+:deep(.gantt_drag_marker) {
+  background: #409eff;
+  height: 2px;
+  border-radius: 1px;
+  box-shadow: 0 1px 3px rgba(64, 158, 255, 0.3);
+}
+
+/* 拖拽时的鼠标样式 */
+:deep(.gantt_grid_data) {
+  cursor: grab;
+}
+
+:deep(.gantt_grid_data:active) {
+  cursor: grabbing;
+}
+
+/* 拖拽时禁用文本选择 */
+:deep(.gantt_row_drag) {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 拖拽时的行高亮 */
+:deep(.gantt_row.gantt_row_drag) {
+  background: rgba(64, 158, 255, 0.15);
+  border-left: 3px solid #409eff;
+  transition: all 0.2s ease;
+}
+
+/* 拖拽预览样式 */
+:deep(.gantt_drag_marker) {
+  background: linear-gradient(90deg, #409eff, #66b1ff);
+  height: 3px;
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.4);
+  animation: dragMarkerPulse 1s infinite;
+}
+
+@keyframes dragMarkerPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scaleY(1.2);
+  }
+}
+
+/* 拖拽时的任务文本样式 */
+:deep(.gantt_row_drag .gantt_cell) {
+  color: #409eff;
+  font-weight: 500;
+}
+
+/* 禁用拖拽时的样式 */
+:deep(.gantt_grid_data.drag-disabled) {
+  cursor: not-allowed;
+}
+
+:deep(.gantt_row.drag-disabled) {
+  opacity: 0.6;
+  pointer-events: none;
+}
+/* 个人中心对话框样式 */
+.user-center-dialog {
+  .el-dialog__body {
+    padding: 0;
+    max-height: 65vh;
+    overflow: hidden;
+  }
+
+  .el-dialog {
+    max-height: 75vh;
+    overflow: hidden;
+  }
+
+  .el-dialog__header {
+    padding: 16px 20px 12px;
+  }
+
+  .el-dialog__title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+/* 右键菜单样式 */
+.gantt-context-menu {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  z-index: 1000;
+
+  .context-menu-header {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .context-menu-divider {
+    height: 1px;
+    background-color: #e4e7ed;
+    margin: 8px 0;
+  }
+
+  .context-menu-section {
+    margin-bottom: 16px;
+
+    .context-menu-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .color-quick-select {
+      display: flex;
+      gap: 8px;
+
+      .color-quick-option {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        transition: transform 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e4e7ed;
+
+        &:hover {
+          transform: scale(1.1);
+          border-color: #409eff;
+          box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
+        }
+
+        .color-indicator {
+          width: 100%;
+          height: 100%;
+          border-radius: 3px;
+        }
+
+        .clear-quick-icon {
+          font-size: 14px;
+          color: #909399;
+        }
+      }
+    }
+  }
+
+  .context-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #f5f7fa;
+    }
+
+    .el-icon {
+      margin-right: 8px;
+    }
+
+    .dropdown-item-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      justify-content: space-between;
+
+      &::after {
+        content: "›";
+        font-size: 16px;
+        color: #909399;
+      }
+    }
+
+    .el-dropdown {
+      width: 100%;
+
+      :deep(.el-dropdown__caret-button) {
+        display: none;
+      }
+    }
+  }
+
+  .danger {
+    color: #f56c6c;
+  }
+}
+
+:deep(.baseline) {
+  position: absolute;
+  border-radius: 2px;
+  /* opacity: 0.7; */
+  height: 4px;
+  background: #ffd180;
+  border: 1px solid rgb(255, 153, 0);
+}
+
+/* 项目权限设置 */
+.permission-section {
+  padding: 12px 0;
+  margin-top: 8px;
+  border-top: 1px solid #edebe9;
+}
+
+.permission-section :deep(.el-radio-group) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.permission-section :deep(.el-radio) {
+  margin-right: 0;
+  height: 28px;
+}
+
+.permission-section :deep(.el-radio__label) {
+  font-size: 13px;
+  color: #323130;
+}
+
+/* 权限设置行样式 */
+.detail-row.permission-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 8px;
+}
+
+.detail-row.permission-row .label {
+  margin-bottom: 4px;
+}
+
+.detail-row.permission-row .value {
+  width: 100%;
+}
+
+.detail-row.permission-row :deep(.el-radio-group) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.detail-row.permission-row :deep(.el-radio) {
+  margin-right: 0;
+  height: 28px;
+  line-height: 28px;
+}
+
+.detail-row.permission-row :deep(.el-radio__label) {
+  font-size: 13px;
+  padding-left: 6px;
+}
+
+/* 分享好友配置区域 - 一行显示 */
+.permission-shared-config {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.permission-shared-config .config-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.permission-shared-config .config-item-users {
+  flex: 1;
+  min-width: 0;
+}
+
+.permission-shared-config .config-item-type {
+  flex-shrink: 0;
+}
+
+.permission-shared-config .config-label {
+  font-size: 12px;
+  color: #605e5c;
+  font-weight: 500;
+}
+
+.permission-shared-config :deep(.el-select) {
+  width: 100%;
+}
+
+.permission-shared-config :deep(.el-radio-group) {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.permission-shared-config :deep(.el-radio) {
+  margin-right: 0;
+  height: 24px;
+}
+
+.permission-shared-config :deep(.el-radio__label) {
+  font-size: 12px;
+  padding-left: 4px;
+}
+
+.shared-users-config {
+  margin-top: 12px;
+  padding-left: 20px;
+  border-left: 2px solid #409eff;
+  background-color: #f5f7fa;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.config-row:last-child {
+  margin-bottom: 0;
+}
+
+.config-label {
+  font-size: 13px;
+  color: #605e5c;
+  font-weight: 500;
+  min-width: 70px;
+}
+
+.config-row :deep(.el-radio-group) {
+  flex-direction: row;
+  gap: 12px;
+}
+
+.config-row :deep(.el-radio) {
+  height: auto;
+}

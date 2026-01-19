@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
-
+import { getDayjsWeekOfMonth } from './index.js'
 /**
  * 导出甘特图为Excel文件
  * @param {Object} options 导出选项
@@ -9,9 +9,10 @@ import { ElMessage } from 'element-plus'
  * @param {Object} options.projectInfo 项目信息
  * @param {Array} options.sortedAllColumns 排序后的所有列
  * @param {Array} options.visibleColumns 可见列
+ * @param {String} options.model 视图：default, month, quarter
  */
 export const exportGanttToExcel = async (options) => {
-    const { tasks, projectInfo, sortedAllColumns, visibleColumns } = options
+    const { tasks, projectInfo, sortedAllColumns, visibleColumns, model } = options
 
     try {
         // 创建工作簿
@@ -49,12 +50,44 @@ export const exportGanttToExcel = async (options) => {
         if (!minDate) minDate = dayjs()
         if (!maxDate) maxDate = dayjs().add(30, 'day')
 
-        // 生成日期列表（按天）
-        const dateColumns = []
-        let currentDate = minDate
-        while (currentDate.isBefore(maxDate) || currentDate.isSame(maxDate, 'day')) {
-            dateColumns.push(currentDate)
-            currentDate = currentDate.add(1, 'day')
+        // 根据视图模式生成日期列表和配置
+        let dateColumns = []
+        let columnWidth = 3
+
+        if (model === 'month') {
+            // 月视图：按周生成
+            const weekColumns = []
+            let currentDate = minDate.startOf('week')
+            const endDate = maxDate.endOf('week')
+
+            while (currentDate.isBefore(endDate) || currentDate.isSame(endDate, 'day')) {
+                weekColumns.push(currentDate)
+                currentDate = currentDate.add(1, 'week')
+            }
+
+            dateColumns = weekColumns
+            columnWidth = 5 // 月视图列宽
+        } else if (model === 'quarter') {
+            // 季度视图：按月生成
+            const monthColumns = []
+            let currentDate = minDate.startOf('month')
+            const endDate = maxDate.endOf('month')
+
+            while (currentDate.isBefore(endDate) || currentDate.isSame(endDate, 'month')) {
+                monthColumns.push(currentDate)
+                currentDate = currentDate.add(1, 'month')
+            }
+
+            dateColumns = monthColumns
+            columnWidth = 8 // 季度视图列宽
+        } else {
+            // 默认视图：按天生成
+            let currentDate = minDate
+            while (currentDate.isBefore(maxDate) || currentDate.isSame(maxDate, 'day')) {
+                dateColumns.push(currentDate)
+                currentDate = currentDate.add(1, 'day')
+            }
+            columnWidth = 3 // 默认视图列宽
         }
 
         // 根据 sortedAllColumns 和 visibleColumns 生成列结构
@@ -74,87 +107,243 @@ export const exportGanttToExcel = async (options) => {
         const columns = [...leftColumns]
         dateColumns.forEach((date, index) => {
             columns.push({
-                header: date.format('M-D'),
+                header: model === 'month' ? `第${date.week()}周` :
+                    model === 'quarter' ? date.format('M月') :
+                        date.format('M-D'),
                 key: `date_${index}`,
-                width: 3
+                width: columnWidth
             })
         })
         worksheet.columns = columns
 
-        // 设置第一行（年月）
-        const firstRow = worksheet.getRow(1)
-        let currentMonth = null
-        let monthStartCol = leftColumns.length + 1
+        // 设置第一行和第二行（根据不同视图模式）
+        if (model === 'month') {
+            // 月视图：第一行显示月份，第二行显示周
+            let currentMonth = null
+            let monthStartCol = leftColumns.length + 1
 
-        dateColumns.forEach((date, index) => {
-            const col = leftColumns.length + 1 + index
-            const month = date.format('YYYY-M')
+            dateColumns.forEach((date, index) => {
+                const col = leftColumns.length + 1 + index
+                const month = date.format('YYYY-M')
 
-            if (month !== currentMonth) {
-                if (currentMonth !== null) {
-                    // 合并前一个月的单元格
-                    worksheet.mergeCells(1, monthStartCol, 1, col - 1)
-                    const cell = worksheet.getCell(1, monthStartCol)
-                    cell.value = dayjs(currentMonth, 'YYYY-M').format('YYYY年M月')
-                    cell.alignment = { horizontal: 'center', vertical: 'middle' }
-                    cell.font = { bold: true, size: 10 }
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FF5B9BD5' }
+                if (month !== currentMonth) {
+                    if (currentMonth !== null) {
+                        // 合并前一个月的单元格
+                        worksheet.mergeCells(1, monthStartCol, 1, col - 1)
+                        const cell = worksheet.getCell(1, monthStartCol)
+                        cell.value = dayjs(currentMonth, 'YYYY-M').format('YYYY年M月')
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' }
+                        cell.font = { bold: true, size: 10 }
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FF5B9BD5' }
+                        }
+                        cell.border = {
+                            top: { style: 'thin', color: { argb: 'FF000000' } },
+                            left: { style: 'thin', color: { argb: 'FF000000' } },
+                            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                            right: { style: 'thin', color: { argb: 'FF000000' } }
+                        }
                     }
-                    cell.border = {
-                        top: { style: 'thin', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF000000' } },
-                        bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF000000' } }
-                    }
+                    currentMonth = month
+                    monthStartCol = col
                 }
-                currentMonth = month
-                monthStartCol = col
-            }
-        })
+            })
 
-        // 处理最后一个月
-        if (currentMonth !== null) {
-            const lastCol = leftColumns.length + dateColumns.length
-            worksheet.mergeCells(1, monthStartCol, 1, lastCol)
-            const cell = worksheet.getCell(1, monthStartCol)
-            cell.value = dayjs(currentMonth, 'YYYY-M').format('YYYY年M月')
-            cell.alignment = { horizontal: 'center', vertical: 'middle' }
-            cell.font = { bold: true, size: 10 }
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FF5B9BD5' }
+            // 处理最后一个月
+            if (currentMonth !== null) {
+                const lastCol = leftColumns.length + dateColumns.length
+                worksheet.mergeCells(1, monthStartCol, 1, lastCol)
+                const cell = worksheet.getCell(1, monthStartCol)
+                cell.value = dayjs(currentMonth, 'YYYY-M').format('YYYY年M月')
+                cell.alignment = { horizontal: 'center', vertical: 'middle' }
+                cell.font = { bold: true, size: 10 }
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF5B9BD5' }
+                }
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
             }
-            cell.border = {
-                top: { style: 'thin', color: { argb: 'FF000000' } },
-                left: { style: 'thin', color: { argb: 'FF000000' } },
-                bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                right: { style: 'thin', color: { argb: 'FF000000' } }
+
+            // 设置第二行（周）
+            const secondRow = worksheet.getRow(2)
+            dateColumns.forEach((date, index) => {
+                const cell = secondRow.getCell(leftColumns.length + 1 + index)
+                cell.value = `第${getDayjsWeekOfMonth(date)}周`
+                cell.alignment = { horizontal: 'center', vertical: 'middle' }
+                cell.font = { size: 9 }
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFE7F3F8' }
+                }
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            })
+        } else if (model === 'quarter') {
+            // 季度视图：第一行显示季度，第二行显示月份
+            let currentQuarter = null
+            let quarterStartCol = leftColumns.length + 1
+
+            dateColumns.forEach((date, index) => {
+                const col = leftColumns.length + 1 + index
+                const year = date.year()
+                const quarter = Math.floor((date.month()) / 3) + 1
+                const quarterKey = `${year}-Q${quarter}`
+
+                if (quarterKey !== currentQuarter) {
+                    if (currentQuarter !== null) {
+                        // 合并前一个季度的单元格
+                        worksheet.mergeCells(1, quarterStartCol, 1, col - 1)
+                        const cell = worksheet.getCell(1, quarterStartCol)
+                        const [qYear, qNum] = currentQuarter.split('-Q')
+                        cell.value = `${qYear}年第${qNum}季度`
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' }
+                        cell.font = { bold: true, size: 10 }
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FF5B9BD5' }
+                        }
+                        cell.border = {
+                            top: { style: 'thin', color: { argb: 'FF000000' } },
+                            left: { style: 'thin', color: { argb: 'FF000000' } },
+                            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                            right: { style: 'thin', color: { argb: 'FF000000' } }
+                        }
+                    }
+                    currentQuarter = quarterKey
+                    quarterStartCol = col
+                }
+            })
+
+            // 处理最后一个季度
+            if (currentQuarter !== null) {
+                const lastCol = leftColumns.length + dateColumns.length
+                worksheet.mergeCells(1, quarterStartCol, 1, lastCol)
+                const cell = worksheet.getCell(1, quarterStartCol)
+                const [qYear, qNum] = currentQuarter.split('-Q')
+                cell.value = `${qYear}年第${qNum}季度`
+                cell.alignment = { horizontal: 'center', vertical: 'middle' }
+                cell.font = { bold: true, size: 10 }
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF5B9BD5' }
+                }
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
             }
+
+            // 设置第二行（月份）
+            const secondRow = worksheet.getRow(2)
+            dateColumns.forEach((date, index) => {
+                const cell = secondRow.getCell(leftColumns.length + 1 + index)
+                cell.value = `${date.format('M')}月`
+                cell.alignment = { horizontal: 'center', vertical: 'middle' }
+                cell.font = { size: 9 }
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFE7F3F8' }
+                }
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            })
+        } else {
+            // 默认视图：第一行显示月份，第二行显示日期
+            let currentMonth = null
+            let monthStartCol = leftColumns.length + 1
+
+            dateColumns.forEach((date, index) => {
+                const col = leftColumns.length + 1 + index
+                const month = date.format('YYYY-M')
+
+                if (month !== currentMonth) {
+                    if (currentMonth !== null) {
+                        // 合并前一个月的单元格
+                        worksheet.mergeCells(1, monthStartCol, 1, col - 1)
+                        const cell = worksheet.getCell(1, monthStartCol)
+                        cell.value = dayjs(currentMonth, 'YYYY-M').format('YYYY年M月')
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' }
+                        cell.font = { bold: true, size: 10 }
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FF5B9BD5' }
+                        }
+                        cell.border = {
+                            top: { style: 'thin', color: { argb: 'FF000000' } },
+                            left: { style: 'thin', color: { argb: 'FF000000' } },
+                            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                            right: { style: 'thin', color: { argb: 'FF000000' } }
+                        }
+                    }
+                    currentMonth = month
+                    monthStartCol = col
+                }
+            })
+
+            // 处理最后一个月
+            if (currentMonth !== null) {
+                const lastCol = leftColumns.length + dateColumns.length
+                worksheet.mergeCells(1, monthStartCol, 1, lastCol)
+                const cell = worksheet.getCell(1, monthStartCol)
+                cell.value = dayjs(currentMonth, 'YYYY-M').format('YYYY年M月')
+                cell.alignment = { horizontal: 'center', vertical: 'middle' }
+                cell.font = { bold: true, size: 10 }
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF5B9BD5' }
+                }
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            }
+
+            // 设置第二行（日期）
+            const secondRow = worksheet.getRow(2)
+            dateColumns.forEach((date, index) => {
+                const cell = secondRow.getCell(leftColumns.length + 1 + index)
+                cell.value = date.date()
+                cell.alignment = { horizontal: 'center', vertical: 'middle' }
+                cell.font = { size: 9 }
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFE7F3F8' }
+                }
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            })
         }
-
-        // 设置第二行（日期）
-        const secondRow = worksheet.getRow(2)
-        dateColumns.forEach((date, index) => {
-            const cell = secondRow.getCell(leftColumns.length + 1 + index)
-            cell.value = date.date()
-            cell.alignment = { horizontal: 'center', vertical: 'middle' }
-            cell.font = { size: 9 }
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFE7F3F8' }
-            }
-            cell.border = {
-                top: { style: 'thin', color: { argb: 'FF000000' } },
-                left: { style: 'thin', color: { argb: 'FF000000' } },
-                bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                right: { style: 'thin', color: { argb: 'FF000000' } }
-            }
-        })
 
         // 设置左侧表头（合并1-2行）
         leftColumns.forEach((col, index) => {
@@ -176,8 +365,15 @@ export const exportGanttToExcel = async (options) => {
             }
         })
 
+        // 按 $index 排序任务
+        const sortedTasks = tasks.slice().sort((a, b) => {
+            const indexA = a.$index !== undefined ? a.$index : Infinity
+            const indexB = b.$index !== undefined ? b.$index : Infinity
+            return indexA - indexB
+        })
+
         // 添加任务数据
-        tasks.forEach((task, taskIndex) => {
+        sortedTasks.forEach((task, taskIndex) => {
             const rowIndex = taskIndex + 3
             const row = worksheet.getRow(rowIndex)
 
@@ -195,9 +391,9 @@ export const exportGanttToExcel = async (options) => {
                     const indent = '  '.repeat(level)
                     cell.value = indent + (task.text || '')
                 } else if (fieldName === 'start_date') {
-                    cell.value = task.start_date || ''
+                    cell.value = dayjs(task.start_date).format('YYYY-MM-DD') || ''
                 } else if (fieldName === 'end_date') {
-                    cell.value = task.end_date || ''
+                    cell.value = dayjs(task.end_date).format('YYYY-MM-DD')  || ''
                 } else if (fieldName === 'duration') {
                     cell.value = task.duration || 0
                 } else if (fieldName === 'progress') {
@@ -241,9 +437,30 @@ export const exportGanttToExcel = async (options) => {
                 dateColumns.forEach((date, dateIndex) => {
                     const cell = row.getCell(leftColumns.length + 1 + dateIndex)
 
+                    let isInRange = false
+
+                    if (model === 'month') {
+                        // 月视图：判断任务是否在当前周内
+                        const weekStart = date.startOf('week')
+                        const weekEnd = date.endOf('week')
+
+                        isInRange = (taskStart.isBefore(weekEnd) || taskStart.isSame(weekEnd, 'day')) &&
+                            (taskEnd.isAfter(weekStart) || taskEnd.isSame(weekStart, 'day'))
+                    } else if (model === 'quarter') {
+                        // 季度视图：判断任务是否在当前月内
+                        const monthStart = date.startOf('month')
+                        const monthEnd = date.endOf('month')
+
+                        isInRange = (taskStart.isBefore(monthEnd) || taskStart.isSame(monthEnd, 'day')) &&
+                            (taskEnd.isAfter(monthStart) || taskEnd.isSame(monthStart, 'day'))
+                    } else {
+                        // 默认视图：判断当前日期是否在任务范围内
+                        isInRange = (date.isAfter(taskStart) || date.isSame(taskStart, 'day')) &&
+                            (date.isBefore(taskEnd) || date.isSame(taskEnd, 'day'))
+                    }
+
                     // 判断当前日期是否在任务范围内
-                    if ((date.isAfter(taskStart) || date.isSame(taskStart, 'day')) &&
-                        (date.isBefore(taskEnd) || date.isSame(taskEnd, 'day'))) {
+                    if (isInRange) {
 
                         // 根据进度显示不同颜色
                         let fillColor = 'FFE7E6E6' // 默认浅灰色（未开始）

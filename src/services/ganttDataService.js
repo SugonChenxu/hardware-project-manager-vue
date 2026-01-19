@@ -14,26 +14,25 @@ import { parseTime } from '../utils/index.js'
  * @returns {Promise<{tasks: Array, links: Array, projectInfo?: Object}>}
  */
 export const loadGanttData = async (code = null) => {
-  try {
     if (code) {
       // 从API加载项目数据
-      const response = await sysprojectapi.get({ id:code })
-      
+      const response = await sysprojectapi.get({ id: code })
+
       if (response && response.data) {
         const projectData = response.data
-        
+
         // 解析项目数据中的甘特图数据
         let tasks = []
         let links = []
         let customColumns = []
         let visibleColumns = []
-        
+
         if (projectData.content) {
           try {
-            const ganttDataObj = typeof projectData.content === 'string' 
-              ? JSON.parse(projectData.content) 
+            const ganttDataObj = typeof projectData.content === 'string'
+              ? JSON.parse(projectData.content)
               : projectData.content
-            
+
             tasks = ganttDataObj.tasks || []
             links = ganttDataObj.links || []
             customColumns = ganttDataObj.customColumns || []
@@ -42,7 +41,7 @@ export const loadGanttData = async (code = null) => {
             console.error('解析甘特图数据失败:', error)
           }
         }
-        
+
         return {
           tasks,
           links,
@@ -56,10 +55,13 @@ export const loadGanttData = async (code = null) => {
             updateTime: projectData.updateTime,
             createUserName: projectData.createUserName,
             customColumns: customColumns,
-            visibleColumns: visibleColumns
+            visibleColumns: visibleColumns,
+            visibilityScope: projectData.visibilityScope || 0,
+            permissionUserIds: projectData.permissionUserIds || [],
+            permissionType: projectData.permissionType || 'VIEW'
           }
         }
-      } 
+      }
 
       return null;
     } else {
@@ -77,10 +79,6 @@ export const loadGanttData = async (code = null) => {
         }
       }
     }
-  } catch (error) {
-    ElMessage.error('加载甘特图数据失败:', error)
-    return null;
-  }
 }
 
 /**
@@ -91,7 +89,7 @@ export const loadGanttData = async (code = null) => {
 const processTasksForSerialization = (tasks) => {
   return tasks.map(task => {
     const processedTask = { ...task }
-    
+
     // 处理日期字段，确保使用本地时区格式
     if (processedTask.start_date) {
       processedTask.start_date = parseTime(processedTask.start_date)
@@ -105,7 +103,7 @@ const processTasksForSerialization = (tasks) => {
     if (processedTask.planned_end) {
       processedTask.planned_end = parseTime(processedTask.planned_end)
     }
-    
+
     return processedTask
   })
 }
@@ -121,7 +119,7 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
   try {
     // 处理任务数据，确保日期正确序列化
     const processedTasks = processTasksForSerialization(tasks)
-    
+
     const ganttDataObj = {
       tasks: processedTasks,
       links,
@@ -132,13 +130,16 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
 
     let projectData = {
       content: JSON.stringify(ganttDataObj),
-        name: projectInfo.name,
-        description: projectInfo.description,
-        code: projectInfo.code
+      name: projectInfo.name,
+      description: projectInfo.description,
+      code: projectInfo.code,
+      visibilityScope: projectInfo.visibilityScope || 0,
+      permissionUserIds: projectInfo.permissionUserIds || [],
+      permissionType: projectInfo.permissionType || 'VIEW'
     }
 
     let response
-    
+
     if (projectInfo.id) {
       projectData.id = projectInfo.id
       response = await sysprojectapi.update(projectData)
@@ -152,7 +153,7 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
       }
       response = await sysprojectapi.add(projectData)
     }
-    
+
     return response;
   } catch (error) {
     console.error('保存甘特图数据到项目失败:', error)
@@ -216,28 +217,28 @@ export const generateNewTaskId = (tasks) => {
  */
 export const getAllPredecessors = (taskId, links, visited = new Set()) => {
   if (!links || links.length === 0) return []
-  
+
   // 防止循环依赖
   if (visited.has(taskId)) {
     console.warn(`检测到循环依赖，任务ID: ${taskId}`)
     return []
   }
-  
+
   visited.add(taskId)
-  
+
   // 获取直接前置任务
   const directPredecessors = links
     .filter(l => l.target === taskId)
     .map(l => l.source)
-  
+
   // 递归获取所有前置任务
   const allPredecessors = new Set(directPredecessors)
-  
+
   directPredecessors.forEach(predecessorId => {
     const indirectPredecessors = getAllPredecessors(predecessorId, links, new Set(visited))
     indirectPredecessors.forEach(id => allPredecessors.add(id))
   })
-  
+
   return Array.from(allPredecessors)
 }
 
@@ -261,28 +262,28 @@ export const getDirectPredecessors = (taskId, links) => {
  */
 export const getAllSuccessors = (taskId, links, visited = new Set()) => {
   if (!links || links.length === 0) return []
-  
+
   // 防止循环依赖
   if (visited.has(taskId)) {
     console.warn(`检测到循环依赖，任务ID: ${taskId}`)
     return []
   }
-  
+
   visited.add(taskId)
-  
+
   // 获取直接后序任务
   const directSuccessors = links
-    .filter(l => l.source === taskId)
+    .filter(l => l.source == taskId)
     .map(l => l.target)
-  
+
   // 递归获取所有后序任务
   const allSuccessors = new Set(directSuccessors)
-  
+
   directSuccessors.forEach(successorId => {
     const indirectSuccessors = getAllSuccessors(successorId, links, new Set(visited))
     indirectSuccessors.forEach(id => allSuccessors.add(id))
   })
-  
+
   return Array.from(allSuccessors)
 }
 

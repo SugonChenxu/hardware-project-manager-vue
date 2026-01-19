@@ -31,8 +31,8 @@
               <span class="duration-label">个月</span>
             </div>
             <div class="duration-tips">
-              <span v-if="months >= 6" class="tip-text">选择6个月以上享受9折优惠</span>
-              <span v-else class="tip-text">选择6个月以上享受9折优惠</span>
+              <span v-if="months >= 6" class="tip-text">选择6个月以上享受8折优惠</span>
+              <span v-else class="tip-text">选择6个月以上享受8折优惠</span>
             </div>
           </div>
 

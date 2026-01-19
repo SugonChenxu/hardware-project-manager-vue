@@ -4,7 +4,9 @@
     <div class="user-header">
       <div class="user-info">
         <div class="avatar">
-          <el-avatar :size="60" :src="userInfo.avatar" icon="User" />
+          <el-avatar :size="50" class="user-avatar">
+            {{ userInfo?.username ? userInfo.username.charAt(0) : '游' }}
+          </el-avatar>
         </div>
         <div class="user-details">
           <h3 class="username">{{ userInfo.username || '未登录' }}</h3>
@@ -34,7 +36,6 @@
 
     <!-- 优惠信息 -->
     <div class="promo-section">
-      <h2 class="section-title">优惠活动</h2>
       <div class="promo-cards">
         <div class="promo-card first-recharge-promo">
           <div class="promo-icon">🎉</div>
@@ -57,7 +58,6 @@
 
     <!-- 版本对比表格 -->
     <div class="version-comparison">
-      <h2 class="section-title">版本对比</h2>
       <div class="comparison-table">
         <table>
           <thead>
@@ -129,7 +129,7 @@
                 </el-icon>
               </td>
             </tr>
-            
+
             <tr>
               <td class="feature-name">其他服务</td>
               <td class="feature-value"></td>
@@ -156,25 +156,20 @@
     </div>
   </div>
 
-  <!-- 支付对话框 -->
-  <PaymentDialog v-model="paymentDialogVisible" :version="selectedUpgradeVersion"
-    @payment-success="handlePaymentSuccess" />
-
-  <!-- 联系客服对话框 -->
-  <ContactServiceDialog v-model="showContactDialog" />
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Check, Close, User } from '@element-plus/icons-vue'
-import PaymentDialog from './PaymentDialog.vue'
-import ContactServiceDialog from './ContactServiceDialog.vue'
+import { Check } from '@element-plus/icons-vue'
 import { getToken } from '@/utils/auth'
 import { getUserVip } from '../api/users'
 import { getUserProfile } from '../api/login'
 import { getProjCnt } from '../api/sysproject'
 import dayjs from 'dayjs'
+
+// 定义 emit
+const emit = defineEmits(['open-payment', 'open-contact'])
 
 // 用户信息
 const userInfo = reactive({
@@ -193,10 +188,7 @@ const userStats = reactive({
 // 当前版本
 const currentVersion = ref([])
 
-// 支付对话框相关
-const paymentDialogVisible = ref(false)
-const selectedUpgradeVersion = ref('UserPersonal')
-const showContactDialog = ref(false)
+
 
 // 版本配置
 const versionConfig = {
@@ -229,19 +221,13 @@ const handleUpgrade = (version) => {
     handleContact()
   } else {
     // 个人版和旗舰版直接打开支付对话框
-    selectedUpgradeVersion.value = version
-    paymentDialogVisible.value = true
+    emit('open-payment', version)
   }
 }
 
 // 联系客服
 const handleContact = () => {
-  showContactDialog.value = true
-}
-
-// 处理支付成功
-const handlePaymentSuccess = (paymentData) => {
-  ElMessage.success('支付成功！刷新后生效')
+  emit('open-contact')
 }
 
 // 获取版本标签类型
@@ -320,17 +306,17 @@ onMounted(async () => {
 
 <style scoped>
 .user-center {
-  padding: 16px;
+  padding: 10px;
   background: #f5f7fa;
   min-height: auto;
 }
 
 .user-header {
   background: white;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -339,7 +325,7 @@ onMounted(async () => {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .avatar {
@@ -351,78 +337,80 @@ onMounted(async () => {
 }
 
 .username {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: #303133;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
 }
 
 .user-level {
-  margin: 6px 0 0 0;
+  margin: 4px 0 0 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
 
 .version-tag {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .expire-date {
-  font-size: 11px;
+  font-size: 10px;
   opacity: 0.8;
-  margin-left: 4px;
+  margin-left: 3px;
 }
 
 .user-stats {
   display: flex;
-  gap: 24px;
+  gap: 32px;
 }
 
 .stat-item {
   text-align: center;
+  min-width: 60px;
+  padding: 0 8px;
 }
 
 .stat-label {
   display: block;
-  font-size: 12px;
+  font-size: 11px;
   color: #909399;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .stat-value {
   display: block;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #409eff;
 }
 
 .promo-section {
   background: white;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .promo-cards {
   display: flex;
-  gap: 16px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .promo-card {
   flex: 1;
-  min-width: 280px;
+  min-width: 240px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 8px;
+  padding: 10px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  border: 2px solid transparent;
+  gap: 8px;
+  border: 1.5px solid transparent;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -434,13 +422,13 @@ onMounted(async () => {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 2px;
   background: linear-gradient(90deg, #409eff, #67c23a);
 }
 
 .promo-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .first-recharge-promo {
@@ -454,7 +442,7 @@ onMounted(async () => {
 }
 
 .promo-icon {
-  font-size: 32px;
+  font-size: 24px;
   flex-shrink: 0;
 }
 
@@ -463,29 +451,29 @@ onMounted(async () => {
 }
 
 .promo-title {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
   color: #303133;
-  margin: 0 0 4px 0;
+  margin: 0 0 2px 0;
 }
 
 .promo-desc {
-  font-size: 14px;
+  font-size: 12px;
   color: #606266;
-  margin: 0 0 8px 0;
-  line-height: 1.4;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
 }
 
 .promo-tag {
   display: inline-block;
   background: #409eff;
   color: white;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 1px 6px;
+  border-radius: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .first-recharge-promo .promo-tag {
@@ -498,21 +486,21 @@ onMounted(async () => {
 
 .version-comparison {
   background: white;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  padding: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
   color: #303133;
-  margin: 0 0 16px 0;
+  margin: 0 0 8px 0;
 }
 
 .comparison-table {
   overflow-x: auto;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 table {
@@ -523,9 +511,10 @@ table {
 
 th,
 td {
-  padding: 12px 8px;
+  padding: 6px 4px;
   text-align: center;
   border: 1px solid #ebeef5;
+  font-size: 12px;
 }
 
 .feature-column {
@@ -533,8 +522,8 @@ td {
   font-weight: 600;
   color: #303133;
   text-align: left;
-  width: 160px;
-  font-size: 14px;
+  width: 140px;
+  font-size: 12px;
 }
 
 .version-column {
@@ -551,17 +540,17 @@ td {
 .version-header {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .version-name {
   font-weight: 600;
   color: #303133;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .version-price {
-  font-size: 12px;
+  font-size: 11px;
   color: #409eff;
   font-weight: 500;
 }
@@ -570,13 +559,13 @@ td {
   text-align: left;
   font-weight: 500;
   color: #606266;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .feature-value {
   color: #303133;
   font-weight: 500;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .feature-value.unlimited {
@@ -586,25 +575,25 @@ td {
 
 .check-icon {
   color: #67c23a;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .cross-icon {
   color: #f56c6c;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .upgrade-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .upgrade-btn {
-  min-width: 100px;
-  font-size: 13px;
-  padding: 8px 16px;
+  min-width: 90px;
+  font-size: 12px;
+  padding: 6px 12px;
 }
 
 @media (max-width: 768px) {

@@ -66,6 +66,40 @@
                     <el-button type="danger" v-if="projectInfo?.createUserId == userInfo?.id" size="small"
                       @click="deleteProject">删除</el-button>
                   </div>
+
+                  <!-- 权限设置 -->
+                  <div class="detail-row permission-row" v-if="projectInfo?.createUserId == userInfo?.id">
+                    <span class="label">权限：</span>
+                    <div class="value">
+                      <el-radio-group v-model="projectPermission.visibilityScope" size="small"
+                        @change="handleVisibilityScopeChange">
+                        <el-radio :label="0">私有</el-radio>
+                        <el-radio :label="1">指定人员</el-radio>
+                        <el-radio :label="2">所有人可查看</el-radio>
+                        <el-radio :label="3">所有人可编辑</el-radio>
+                      </el-radio-group>
+                    </div>
+                  </div>
+
+                  <!-- 当选择"仅指定人员"时显示 -->
+                  <div class="permission-shared-config"
+                    v-if="projectInfo?.createUserId == userInfo?.id && projectPermission.visibilityScope === 1">
+                    <div class="config-item config-item-users">
+                      <span class="config-label">指定人员[姓名(账号)]</span>
+                      <el-select v-model="projectPermission.permissionUserIds" multiple filterable remote
+                        reserve-keyword placeholder="请输入姓名或账号搜索" :remote-method="searchUsers" :loading="userSearchLoading"
+                        @change="saveProject" size="small">
+                        <el-option v-for="item in userOptions" :key="item.id" :label="`${item.name} (${item.account})`" :value="item.id" />
+                      </el-select>
+                    </div>
+                    <div class="config-item config-item-type">
+                      <span class="config-label">权限类型</span>
+                      <el-radio-group v-model="projectPermission.permissionType" size="small" @change="saveProject">
+                        <el-radio label="VIEW">可查看</el-radio>
+                        <el-radio label="EDIT">可编辑</el-radio>
+                      </el-radio-group>
+                    </div>
+                  </div>
                 </div>
               </el-dropdown-menu>
             </template>
@@ -268,9 +302,14 @@
           </template>
         </el-dropdown>
 
-        <el-tooltip content="开启后，修改任务时间会自动调整有关联关系的任务时间" placement="bottom">
-          <el-switch v-model="cascade" size="small" inline-prompt active-text="关联调整">
-          </el-switch>
+        <el-tooltip :content="cascade ? '关联调整已开启：修改任务时间会自动调整有关联关系的任务时间' : '关联调整已关闭：即使有关联关系，修改任务时间也互不影响'"
+          placement="bottom">
+          <el-button @click="cascade = !cascade" :class="cascade ? 'outlook-btn checked' : 'outlook-btn'">
+            <el-icon>
+              <Link />
+            </el-icon>
+            <span>{{ cascade ? '已开启关联' : '已关闭关联' }}</span>
+          </el-button>
         </el-tooltip>
 
         <div class="divider"></div>
@@ -303,7 +342,8 @@
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item divided command="profile">个人设置</el-dropdown-item>
+              <el-dropdown-item divided command="profile">个人中心</el-dropdown-item>
+              <el-dropdown-item command="changePassword" v-if="userInfo">修改密码</el-dropdown-item>
               <el-dropdown-item command="logout" v-if="userInfo">退出登录</el-dropdown-item>
               <el-dropdown-item command="login" v-else>立即登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -523,10 +563,14 @@
     <LoginModal v-model="showLoginModal" @login-success="handleLoginSuccess" />
 
     <!-- 个人中心对话框 -->
-    <el-dialog v-model="userCenterVisible" title="个人中心" width="800px" :close-on-click-modal="false"
+    <el-dialog v-model="userCenterVisible" draggable width="700px" :close-on-click-modal="false"
       class="user-center-dialog">
-      <UserCenter v-if="userCenterVisible" />
+      <UserCenter v-if="userCenterVisible" @open-payment="handleOpenPayment" @open-contact="handleOpenContact" />
     </el-dialog>
+
+    <!-- 支付对话框 -->
+    <PaymentDialog v-model="paymentDialogVisible" v-if="paymentDialogVisible" :version="selectedUpgradeVersion"
+      @payment-success="handlePaymentSuccess" />
 
     <!-- 客服联系对话框 -->
     <ContactServiceDialog v-model="showContactDialog" />
@@ -560,6 +604,23 @@
       </template>
     </el-dialog>
 
+
+    <!-- 修改密码对话框 -->
+    <el-dialog v-model="showChangePasswordDialog" title="修改密码" width="400px" :close-on-click-modal="false">
+      <el-form :model="changePasswordForm" :rules="passwordRules" ref="changePasswordFormRef" label-width="100px">
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input v-model="changePasswordForm.newPassword" type="password" placeholder="请输入新密码" show-password />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="changePasswordForm.confirmPassword" type="password" placeholder="请再次输入新密码" show-password />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showChangePasswordDialog = false">取消</el-button>
+        <el-button type="primary" @click="submitChangePassword" :loading="changingPassword">确定</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 版本更新对话框 -->
     <VersionUpdateDialog v-model="showVersionUpdateDialog"
       :update-message="`检测到新版本 ${versionUpdateInfo.serverVersion}，当前版本 ${versionUpdateInfo.localVersion}`"
@@ -572,20 +633,24 @@
 import { ref, onMounted, onUnmounted, nextTick, watch, computed, h, createApp, defineComponent, getCurrentInstance } from 'vue'
 import { gantt } from 'dhtmlx-gantt'
 import { getUserProfile } from '../api/login.js'
+import { changePassword, getList, loadByIds } from '../api/users.js'
 import UserCenter from './UserCenter.vue'
+import PaymentDialog from './PaymentDialog.vue'
 import ContactServiceDialog from './ContactServiceDialog.vue'
 import VersionUpdateDialog from './VersionUpdateDialog.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
-import { ElConfigProvider, ElMessage, ElMessageBox, ElSelect, ElOption } from 'element-plus'
+import { ElMessage, ElMessageBox, ElSelect, ElOption } from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import Sortable from 'sortablejs'
 import { exportGanttToExcel } from '../utils/exportExcel.js'
+import { getWeekOfMonth } from '../utils/index.js'
+import { encryptByMd5 } from '../utils/encrypt.js'
 
 // 设置dayjs为中文
 dayjs.locale('zh-cn')
 import {
-  Calendar, Plus, Expand, Fold, FullScreen, Download, Upload, Document,
+  Calendar, Plus, Expand, Fold, Download, Document, Link,
   ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort, QuestionFilled, Delete, Aim, View
 } from '@element-plus/icons-vue'
 import {
@@ -629,8 +694,38 @@ const showEditDialog = ref(false)  // 编辑对话框显示状态
 const showLoginModal = ref(false)  // 登录模态框显示状态
 const userCenterVisible = ref(false)  // 个人中心对话框显示状态
 const showContactDialog = ref(false)  // 客服联系对话框显示状态
+const paymentDialogVisible = ref(false)  // 支付对话框显示状态
+const selectedUpgradeVersion = ref('UserPersonal')  // 选中的升级版本
 const pendingUserCenterOpen = ref(false)  // 待打开个人中心标志
 const saving = ref(false) // 保存按钮加载状态
+
+// 修改密码相关
+const showChangePasswordDialog = ref(false)  // 修改密码对话框显示状态
+const changingPassword = ref(false)  // 修改密码提交状态
+const changePasswordFormRef = ref()  // 修改密码表单引用
+const changePasswordForm = ref({
+  newPassword: '',
+  confirmPassword: ''
+})
+const passwordRules = {
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入新密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== changePasswordForm.value.newPassword) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
+}
 
 // 任务数据 - 从数据服务加载
 const tasks = ref([])
@@ -660,6 +755,47 @@ const userInfo = ref(null)
 // 收藏状态
 const isStarred = ref(false)
 const starring = ref(false) // 收藏操作加载状态
+
+// 项目权限设置
+const projectPermission = ref({
+  visibilityScope: 0, // 0-仅我自己，1-仅我分享的好友，2-所有人可查看，3-所有人可编辑
+  permissionUserIds: [], // 指定的用户ID列表
+  permissionType: 'VIEW' // VIEW-可查看，EDIT-可编辑
+})
+
+// 用户搜索相关
+const userOptions = ref([])
+const userSearchLoading = ref(false)
+
+// 搜索用户
+const searchUsers = async (query) => {
+  if (query) {
+    userSearchLoading.value = true
+    try {
+      const res = await getList({ key: query, page: 1, limit: 5 })
+      userOptions.value = res.data
+    } catch (e) {
+      console.error('搜索用户失败:', e)
+    } finally {
+      userSearchLoading.value = false
+    }
+  } else {
+    userOptions.value = []
+  }
+}
+
+// 加载已选择的用户信息
+const loadSelectedUsers = async () => {
+  if (projectPermission.value.permissionUserIds && projectPermission.value.permissionUserIds.length > 0) {
+    try {
+      const res = await loadByIds(projectPermission.value.permissionUserIds)
+      // 将加载的用户添加到选项中，避免显示ID
+      userOptions.value = res.data
+    } catch (e) {
+      console.error('加载已选用户失败:', e)
+    }
+  }
+}
 
 // 版本号管理
 const webVersion = ref('')
@@ -881,12 +1017,8 @@ const checkVersionAndRefresh = async () => {
           serverVersion: serverVersion,
           details: [
             '✅ 全新域名：http://stargantt.cn 你的进度星甘守护',
-            '✅ 新增负责人列表，可多选、自由添加👍',
-            '✅ 重构导出功能，可导出带有甘特图的Excel文件',
-            '✅ 新增【设置基线】功能，创建项目计划的 “原始参照物”',
-            '✅ 增加右键快捷操作，可快速设置任务背景色、删除任务、编辑任务',
-            '✅ 全新【列设置】功能可增加自定义列，设置可见列、拖动排序',
-            '✅ 新增【复制项目】功能，可复制当前项目为新项目'
+            '✅ 新增项目权限控制，可以指定人员查看/编辑项目🛡️',
+            '✅ 优化导出，可以在默认/月/季度视图下导出不同的Excel甘特图'
           ]
         }
 
@@ -1272,6 +1404,22 @@ const contactService = () => {
   showContactDialog.value = true
 }
 
+// 处理从 UserCenter 打开支付对话框
+const handleOpenPayment = (version) => {
+  selectedUpgradeVersion.value = version
+  paymentDialogVisible.value = true
+}
+
+// 处理从 UserCenter 打开联系客服对话框
+const handleOpenContact = () => {
+  showContactDialog.value = true
+}
+
+// 处理支付成功
+const handlePaymentSuccess = () => {
+  ElMessage.success('支付成功！刷新后生效')
+}
+
 const openHelp = () => {
   // 在新标签页打开帮助页面
   window.open('/help', '_blank')
@@ -1383,13 +1531,23 @@ const loadInitialData = async (code = null) => {
 
     document.title = `${projectInfo.value.name} - 星甘StarGantt|开源免费的在线甘特图制作平台|专业的项目进度管理工具`
 
+    // 初始化权限配置
+    projectPermission.value = {
+      visibilityScope: projectInfo.value.visibilityScope || 0,
+      permissionUserIds: projectInfo.value.permissionUserIds || [],
+      permissionType: projectInfo.value.permissionType || 'VIEW'
+    }
+
+    // 加载已选用户信息
+    loadSelectedUsers()
+
     // 更新项目负责人列表
     updateProjectOwners()
 
     // 检查收藏状态
     checkStarStatus()
   } catch (error) {
-    ElMessage.error('数据加载失败，请刷新页面重试')
+    ElMessage.error(error.message)
   } finally {
     loading.value = false
     // 延迟执行，确保DOM已经渲染
@@ -1670,7 +1828,6 @@ const initGantt = () => {
       // 甘特图里面更新后，更新响应式数组中的任务 
       const index = tasks.value.findIndex(t => t.id == id)
       if (index !== -1) {
-        syncTaskProgressAndStatus(task)
         //重新计算父级任务的progress
         recalculateParentTaskProgress(task)
         updateCascade(tasks.value[index], task)
@@ -1702,6 +1859,13 @@ const initGantt = () => {
     gantt.attachEvent("onGanttScroll", () => {
       renderCustomTaskLayer()
     })
+
+    // 内联编辑保存事件
+    var inlineEditors = gantt.ext.inlineEditors;
+    inlineEditors.attachEvent("onSave", function (state) {
+      console.log(state);
+      inlineEditOnSave(state)
+    });
 
     const editorInstances = new Map()
 
@@ -1845,37 +2009,81 @@ const initGantt = () => {
 const recalculateParentTaskProgress = (task) => {
   const parentTask = tasks.value.find(t => t.id == task.parent)
   if (parentTask) {
+    var oldtask = { ...parentTask }
     let childTasks = tasks.value.filter(t => t.parent == parentTask.id)
     let childTasksProgress = childTasks.reduce((sum, t) => sum + Number(t.progress || 0), 0)
     parentTask.progress = childTasksProgress / childTasks.length
 
-    syncTaskProgressAndStatus(parentTask)
+    syncTaskProgressAndStatus(oldtask, parentTask)
   }
 }
 
-// 同步任务进度和状态
-const syncTaskProgressAndStatus = (task) => {
-  if (task.progress > 0 && task.status == 'not_started') {
+/**
+ * 同步任务进度和状态
+ * @param oldtask 旧任务对象
+ * @param task 新任务对象
+ */
+const syncTaskProgressAndStatus = (oldtask, task) => {
+  if (oldtask.progress == task.progress && oldtask.status == task.status) {
+    return;
+  }
+  let changeProcess = false
+  if (oldtask.progress != task.progress) {
+    changeProcess = true
+  } else {
+    changeProcess = false
+  }
+
+  if (changeProcess && task.progress > 0 && task.status == 'not_started') {
     task.status = 'in_progress'
   }
-  if (task.progress == 1) { //直接进度调整为100%，则状态调整为完成
+  if (changeProcess && task.progress == 1) { //直接进度调整为100%，则状态调整为完成
     task.status = 'completed'
   }
 
-  if (task.progress < 1 && task.status == 'completed') { //直接选中完成，则百分比调整为100%
+  if (!changeProcess && task.progress < 1 && task.status == 'completed') { //调整进度为完成，则百分比调整为100%
     task.progress = 1
   }
 }
 
-// 计算本月第几周的函数
-const getWeekOfMonth = (date) => {
-  const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1)
-  const firstWeekday = firstDayOfMonth.getDay() // 0是周日，1是周一...
-  const dayOfMonth = date.getDate()
+/**
+ * 内联编辑保存时触发
+ * @param {Object} params - 包含任务ID、列名、旧值、新值的对象
+ */
+const inlineEditOnSave = ({ id, columnName, oldValue, newValue }) => {
+  var task = tasks.value.find(t => t.id == id)
+  if (oldValue == newValue) {
+    return;
+  }
 
-  // 计算本月第几周（从1开始）
-  const weekOfMonth = Math.ceil((dayOfMonth + firstWeekday) / 7)
-  return weekOfMonth
+  if (columnName == "start_date") {
+    updateCascade({ start_date: oldValue, end_date: task.end_date }, { id: id, start_date: newValue, end_date: task.end_date })
+    return
+  }
+
+  if (columnName == "end_date") {
+    updateCascade({ end_date: oldValue, start_date: task.start_date }, { id: id, end_date: newValue, start_date: task.start_date })
+    return
+  }
+
+  if (columnName == "progress") {
+    if (task.progress > 0 && task.status == 'not_started') {
+      task.status = 'in_progress'
+    }
+    if (task.progress == 1) { //直接进度调整为100%，则状态调整为完成
+      task.status = 'completed'
+    }
+  }
+  if (columnName == "status") {
+    if (task.progress < 1 && task.status == 'completed') { //调整进度为完成，则百分比调整为100%
+      task.progress = 1
+    }
+  }
+
+  gantt.updateTask(id, task)
+  setTimeout(() => {
+    gantt.render()
+  }, 100)
 }
 
 // 设置时间刻度
@@ -2224,6 +2432,7 @@ const updateTask = () => {
     updateTaskLinks(editTask.value.id, newPredecessors)
 
     updateCascade(originalTask, updatedTask)
+    syncTaskProgressAndStatus(originalTask, updatedTask)
 
     // 更新甘特图中的任务
     gantt.updateTask(editTask.value.id, updatedTask)
@@ -2399,7 +2608,8 @@ const exportData = async () => {
     tasks: tasks.value,
     projectInfo: projectInfo.value,
     sortedAllColumns: sortedAllColumns.value,
-    visibleColumns: visibleColumns.value
+    visibleColumns: visibleColumns.value,
+    model: viewMode.value
   })
 }
 
@@ -2609,6 +2819,11 @@ const saveProject = async () => {
     // 保存可见字段配置
     projectInfo.value.visibleColumns = visibleColumns.value
 
+    // 保存权限配置
+    projectInfo.value.visibilityScope = projectPermission.value.visibilityScope
+    projectInfo.value.permissionUserIds = projectPermission.value.permissionUserIds
+    projectInfo.value.permissionType = projectPermission.value.permissionType
+
     const result = await saveGanttDataToProject(tasks.value, links.value, projectInfo.value)
 
     // 更新项目信息
@@ -2649,6 +2864,7 @@ const saveProject = async () => {
     }
 
     ElMessage.success('项目保存成功')
+    return result.code
   } catch (error) {
     if (error.status === 401 || error.code == '401') {
       ElMessage.error('请登录后保存')
@@ -2661,6 +2877,7 @@ const saveProject = async () => {
       const errorMessage = error.message || error.msg || '保存项目失败，请重试'
       ElMessage.error(errorMessage)
     }
+    return error.code
   } finally {
     saving.value = false
   }
@@ -2749,6 +2966,15 @@ const handleUserCommand = (command) => {
       }
       userCenterVisible.value = true
       break
+    case 'changePassword':
+      // 检查是否已登录
+      if (!userInfo.value || !getToken()) {
+        ElMessage.warning('请先登录后修改密码')
+        showLoginModal.value = true
+        return
+      }
+      showChangePasswordDialog.value = true
+      break
     case 'logout':
       userInfo.value = null
       removeToken()
@@ -2760,6 +2986,41 @@ const handleUserCommand = (command) => {
   }
 }
 
+// 提交修改密码
+const submitChangePassword = async () => {
+  if (!changePasswordFormRef.value) return
+
+  try {
+    await changePasswordFormRef.value.validate()
+
+    changingPassword.value = true
+
+    const response = await changePassword({
+      password: encryptByMd5(changePasswordForm.value.newPassword)
+    })
+
+    if (response.code === 200) {
+      ElMessage.success('密码修改成功')
+      showChangePasswordDialog.value = false
+      // 重置表单
+      changePasswordForm.value = {
+        newPassword: '',
+        confirmPassword: ''
+      }
+      changePasswordFormRef.value.resetFields()
+    } else {
+      ElMessage.error(response.message || '修改密码失败')
+    }
+  } catch (error) {
+    if (error.message) {
+      ElMessage.error(error.message)
+    }
+  } finally {
+    changingPassword.value = false
+  }
+}
+
+
 // 切换项目下拉菜单显示状态
 const toggleProjectDropdown = () => {
   projectDropdownVisible.value = !projectDropdownVisible.value
@@ -2767,7 +3028,6 @@ const toggleProjectDropdown = () => {
 
 // 处理项目下拉菜单显示状态变化
 const handleDropdownVisibleChange = (visible) => {
-  console.log('Dropdown visible change:', visible)
   // 如果dropdown关闭，取消所有编辑状态
   if (!visible) {
     cancelEdit()
@@ -2877,6 +3137,8 @@ const confirmEdit = async (fieldName) => {
     projectInfo.value = {}
   }
 
+  var oldCode = projectInfo.value[fieldName] //保存旧值
+
   // 更新项目信息
   projectInfo.value[fieldName] = editingValue.value
 
@@ -2886,7 +3148,11 @@ const confirmEdit = async (fieldName) => {
   originalValue.value = ''
 
   // 自动保存项目
-  await saveProject()
+  var resp = await saveProject()
+  if (resp != 200) {
+    projectInfo.value[fieldName] = oldCode //回滚
+    return
+  }
   if (fieldName == 'code') { //如果code变了，需要跳转
     const newUrl = `${window.location.origin}${window.location.pathname}?code=${projectInfo.value.code}`
     window.history.replaceState({}, '', newUrl)
@@ -2904,6 +3170,19 @@ const cancelEdit = () => {
   })
   editingValue.value = originalValue.value
   originalValue.value = ''
+}
+
+// 处理权限范围变化
+const handleVisibilityScopeChange = async (value) => {
+  // 当选择"仅我分享的好友"时,重置权限配置
+  if (value === 1) {
+    if (!projectPermission.value.permissionType) {
+      projectPermission.value.permissionType = 'VIEW'
+    }
+  }
+
+  // 自动保存项目
+  await saveProject()
 }
 
 
@@ -3129,6 +3408,10 @@ const deleteProject = async () => {
 const renderCustomTaskLayer = () => {
   // 遍历所有任务，渲染基线
   gantt.eachTask((task) => {
+    if (!ganttContainer.value || !ganttContainer.value.querySelector) {
+      return;
+    }
+
     //获取的是gantt_bars_area gantt_task_line
     const taskLine = ganttContainer.value.querySelector(`.gantt_task_line[task_id="${task.id}"]`)
     if (!taskLine) return
@@ -3195,1132 +3478,5 @@ const setBaseline = () => {
 </script>
 
 <style scoped>
-.gantt-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #f5f7fa;
-}
-
-/* Outlook风格工具栏 */
-.outlook-toolbar {
-  display: flex;
-  align-items: stretch;
-  background: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
-  height: 40px;
-  padding: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-/* 品牌区域 */
-.brand-section {
-  display: flex;
-  align-items: center;
-  background: #ffffff;
-  padding: 0 16px;
-  border-right: 1px solid #dee2e6;
-  min-width: 260px;
-  height: 100%;
-}
-
-.app-logo {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-right: 12px;
-}
-
-.logo-icon {
-  width: 20px;
-  height: 20px;
-  color: #0078d4;
-}
-
-.app-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #323130;
-}
-
-.project-selector {
-  flex: 1;
-}
-
-.project-info {
-  display: flex;
-  flex-direction: column;
-  padding: 4px 8px;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-  position: relative;
-  justify-content: center;
-  height: 32px;
-}
-
-.project-info:hover {
-  background-color: #f3f2f1;
-}
-
-.project-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #323130;
-  line-height: 1.1;
-}
-
-.project-meta {
-  font-size: 11px;
-  color: #605e5c;
-  line-height: 1.1;
-  margin-top: 1px;
-}
-
-.dropdown-arrow {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  color: #605e5c;
-}
-
-/* 项目下拉菜单 */
-.project-menu {
-  min-width: 320px;
-}
-
-.project-details {
-  padding: 16px;
-  border-bottom: 1px solid #edebe9;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.detail-row:last-child {
-  margin-bottom: 0;
-}
-
-.detail-row .label {
-  color: #605e5c;
-  font-weight: 500;
-}
-
-.detail-row .value {
-  color: #323130;
-  font-weight: 400;
-}
-
-.detail-row .value.readonly {
-  color: #909399;
-}
-
-/* 可编辑字段样式 */
-.editable-field {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-  min-height: 28px;
-}
-
-.editable-field:hover {
-  background-color: #f5f7fa;
-  border-color: #e4e7ed;
-}
-
-.editable-field .value.editable {
-  flex: 1;
-  color: #409eff;
-  word-wrap: break-word;
-  word-break: break-all;
-  white-space: pre-wrap;
-  max-width: 300px;
-  line-height: 1.4;
-}
-
-.editable-field .edit-icon {
-  font-size: 12px;
-  color: #c0c4cc;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.editable-field:hover .edit-icon {
-  opacity: 1;
-}
-
-/* 内联编辑输入框样式 */
-.inline-edit-input,
-.inline-edit-textarea {
-  margin-top: 4px;
-}
-
-.inline-edit-input :deep(.el-input__wrapper) {
-  border-color: #409eff;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
-}
-
-.inline-edit-textarea :deep(.el-textarea__inner) {
-  border-color: #409eff;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
-  resize: none;
-  min-width: 300px;
-  /* 设置最小宽度 */
-  max-width: 500px;
-  /* 设置最大宽度 */
-}
-
-.textarea-container {
-  margin-top: 4px;
-}
-
-.edit-hint {
-  font-size: 11px;
-  color: #909399;
-  margin-top: 4px;
-  text-align: right;
-}
-
-.project-actions {
-  padding: 12px 16px;
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-/* 操作区域 */
-.action-section {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  padding: 0 12px;
-  gap: 4px;
-  height: 100%;
-}
-
-/* 项目切换区域 */
-.project-switch-section {
-  margin-right: 8px;
-}
-
-.project-selector {
-  width: 200px;
-  height: 32px;
-}
-
-.project-selector :deep(.el-input) {
-  height: 32px;
-}
-
-.project-selector :deep(.el-input__wrapper) {
-  border-radius: 3px;
-  border: 1px solid #d1d1d1;
-  background: #ffffff;
-  transition: all 0.15s ease;
-  padding-left: 32px;
-}
-
-.project-selector :deep(.el-input__wrapper):hover {
-  border-color: #c7c7c7;
-  background: #f3f2f1;
-}
-
-.project-selector :deep(.el-input__wrapper.is-focus) {
-  border-color: #0078d4;
-  box-shadow: 0 0 0 1px #0078d4;
-}
-
-.project-selector :deep(.el-input__inner) {
-  height: 30px;
-  line-height: 30px;
-  font-size: 13px;
-  color: #323130;
-}
-
-.project-selector :deep(.el-input__prefix) {
-  left: 8px;
-  color: #605e5c;
-}
-
-.project-selector :deep(.el-select__caret) {
-  color: #605e5c;
-  font-size: 12px;
-}
-
-/* 项目选项样式 */
-.project-option {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.project-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: #323130;
-  line-height: 1.2;
-}
-
-.project-code {
-  font-size: 11px;
-  color: #605e5c;
-  line-height: 1.2;
-}
-
-/* Outlook按钮样式 */
-.outlook-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  padding: 0 8px;
-  border: 1px solid transparent;
-  background: transparent;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 11px;
-  color: #323130;
-  gap: 4px;
-  min-width: 50px;
-}
-
-.outlook-btn:hover {
-  background-color: #f3f2f1;
-  border-color: #c7c7c7;
-  color: #323130;
-}
-
-.outlook-btn.primary {
-  background-color: #0078d4;
-  border-color: #0078d4;
-  color: white;
-}
-
-.outlook-btn.primary:hover {
-  background-color: #106ebe;
-  border-color: #106ebe;
-  color: white;
-}
-
-.outlook-btn.starred {
-  background-color: #f56c6c;
-  border-color: #f56c6c;
-  color: white;
-}
-
-.outlook-btn.starred:hover {
-  background-color: #f78989;
-  border-color: #f78989;
-  color: white;
-}
-
-/* 分体按钮样式 */
-.split-btn-group {
-  display: flex;
-  height: 32px;
-}
-
-.split-btn-group .outlook-btn {
-  border-radius: 0;
-  margin: 0;
-}
-
-.split-btn-group .split-main {
-  border-top-left-radius: 3px;
-  border-bottom-left-radius: 3px;
-  border-right: 1px solid rgba(255, 255, 255, 0.3);
-  padding-right: 10px;
-}
-
-.split-btn-group .split-dropdown {
-  border-top-right-radius: 3px;
-  border-bottom-right-radius: 3px;
-  min-width: 28px;
-  padding: 0 6px;
-  border-left: none;
-}
-
-.split-btn-group .split-dropdown .el-icon {
-  font-size: 12px;
-}
-
-.split-btn-group .outlook-btn.primary:hover {
-  background-color: #106ebe;
-  border-color: #106ebe;
-}
-
-.outlook-btn .el-icon {
-  font-size: 14px;
-}
-
-.outlook-btn span {
-  font-size: 11px;
-  line-height: 1;
-  font-weight: 400;
-  white-space: nowrap;
-}
-
-.dropdown-btn {
-  position: relative;
-}
-
-.dropdown-btn .dropdown-arrow {
-  position: absolute;
-  right: 2px;
-  bottom: 2px;
-  font-size: 8px;
-}
-
-/* 分隔线 */
-.divider {
-  width: 1px;
-  height: 24px;
-  background-color: #d1d1d1;
-  margin: 0 8px;
-  align-self: center;
-}
-
-/* Outlook选择器 */
-.outlook-select {
-  width: 120px;
-  height: 32px;
-}
-
-.outlook-select .el-input__wrapper {
-  height: 32px;
-  border: 1px solid transparent;
-  background: transparent;
-  border-radius: 3px;
-  transition: all 0.15s ease;
-}
-
-.outlook-select .el-input__inner {
-  font-size: 11px;
-  height: 30px;
-  line-height: 30px;
-}
-
-.outlook-select:hover .el-input__wrapper {
-  background-color: #f3f2f1;
-  border-color: #c7c7c7;
-}
-
-/* 确保下拉菜单选项完整显示 */
-.outlook-select .el-select-dropdown {
-  min-width: 120px;
-}
-
-.outlook-select .el-select-dropdown__item {
-  padding: 0 12px;
-  white-space: nowrap;
-}
-
-/* 字段控制面板 */
-.column-control-panel {
-  padding: 10px;
-  min-width: 220px;
-}
-
-.column-control-menu {
-  padding: 5px 0;
-  min-width: 220px;
-
-  :deep(.el-dropdown-menu__item) {
-    padding: 0;
-    background: transparent;
-
-    &:hover {
-      background: transparent;
-    }
-  }
-}
-
-.panel-header {
-  font-size: 14px;
-  font-weight: 600;
-  color: #323130;
-  margin-bottom: 12px;
-}
-
-.panel-actions {
-  display: flex;
-  justify-content: center;
-
-  padding: 5px 5px;
-
-  .el-button {
-    padding: 3px;
-    font-size: 18px;
-    color: inherit;
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    border: 1px solid #e4e7ed;
-
-    &:hover {
-      background-color: rgba(64, 158, 255, 0.1);
-      border-color: #409eff;
-      transform: scale(1.08);
-    }
-
-    &.is-disabled {
-      color: #c0c4cc;
-
-      &:hover {
-        color: #c0c4cc;
-        background-color: transparent;
-        transform: scale(1);
-      }
-    }
-
-    &.reset-width-btn {
-      color: #e6a23c;
-
-      &:hover {
-        color: #ebb563;
-        background-color: rgba(230, 162, 60, 0.1);
-      }
-    }
-  }
-}
-
-.column-section {
-  padding: 0 12px;
-  margin-bottom: 0;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
-.section-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #606266;
-  margin-bottom: 8px;
-  padding: 4px 0;
-  letter-spacing: 0.5px;
-}
-
-.column-checkboxes {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  .el-checkbox {
-    margin: 0;
-    height: 28px;
-    display: flex;
-    align-items: center;
-
-    :deep(.el-checkbox__label) {
-      font-size: 13px;
-      color: #323130;
-      display: flex;
-      align-items: center;
-      width: 100%;
-      gap: 6px;
-    }
-  }
-}
-
-.custom-column-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* 拖拽排序相关样式 */
-.draggable-column-item {
-  cursor: move;
-  transition: background-color 0.2s;
-  padding: 4px 8px;
-  border-radius: 4px;
-
-  &:hover {
-    background-color: #f5f7fa;
-  }
-}
-
-.drag-handle {
-  display: inline-block;
-  cursor: grab;
-  color: #909399;
-  font-size: 14px;
-  margin-right: 4px;
-  user-select: none;
-
-  &:active {
-    cursor: grabbing;
-  }
-}
-
-.sortable-ghost {
-  opacity: 0.5;
-  background: #ecf5ff;
-  border: 1px dashed #409eff;
-}
-
-/* 用户区域 */
-.user-section {
-  display: flex;
-  align-items: center;
-  background: #ffffff;
-  padding: 0 12px;
-  border-left: 1px solid #dee2e6;
-  min-width: 120px;
-  height: 100%;
-}
-
-.user-dropdown {
-  width: 100%;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-  width: 100%;
-  height: 32px;
-}
-
-.user-info:hover {
-  background-color: #f3f2f1;
-}
-
-.user-avatar {
-  flex-shrink: 0;
-}
-
-.user-name {
-  font-size: 12px;
-  color: #323130;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* 用户下拉菜单 */
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid #edebe9;
-}
-
-.profile-info .name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #323130;
-  margin-bottom: 2px;
-}
-
-.profile-info .email {
-  font-size: 12px;
-  color: #605e5c;
-}
-
-.gantt-container {
-  flex: 1;
-  padding: 3px;
-  overflow: hidden;
-  height: calc(100vh - 48px);
-  /* 减去顶部工具栏的高度 */
-}
-
-.gantt-chart {
-  height: 100%;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  overflow: auto;
-  /* 允许滚动 */
-}
-
-/* 甘特图样式定制 */
-:deep(.gantt_grid) {
-  border-right: 1px solid #e4e7ed;
-}
-
-:deep(.gantt_grid_head_cell) {
-  background: #f5f7fa;
-  border-bottom: 2px solid #e4e7ed;
-  font-weight: 600;
-  color: #303133;
-}
-
-:deep(.gantt_cell) {
-  border-right: 1px solid #e4e7ed;
-  border-bottom: 1px solid #f0f0f0;
-  padding: 4px 6px;
-}
-
-:deep(.gantt_row) {
-  min-height: 28px;
-}
-
-/* 项目行背景 */
-:deep(.gantt_project_row) {
-  /* background: rgba(103, 194, 58, 0.05); */
-  font-weight: 600;
-}
-
-:deep(.gantt_custom_red) {
-  background: #ffebee;
-  font-weight: 600;
-}
-
-:deep(.gantt_custom_yellow) {
-  background: #fffde7;
-  font-weight: 600;
-}
-
-:deep(.gantt_custom_green) {
-  background: #e8f5e8;
-  font-weight: 600;
-}
-
-:deep(.gantt_custom_blue) {
-  background: #e3f2fd;
-  font-weight: 600;
-}
-
-/* 任务文本增强 */
-:deep(.gantt_task_text) {
-  font-weight: 500;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-
-/* 依赖线样式 */
-:deep(.gantt_link_arrow) {
-  border-color: #409eff;
-}
-
-:deep(.gantt_line_wrapper div) {
-  background: #409eff;
-  border-radius: 1px;
-}
-
-/* 时间刻度样式 */
-:deep(.gantt_scale_line) {
-  border-bottom: 2px solid #e4e7ed;
-  background: linear-gradient(to bottom, #fafafa, #f5f7fa);
-}
-
-:deep(.gantt_scale_cell) {
-  border-right: 1px solid #e4e7ed;
-  font-weight: 600;
-  color: #303133;
-}
-
-/* 网格增强 */
-:deep(.gantt_task_bg) {
-  background: repeating-linear-gradient(90deg,
-      transparent,
-      transparent 99px,
-      rgba(0, 0, 0, 0.02) 100px);
-}
-
-/* 周末样式 - 时间轴列 */
-:deep(.gantt_saturday) {
-  background: rgba(255, 193, 7, 0.08) !important;
-}
-
-/* 周末样式 - 时间刻度头部 */
-:deep(.gantt_scale_saturday) {
-  background: linear-gradient(to bottom, #fff3cd, #ffeaa7) !important;
-  color: #856404 !important;
-  font-weight: 700;
-}
-
-
-/* 周末样式增强 - 任务背景区域 */
-:deep(.gantt_task_bg.gantt_saturday) {
-  background: repeating-linear-gradient(90deg,
-      rgba(255, 193, 7, 0.05),
-      rgba(255, 193, 7, 0.05) 99px,
-      rgba(255, 193, 7, 0.15) 100px) !important;
-}
-
-/* Grid分割线拖拽手柄样式 */
-:deep(.grid-resize-handle) {
-  position: absolute;
-  top: 0;
-  right: -3px;
-  width: 6px;
-  height: 100%;
-  cursor: col-resize;
-  background: transparent;
-  z-index: 1000;
-  transition: background-color 0.2s ease;
-  border-right: 1px solid transparent;
-}
-
-
-:deep(.grid-resize-handle::before) {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 2px;
-  height: 20px;
-  background-color: #dcdfe6;
-  border-radius: 1px;
-  transition: background-color 0.2s ease;
-}
-
-:deep(.grid-resize-handle:hover::before) {
-  background-color: #409eff;
-}
-
-/* 拖拽时的视觉反馈 */
-.gantt-container.grid-resizing {
-  cursor: col-resize !important;
-  user-select: none !important;
-}
-
-.gantt-container.grid-resizing * {
-  cursor: col-resize !important;
-}
-
-.gantt-container.grid-resizing :deep(.gantt_grid) {
-  border-right: 2px solid #409eff;
-}
-
-/* Grid最右边边框增强 */
-:deep(.gantt_grid) {
-  border-right: 1px solid #e4e7ed;
-  transition: border-color 0.2s ease;
-}
-
-/* 拖拽排序样式 */
-:deep(.gantt_row_drag) {
-  background: rgba(64, 158, 255, 0.1);
-  border: 1px dashed #409eff;
-}
-
-:deep(.gantt_row_drag_marker) {
-  background: #409eff;
-  height: 2px;
-  border-radius: 1px;
-}
-
-
-/* 拖拽目标位置指示器 */
-:deep(.gantt_drag_marker) {
-  background: #409eff;
-  height: 2px;
-  border-radius: 1px;
-  box-shadow: 0 1px 3px rgba(64, 158, 255, 0.3);
-}
-
-/* 拖拽时的鼠标样式 */
-:deep(.gantt_grid_data) {
-  cursor: grab;
-}
-
-:deep(.gantt_grid_data:active) {
-  cursor: grabbing;
-}
-
-/* 拖拽时禁用文本选择 */
-:deep(.gantt_row_drag) {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-/* 拖拽时的行高亮 */
-:deep(.gantt_row.gantt_row_drag) {
-  background: rgba(64, 158, 255, 0.15);
-  border-left: 3px solid #409eff;
-  transition: all 0.2s ease;
-}
-
-/* 拖拽预览样式 */
-:deep(.gantt_drag_marker) {
-  background: linear-gradient(90deg, #409eff, #66b1ff);
-  height: 3px;
-  border-radius: 2px;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.4);
-  animation: dragMarkerPulse 1s infinite;
-}
-
-@keyframes dragMarkerPulse {
-
-  0%,
-  100% {
-    opacity: 1;
-    transform: scaleY(1);
-  }
-
-  50% {
-    opacity: 0.8;
-    transform: scaleY(1.2);
-  }
-}
-
-/* 拖拽时的任务文本样式 */
-:deep(.gantt_row_drag .gantt_cell) {
-  color: #409eff;
-  font-weight: 500;
-}
-
-/* 禁用拖拽时的样式 */
-:deep(.gantt_grid_data.drag-disabled) {
-  cursor: not-allowed;
-}
-
-:deep(.gantt_row.drag-disabled) {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-
-/* 个人中心对话框样式 */
-.user-center-dialog {
-  .el-dialog__body {
-    padding: 0;
-    max-height: 65vh;
-    overflow: hidden;
-  }
-
-  .el-dialog {
-    max-height: 75vh;
-    overflow: hidden;
-  }
-
-  .el-dialog__header {
-    padding: 16px 20px 12px;
-  }
-
-  .el-dialog__title {
-    font-size: 16px;
-    font-weight: 600;
-  }
-}
-
-/* 背景色选择器样式 */
-.background-color-selector {
-  .current-task-info {
-    margin-bottom: 20px;
-    padding: 12px;
-    background: #f5f7fa;
-    border-radius: 6px;
-
-    .task-label {
-      color: #606266;
-      font-size: 14px;
-      margin-right: 8px;
-    }
-
-    .task-name {
-      color: #303133;
-      font-weight: 500;
-      font-size: 14px;
-    }
-  }
-
-  .color-options {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-
-  .color-option {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
-    padding: 12px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: #f5f7fa;
-      transform: translateY(-2px);
-    }
-
-    .color-preview {
-      width: 60px;
-      height: 40px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 8px;
-      position: relative;
-      transition: all 0.2s ease;
-
-      .color-dot {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        border: 2px solid #ffffff;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      .clear-icon {
-        font-size: 20px;
-        color: #909399;
-      }
-    }
-
-    .color-name {
-      font-size: 12px;
-      color: #606266;
-      font-weight: 500;
-    }
-
-    &:hover .color-preview {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-  }
-}
-
-/* 右键菜单样式 */
-.gantt-context-menu {
-  position: fixed;
-  background: #fff;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 8px;
-  z-index: 1000;
-
-  .context-menu-header {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 12px;
-  }
-
-  .context-menu-divider {
-    height: 1px;
-    background-color: #e4e7ed;
-    margin: 8px 0;
-  }
-
-  .context-menu-section {
-    margin-bottom: 16px;
-
-    .context-menu-title {
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .color-quick-select {
-      display: flex;
-      gap: 8px;
-
-      .color-quick-option {
-        cursor: pointer;
-        width: 24px;
-        height: 24px;
-        border-radius: 4px;
-        transition: transform 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #e4e7ed;
-
-        &:hover {
-          transform: scale(1.1);
-          border-color: #409eff;
-          box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
-        }
-
-        .color-indicator {
-          width: 100%;
-          height: 100%;
-          border-radius: 3px;
-        }
-
-        .clear-quick-icon {
-          font-size: 14px;
-          color: #909399;
-        }
-      }
-    }
-  }
-
-  .context-menu-item {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: #f5f7fa;
-    }
-
-    .el-icon {
-      margin-right: 8px;
-    }
-
-    .dropdown-item-text {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      justify-content: space-between;
-
-      &::after {
-        content: '›';
-        font-size: 16px;
-        color: #909399;
-      }
-    }
-
-    .el-dropdown {
-      width: 100%;
-
-      :deep(.el-dropdown__caret-button) {
-        display: none;
-      }
-    }
-  }
-
-  .danger {
-    color: #f56c6c;
-  }
-}
-
-:deep(.baseline) {
-  position: absolute;
-  border-radius: 2px;
-  /* opacity: 0.7; */
-  height: 4px;
-  background: #ffd180;
-  border: 1px solid rgb(255, 153, 0);
-}
+@import '../styles/index.css';
 </style>
