@@ -15,35 +15,45 @@
         <p class="login-subtitle">{{ isLogin ? '欢迎回来' : '创建新账户' }}</p>
       </div>
 
-      <!-- 表单 -->
-      <el-form :model="form" :rules="rules" ref="formRef" class="login-form" @keyup.enter="handleSubmit">
+      <!-- 登录表单 -->
+      <el-form v-if="isLogin" :model="loginForm" :rules="loginRules" ref="loginFormRef" class="login-form"
+        @keyup.enter="handleSubmit">
         <el-form-item prop="account">
-          <el-input v-model="form.account" placeholder="用户名" size="large" prefix-icon="User" class="form-input" />
+          <el-input v-model="loginForm.account" placeholder="用户名" size="large" prefix-icon="User" class="form-input" />
         </el-form-item>
 
         <el-form-item prop="password">
-          <el-input v-model="form.password" type="password" placeholder="密码" size="large" prefix-icon="Lock"
+          <el-input v-model="loginForm.password" type="password" placeholder="密码" size="large" prefix-icon="Lock"
+            show-password class="form-input" />
+        </el-form-item>
+      </el-form>
+
+      <!-- 注册表单 -->
+      <el-form v-else :model="registerForm" :rules="registerRules" ref="registerFormRef" class="login-form"
+        @keyup.enter="handleSubmit">
+        <el-form-item prop="account">
+          <el-input v-model="registerForm.account" placeholder="用户名" size="large" prefix-icon="User"
+            class="form-input" />
+        </el-form-item>
+
+        <el-form-item prop="password">
+          <el-input v-model="registerForm.password" type="password" placeholder="密码" size="large" prefix-icon="Lock"
             show-password class="form-input" />
         </el-form-item>
 
-        <transition name="slide-fade">
-          <el-form-item v-if="!isLogin" prop="confirmPassword">
-            <el-input v-model="form.confirmPassword" type="password" placeholder="确认密码" size="large" prefix-icon="Lock"
-              show-password class="form-input" />
-          </el-form-item>
-        </transition>
+        <el-form-item prop="confirmPassword">
+          <el-input v-model="registerForm.confirmPassword" type="password" placeholder="确认密码" size="large"
+            prefix-icon="Lock" show-password class="form-input" />
+        </el-form-item>
 
-        <transition name="slide-fade">
-          <el-form-item v-if="!isLogin" prop="name">
-            <el-input v-model="form.name" placeholder="姓名" size="large" prefix-icon="User" class="form-input" />
-          </el-form-item>
-        </transition>
+        <el-form-item prop="name">
+          <el-input v-model="registerForm.name" placeholder="姓名" size="large" prefix-icon="User" class="form-input" />
+        </el-form-item>
 
-        <transition name="slide-fade">
-          <el-form-item v-if="!isLogin" prop="email">
-            <el-input v-model="form.email" placeholder="邮箱地址" size="large" prefix-icon="Message" class="form-input" />
-          </el-form-item>
-        </transition>
+        <el-form-item prop="email">
+          <el-input v-model="registerForm.email" placeholder="邮箱地址" size="large" prefix-icon="Message"
+            class="form-input" />
+        </el-form-item>
       </el-form>
 
       <!-- 操作按钮 -->
@@ -83,7 +93,8 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'login-success'])
 
 // 响应式数据
-const formRef = ref()
+const loginFormRef = ref()
+const registerFormRef = ref()
 const isLogin = ref(true)
 const loading = ref(false)
 
@@ -93,8 +104,14 @@ const visible = computed({
   set: (val) => emit('update:modelValue', val)
 })
 
-// 表单数据
-const form = reactive({
+// 登录表单数据
+const loginForm = reactive({
+  account: '',
+  password: ''
+})
+
+// 注册表单数据
+const registerForm = reactive({
   account: '',
   password: '',
   confirmPassword: '',
@@ -102,58 +119,63 @@ const form = reactive({
   name: ''
 })
 
-// 表单验证规则
-const rules = computed(() => {
-  const baseRules = {
-    account: [
-      { required: true, message: '请输入用户名', trigger: 'blur' },
-      { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
-    ],
-    password: [
-      { required: true, message: '请输入密码', trigger: 'blur' },
-      { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
-    ]
-  }
+// 登录表单验证规则
+const loginRules = {
+  account: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
+  ]
+}
 
-  if (!isLogin.value) {
-    baseRules.confirmPassword = [
-      { required: true, message: '请确认密码', trigger: 'blur' },
-      {
-        validator: (rule, value, callback) => {
-          if (value !== form.password) {
-            callback(new Error('两次输入的密码不一致'))
-          } else {
-            callback()
-          }
-        },
-        trigger: 'blur'
-      }
-    ]
-    baseRules.name = [
-      { required: true, message: '请输入姓名', trigger: 'blur' },
-      { min: 1, max: 20, message: '姓名长度在 1 到 20 个字符', trigger: 'blur' }
-    ]
-    baseRules.email = [
-      { required: true, message: '请输入邮箱', trigger: 'blur' },
-      { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
-    ]
-  }
-
-  return baseRules
-})
+// 注册表单验证规则
+const registerRules = {
+  account: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== registerForm.password) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { min: 1, max: 20, message: '姓名长度在 1 到 20 个字符', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+  ]
+}
 
 // 切换登录/注册模式
 const switchMode = () => {
   isLogin.value = !isLogin.value
-  resetForm()
 }
 
 // 重置表单
 const resetForm = () => {
-  if (formRef.value) {
-    formRef.value.resetFields()
-  }
-  Object.assign(form, {
+  Object.assign(loginForm, {
+    account: '',
+    password: ''
+  })
+  Object.assign(registerForm, {
     account: '',
     password: '',
     confirmPassword: '',
@@ -164,19 +186,20 @@ const resetForm = () => {
 
 // 处理提交
 const handleSubmit = async () => {
-  if (!formRef.value) return
-
   try {
-    await formRef.value.validate()
-    loading.value = true
-
     if (isLogin.value) {
+      if (!loginFormRef.value) return
+      await loginFormRef.value.validate()
+      loading.value = true
       await handleLogin()
     } else {
+      if (!registerFormRef.value) return
+      await registerFormRef.value.validate()
+      loading.value = true
       await handleRegister()
     }
-  } catch (error) {
-    console.error('表单验证失败:', error)
+  } catch {
+    // 表单验证失败
   } finally {
     loading.value = false
   }
@@ -186,12 +209,11 @@ const handleSubmit = async () => {
 const handleLogin = async () => {
   try {
     const response = await login({
-      account: form.account,
-      password: encryptByMd5(form.password) // MD5加密密码
+      account: loginForm.account,
+      password: encryptByMd5(loginForm.password)
     })
 
     if (response.code === 200) {
-      // 保存token
       setToken(response.token)
       visible.value = false
       emit('login-success')
@@ -206,21 +228,24 @@ const handleLogin = async () => {
 const handleRegister = async () => {
   try {
     const response = await add({
-      account: form.account,
-      name: form.name,
-      password: encryptByMd5(form.password), // MD5加密密码
-      email: form.email
+      account: registerForm.account,
+      name: registerForm.name,
+      password: encryptByMd5(registerForm.password),
+      email: registerForm.email
     })
 
     if (response) {
       ElMessage.success('注册成功，请登录')
       isLogin.value = true
-      form.confirmPassword = ''
-      form.email = ''
-      form.name = ''
+      Object.assign(registerForm, {
+        account: '',
+        password: '',
+        confirmPassword: '',
+        email: '',
+        name: ''
+      })
     }
   } catch (error) {
-    console.error('注册失败:', error)
     ElMessage.error('注册失败：' + (error.message || '注册过程中出现错误'))
   }
 }
@@ -376,22 +401,6 @@ defineExpose({
 .switch-btn:hover {
   color: #66b1ff;
   transform: scale(1.05);
-}
-
-/* 动画效果 */
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.slide-fade-enter-from {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.slide-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
 }
 
 @keyframes pulse {

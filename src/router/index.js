@@ -9,6 +9,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import GanttChart from '../components/GanttChart.vue'
 import H5View from '../views/H5View.vue'
 import HelpView from '../views/HelpView.vue'
+import AboutView from '../views/AboutView.vue'
 
 const routes = [
   {
@@ -25,6 +26,15 @@ const routes = [
     path: '/help',
     name: 'Help',
     component: HelpView
+  },
+  {
+    path: '/gantt-chart-online',
+    name: 'About',
+    component: AboutView,
+    meta: {
+      title: '在线甘特图 - 星甘StarGantt | 免费甘特图制作工具',
+      description: '星甘是免费开源的在线甘特图制作工具，支持项目进度管理、任务分解、基线对比、Excel导出等功能'
+    }
   }
 ]
 

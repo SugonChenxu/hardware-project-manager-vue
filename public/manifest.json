@@ -1,7 +1,7 @@
 {
-  "name": "星甘 - 专业的项目进度管理工具",
-  "short_name": "星甘",
-  "description": "专业的甘特图制作平台，支持项目管理、任务规划、进度跟踪",
+  "name": "星甘 StarGantt - 免费在线甘特图制作工具",
+  "short_name": "星甘甘特图",
+  "description": "免费开源的在线甘特图制作工具，支持甘特图绘制、项目进度管理、任务分解、基线设置、Excel导出等专业功能，无需下载安装即可使用",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -9,7 +9,7 @@
   "background_color": "#f5f7fa",
   "lang": "zh-CN",
   "scope": "/",
-  "categories": ["productivity", "business"],
+  "categories": ["productivity", "business", "project management"],
   "icons": [
     {
       "src": "/favicon.ico",

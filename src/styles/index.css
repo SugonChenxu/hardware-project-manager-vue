@@ -2,27 +2,38 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f7fa;
+  background: #f0f2f5;
 }
 
-/* Outlook风格工具栏 */
+/* 现代质感工具栏 */
 .outlook-toolbar {
   display: flex;
   align-items: stretch;
-  background: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  background: linear-gradient(135deg, #334155 0%, #475569 50%, #334155 100%);
+  border-bottom: none;
   height: 40px;
   padding: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.outlook-toolbar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
 }
 
 /* 品牌区域 */
 .brand-section {
   display: flex;
   align-items: center;
-  background: #ffffff;
+  background: transparent;
   padding: 0 16px;
-  border-right: 1px solid #dee2e6;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
   min-width: 260px;
   height: 100%;
 }
@@ -37,13 +48,15 @@
 .logo-icon {
   width: 20px;
   height: 20px;
-  color: #0078d4;
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
 }
 
 .app-name {
   font-size: 14px;
   font-weight: 600;
-  color: #323130;
+  color: #f1f5f9;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.5px;
 }
 
 .project-selector {
@@ -53,29 +66,38 @@
 .project-info {
   display: flex;
   flex-direction: column;
-  padding: 4px 8px;
-  border-radius: 3px;
+  padding: 4px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: all 0.2s ease;
   position: relative;
   justify-content: center;
   height: 32px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .project-info:hover {
-  background-color: #f3f2f1;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.project-info:focus,
+.project-info:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .project-title {
   font-size: 13px;
   font-weight: 600;
-  color: #323130;
+  color: #f1f5f9;
   line-height: 1.1;
 }
 
 .project-meta {
   font-size: 11px;
-  color: #605e5c;
+  color: #94a3b8;
   line-height: 1.1;
   margin-top: 1px;
 }
@@ -86,7 +108,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 12px;
-  color: #605e5c;
+  color: #94a3b8;
 }
 
 /* 项目下拉菜单 */
@@ -122,6 +144,18 @@
 
 .detail-row .value.readonly {
   color: #909399;
+}
+
+.detail-row.action-row {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #edebe9;
+}
+
+.detail-row.action-row + .detail-row.action-row {
+  margin-top: 4px;
+  padding-top: 0;
+  border-top: none;
 }
 
 /* 可编辑字段样式 */
@@ -212,6 +246,7 @@
   padding: 0 12px;
   gap: 4px;
   height: 100%;
+  background: transparent;
 }
 
 /* 项目切换区域 */
@@ -220,7 +255,7 @@
 }
 
 .project-selector {
-  width: 200px;
+  width: 120px;
   height: 32px;
 }
 
@@ -229,37 +264,39 @@
 }
 
 .project-selector :deep(.el-input__wrapper) {
-  border-radius: 3px;
-  border: 1px solid #d1d1d1;
-  background: #ffffff;
-  transition: all 0.15s ease;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
   padding-left: 32px;
+  backdrop-filter: blur(4px);
 }
 
 .project-selector :deep(.el-input__wrapper):hover {
-  border-color: #c7c7c7;
-  background: #f3f2f1;
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .project-selector :deep(.el-input__wrapper.is-focus) {
-  border-color: #0078d4;
-  box-shadow: 0 0 0 1px #0078d4;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .project-selector :deep(.el-input__inner) {
   height: 30px;
   line-height: 30px;
   font-size: 13px;
-  color: #323130;
+  color: #f1f5f9;
 }
 
 .project-selector :deep(.el-input__prefix) {
   left: 8px;
-  color: #605e5c;
+  color: #94a3b8;
 }
 
 .project-selector :deep(.el-select__caret) {
-  color: #605e5c;
+  color: #94a3b8;
   font-size: 12px;
 }
 
@@ -283,64 +320,85 @@
   line-height: 1.2;
 }
 
-/* Outlook按钮样式 */
+/* 现代质感按钮样式 */
 .outlook-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 32px;
-  padding: 0 8px;
-  border: 1px solid transparent;
-  background: transparent;
-  border-radius: 3px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   font-size: 11px;
-  color: #323130;
+  color: #e2e8f0;
   gap: 4px;
   min-width: 50px;
+  backdrop-filter: blur(4px);
+  outline: none !important;
 }
 
 .outlook-btn:hover {
-  background-color: #f3f2f1;
-  border-color: #c7c7c7;
-  color: #323130;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.outlook-btn:focus,
+.outlook-btn:focus-visible,
+.outlook-btn.is-focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.outlook-btn:not(.primary):not(.starred):not(.checked):focus,
+.outlook-btn:not(.primary):not(.starred):not(.checked):focus-visible {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .outlook-btn.primary {
-  background-color: #0078d4;
-  border-color: #0078d4;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: rgba(59, 130, 246, 0.5);
   color: white;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .outlook-btn.checked {
-  background-color: #e3f2fd;
-  /* border-color: #0078d4; */
-  color: #0078d4;
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
 }
 
 .outlook-btn.checked:hover {
-  background-color: #bbdefb;
-  /* border-color: #0078d4; */
-  color: #0078d4;
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #93c5fd;
 }
 
 .outlook-btn.primary:hover {
-  background-color: #106ebe;
-  border-color: #106ebe;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-color: rgba(59, 130, 246, 0.6);
   color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
 .outlook-btn.starred {
-  background-color: #f56c6c;
-  border-color: #f56c6c;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-color: rgba(249, 115, 22, 0.5);
   color: white;
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.3);
 }
 
 .outlook-btn.starred:hover {
-  background-color: #f78989;
-  border-color: #f78989;
+  background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+  border-color: rgba(249, 115, 22, 0.6);
   color: white;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
 }
 
 /* 分体按钮样式 */
@@ -355,15 +413,15 @@
 }
 
 .split-btn-group .split-main {
-  border-top-left-radius: 3px;
-  border-bottom-left-radius: 3px;
-  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
   padding-right: 10px;
 }
 
 .split-btn-group .split-dropdown {
-  border-top-right-radius: 3px;
-  border-bottom-right-radius: 3px;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
   min-width: 28px;
   padding: 0 6px;
   border-left: none;
@@ -374,19 +432,33 @@
 }
 
 .split-btn-group .outlook-btn.primary:hover {
-  background-color: #106ebe;
-  border-color: #106ebe;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+/* 覆盖 Element Plus 按钮默认样式 */
+.outlook-btn.el-button:focus,
+.outlook-btn.el-button:focus-visible,
+.outlook-btn.el-button.is-focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.outlook-btn.el-button:not(.is-disabled):focus {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .outlook-btn .el-icon {
   font-size: 14px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
 }
 
 .outlook-btn span {
   font-size: 11px;
   line-height: 1;
-  font-weight: 400;
+  font-weight: 500;
   white-space: nowrap;
+  letter-spacing: 0.3px;
 }
 
 .dropdown-btn {
@@ -403,13 +475,13 @@
 /* 分隔线 */
 .divider {
   width: 1px;
-  height: 24px;
-  background-color: #d1d1d1;
-  margin: 0 8px;
+  height: 20px;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  margin: 0 10px;
   align-self: center;
 }
 
-/* Outlook选择器 */
+/* 现代选择器 */
 .outlook-select {
   width: 120px;
   height: 32px;
@@ -417,21 +489,22 @@
 
 .outlook-select .el-input__wrapper {
   height: 32px;
-  border: 1px solid transparent;
-  background: transparent;
-  border-radius: 3px;
-  transition: all 0.15s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
 .outlook-select .el-input__inner {
   font-size: 11px;
   height: 30px;
   line-height: 30px;
+  color: #e2e8f0;
 }
 
 .outlook-select:hover .el-input__wrapper {
-  background-color: #f3f2f1;
-  border-color: #c7c7c7;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* 确保下拉菜单选项完整显示 */
@@ -585,9 +658,9 @@
 .user-section {
   display: flex;
   align-items: center;
-  background: #ffffff;
+  background: transparent;
   padding: 0 12px;
-  border-left: 1px solid #dee2e6;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
   min-width: 120px;
   height: 100%;
 }
@@ -600,25 +673,35 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 6px;
-  border-radius: 3px;
+  padding: 4px 8px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: all 0.2s ease;
   width: 100%;
   height: 32px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .user-info:hover {
-  background-color: #f3f2f1;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.user-info:focus,
+.user-info:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .user-avatar {
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .user-name {
   font-size: 12px;
-  color: #323130;
+  color: #e2e8f0;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -674,8 +757,8 @@
   font-weight: 600;
 }
 
-:deep(.gantt_custom_yellow) {
-  background: #fffde7;
+:deep(.gantt_custom_purple) {
+  background: #f3e8ff;
   font-weight: 600;
 }
 
@@ -687,6 +770,54 @@
 :deep(.gantt_custom_blue) {
   background: #e3f2fd;
   font-weight: 600;
+}
+
+/* 任务条颜色样式 - 红色 */
+:deep(.gantt_task_line.gantt_custom_red_bar) {
+  background-color: #f44336;
+  border-color: #d32f2f;
+}
+:deep(.gantt_task_line.gantt_custom_red_bar .gantt_task_progress) {
+  background-color: #c62828;
+}
+:deep(.gantt_task_line.gantt_custom_red_bar .gantt_task_content) {
+  color: #fff;
+}
+
+/* 任务条颜色样式 - 紫色 */
+:deep(.gantt_task_line.gantt_custom_purple_bar) {
+  background-color: #9333EA;
+  border-color: #7928CA;
+}
+:deep(.gantt_task_line.gantt_custom_purple_bar .gantt_task_progress) {
+  background-color: #6B21A8;
+}
+:deep(.gantt_task_line.gantt_custom_purple_bar .gantt_task_content) {
+  color: #fff;
+}
+
+/* 任务条颜色样式 - 绿色 */
+:deep(.gantt_task_line.gantt_custom_green_bar) {
+  background-color: #4caf50;
+  border-color: #388e3c;
+}
+:deep(.gantt_task_line.gantt_custom_green_bar .gantt_task_progress) {
+  background-color: #2e7d32;
+}
+:deep(.gantt_task_line.gantt_custom_green_bar .gantt_task_content) {
+  color: #fff;
+}
+
+/* 任务条颜色样式 - 蓝色 */
+:deep(.gantt_task_line.gantt_custom_blue_bar) {
+  background-color: #2196f3;
+  border-color: #1976d2;
+}
+:deep(.gantt_task_line.gantt_custom_blue_bar .gantt_task_progress) {
+  background-color: #1565c0;
+}
+:deep(.gantt_task_line.gantt_custom_blue_bar .gantt_task_content) {
+  color: #fff;
 }
 
 /* 任务文本增强 */
@@ -1011,6 +1142,19 @@
   .danger {
     color: #f56c6c;
   }
+
+  .context-menu-item.disabled {
+    color: #c0c4cc;
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: transparent;
+    }
+
+    .el-icon {
+      color: #c0c4cc;
+    }
+  }
 }
 
 :deep(.baseline) {
@@ -1164,3 +1308,330 @@
 .config-row :deep(.el-radio) {
   height: auto;
 }
+
+/* ========== 响应式设计 - 工具栏自适应 ========== */
+
+/* 中等屏幕 (<=1400px) - 开始压缩 */
+@media screen and (max-width: 1400px) {
+  .brand-section {
+    min-width: 200px;
+    padding: 0 10px;
+  }
+
+  .app-logo {
+    margin-right: 8px;
+  }
+
+  .action-section {
+    padding: 0 8px;
+    gap: 3px;
+  }
+
+  .outlook-btn {
+    padding: 0 8px;
+    min-width: 44px;
+  }
+
+  .divider {
+    margin: 0 6px;
+  }
+
+  .project-switch-section {
+    margin-right: 4px;
+  }
+
+  .user-section {
+    min-width: 60px;
+    padding: 0 6px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .user-info {
+    padding: 4px;
+    justify-content: center;
+  }
+}
+
+/* 小屏幕 (<=1200px) - 只显示第一个字符 */
+@media screen and (max-width: 1200px) {
+  .brand-section {
+    min-width: 160px;
+    padding: 0 8px;
+  }
+
+  .app-name {
+    display: none;
+  }
+
+  .action-section {
+    padding: 0 6px;
+    gap: 2px;
+  }
+
+  .outlook-btn {
+    padding: 0 6px;
+    min-width: 36px;
+  }
+
+  /* 按钮文字只显示第一个字符（emoji或汉字） */
+  .outlook-btn span {
+    display: inline-block;
+    max-width: 1.5em;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
+    vertical-align: middle;
+    line-height: 1;
+    text-align: left;
+  }
+
+  .outlook-btn .el-icon {
+    font-size: 16px;
+  }
+
+  .divider {
+    margin: 0 4px;
+  }
+
+  .project-switch-section {
+    margin-right: 2px;
+  }
+
+  .user-section {
+    min-width: 60px;
+    padding: 0 6px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .user-info {
+    padding: 4px;
+    justify-content: center;
+  }
+
+  /* 分体按钮调整 */
+  .split-btn-group .split-main {
+    padding-right: 6px;
+  }
+
+  .split-btn-group .split-dropdown {
+    min-width: 24px;
+    padding: 0 4px;
+  }
+
+  /* 视图下拉按钮特殊处理 - 只显示第一个字符 */
+  .view-mode-dropdown .outlook-btn span {
+    max-width: 1.5em;
+    font-size: 10px;
+  }
+}
+
+/* 超小屏幕 (<=900px) - 极限压缩 */
+@media screen and (max-width: 900px) {
+  .outlook-toolbar {
+    height: 36px;
+  }
+
+  .brand-section {
+    min-width: 100px;
+    padding: 0 6px;
+    border-right: none;
+  }
+
+  .logo-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .project-info {
+    padding: 2px 6px;
+    height: 28px;
+  }
+
+  .project-title {
+    font-size: 12px;
+  }
+
+  .project-meta {
+    display: none;
+  }
+
+  .action-section {
+    padding: 0 4px;
+    gap: 1px;
+  }
+
+  .outlook-btn {
+    height: 28px;
+    padding: 0 5px;
+    min-width: 32px;
+    border-radius: 4px;
+  }
+
+  /* 按钮文字只显示第一个字符 */
+  .outlook-btn span {
+    display: inline-block;
+    max-width: 1.5em;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
+    vertical-align: middle;
+    line-height: 1;
+    font-size: 11px;
+    text-align: left;
+  }
+
+  .outlook-btn .el-icon {
+    font-size: 14px;
+  }
+
+  .divider {
+    margin: 0 3px;
+    height: 16px;
+  }
+
+  .project-switch-section {
+    display: none;
+  }
+
+  .user-section {
+    min-width: 44px;
+    padding: 0 4px;
+    border-left: none;
+  }
+
+  .user-info {
+    height: 28px;
+    padding: 2px;
+  }
+
+  .user-avatar {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 11px !important;
+  }
+
+  /* 隐藏次要按钮 */
+  .brand-section .outlook-btn {
+    display: none;
+  }
+
+  /* 分体按钮调整 */
+  .split-btn-group {
+    height: 28px;
+  }
+
+  .split-btn-group .split-main {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+  }
+
+  .split-btn-group .split-dropdown {
+    min-width: 20px;
+    padding: 0 3px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+
+  /* 视图下拉调整 - 只显示第一个字符 */
+  .view-mode-dropdown .outlook-btn span {
+    max-width: 1.5em;
+    font-size: 11px;
+  }
+
+  .gantt-container {
+    height: calc(100vh - 42px);
+  }
+}
+
+.more-menu-popover {
+  padding: 0 !important;
+  min-width: 180px !important;
+}
+
+.more-menu-popover .el-popper__arrow {
+  display: none;
+}
+
+.more-menu {
+  border: none;
+  border-radius: 8px;
+}
+
+.more-menu .el-menu-item,
+.more-menu .el-sub-menu__title {
+  height: 36px;
+  line-height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+  color: #606266;
+  transition: all 0.2s;
+}
+
+.more-menu .el-menu-item .el-icon,
+.more-menu .el-sub-menu__title .el-icon {
+  margin-right: 8px;
+  font-size: 14px;
+  color: #909399;
+}
+
+.more-menu .el-menu-item:hover,
+.more-menu .el-sub-menu__title:hover {
+  background-color: #f5f7fa;
+  color: #409eff;
+}
+
+.more-menu .el-menu-item:hover .el-icon,
+.more-menu .el-sub-menu__title:hover .el-icon {
+  color: #409eff;
+}
+
+.more-menu .el-menu-item.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.more-menu .el-menu-item.is-disabled:hover {
+  background-color: transparent;
+  color: #909399;
+}
+
+.more-menu .el-sub-menu .el-menu {
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+}
+
+.more-menu .el-sub-menu .el-menu-item {
+  min-width: 140px;
+}
+
+.more-menu .el-sub-menu__title .el-sub-menu__icon-arrow {
+  position: absolute;
+  right: 16px;
+  transition: transform 0.3s;
+  transform: rotate(-90deg);
+}
+
+.more-sub-menu {
+  margin-left: 8px !important;
+}
+
+.more-sub-menu.el-popper {
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+}
+
+.more-sub-menu .el-menu {
+  border: none;
+  box-shadow: none;
+}
+

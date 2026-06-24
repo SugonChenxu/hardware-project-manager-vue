@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # 主站地图
-Sitemap: https://g.openauth.net.cn/sitemap.xml
+Sitemap: http://stargantt.cn/sitemap.xml
 
 # 禁止访问的路径
 Disallow: /api/

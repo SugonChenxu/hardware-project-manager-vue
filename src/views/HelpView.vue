@@ -265,7 +265,7 @@
                                 </el-icon>
                                 <div class="support-info">
                                     <h4>在线客服</h4>
-                                    <p>点击此处查看客服微信二维码</p>
+                                    <p>点击此处查看官方QQ群二维码</p>
                                 </div>
                             </div>
 

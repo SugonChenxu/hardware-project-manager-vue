@@ -58,7 +58,8 @@ export const loadGanttData = async (code = null) => {
             visibleColumns: visibleColumns,
             visibilityScope: projectData.visibilityScope || 0,
             permissionUserIds: projectData.permissionUserIds || [],
-            permissionType: projectData.permissionType || 'VIEW'
+            permissionType: projectData.permissionType || 'VIEW',
+            viewMode: projectData.viewMode || 'default'
           }
         }
       }
@@ -135,7 +136,8 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
       code: projectInfo.code,
       visibilityScope: projectInfo.visibilityScope || 0,
       permissionUserIds: projectInfo.permissionUserIds || [],
-      permissionType: projectInfo.permissionType || 'VIEW'
+      permissionType: projectInfo.permissionType || 'VIEW',
+      viewMode: projectInfo.viewMode || 'default'
     }
 
     let response

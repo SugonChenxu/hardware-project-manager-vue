@@ -393,7 +393,7 @@ export const exportGanttToExcel = async (options) => {
                 } else if (fieldName === 'start_date') {
                     cell.value = dayjs(task.start_date).format('YYYY-MM-DD') || ''
                 } else if (fieldName === 'end_date') {
-                    cell.value = dayjs(task.end_date).format('YYYY-MM-DD')  || ''
+                    cell.value = dayjs(task.end_date).format('YYYY-MM-DD') || ''
                 } else if (fieldName === 'duration') {
                     cell.value = task.duration || 0
                 } else if (fieldName === 'progress') {
@@ -433,16 +433,22 @@ export const exportGanttToExcel = async (options) => {
             if (task.start_date && task.end_date) {
                 const taskStart = dayjs(task.start_date)
                 const taskEnd = dayjs(task.end_date)
+                // 计算任务总天数
+                const totalDays = taskEnd.diff(taskStart, 'day') + 1
 
                 dateColumns.forEach((date, dateIndex) => {
                     const cell = row.getCell(leftColumns.length + 1 + dateIndex)
 
                     let isInRange = false
+                    let currentPeriodStart = date
+                    let currentPeriodEnd = date
 
                     if (model === 'month') {
                         // 月视图：判断任务是否在当前周内
                         const weekStart = date.startOf('week')
                         const weekEnd = date.endOf('week')
+                        currentPeriodStart = weekStart
+                        currentPeriodEnd = weekEnd
 
                         isInRange = (taskStart.isBefore(weekEnd) || taskStart.isSame(weekEnd, 'day')) &&
                             (taskEnd.isAfter(weekStart) || taskEnd.isSame(weekStart, 'day'))
@@ -450,6 +456,8 @@ export const exportGanttToExcel = async (options) => {
                         // 季度视图：判断任务是否在当前月内
                         const monthStart = date.startOf('month')
                         const monthEnd = date.endOf('month')
+                        currentPeriodStart = monthStart
+                        currentPeriodEnd = monthEnd
 
                         isInRange = (taskStart.isBefore(monthEnd) || taskStart.isSame(monthEnd, 'day')) &&
                             (taskEnd.isAfter(monthStart) || taskEnd.isSame(monthStart, 'day'))
@@ -468,7 +476,22 @@ export const exportGanttToExcel = async (options) => {
                         if (task.status === 'completed') {
                             fillColor = 'FFA5D6A7' // 绿色（已完成）
                         } else if (task.status === 'in_progress') {
-                            fillColor = 'FFEF9A9A' // 红色（进行中）
+                            // 进行中的任务，如果有进度需要计算颜色
+                            if (task.progress && task.progress > 0) {
+                                // 计算当前日期单元格的结束位置在任务时间范围内的比例
+                                const cellEnd = model === 'month' || model === 'quarter' ? currentPeriodEnd : date
+                                const daysFromStart = cellEnd.diff(taskStart, 'day') + 1
+                                const progressPosition = daysFromStart / totalDays
+
+                                // 如果当前单元格的位置在已完成的进度范围内，使用深红色，否则使用浅红色
+                                if (progressPosition <= task.progress) {
+                                    fillColor = 'FFA5D6A7' // 绿色（已完成部分）
+                                } else {
+                                    fillColor = 'FFEF9A9A' // 浅红色（未完成部分）
+                                }
+                            } else {
+                                fillColor = 'FFEF9A9A' // 红色（进行中，无进度）
+                            }
                         } else if (task.type === 'milestone') {
                             fillColor = 'FFFFEB3B' // 黄色（里程碑）
                         }

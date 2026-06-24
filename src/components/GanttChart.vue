@@ -55,16 +55,27 @@
                     </div>
                   </div>
 
-                  <div class="detail-row">
+                  <div class="detail-row" v-if="projectInfo?.updateTime">
+                    <span class="label">更新时间</span>
+                    <span class="value readonly">{{ projectInfo?.updateTime }}</span>
+                    <el-button type="primary" link size="small" @click="openHistoryDialog" v-if="projectInfo?.id">
+                      <el-icon>
+                        <Clock />
+                      </el-icon>
+                      历史版本
+                    </el-button>
+                  </div>
+                  <div class="detail-row" v-else>
                     <span class="label">创建时间</span>
                     <span class="value readonly">{{ projectInfo?.createTime }}</span>
                   </div>
 
-                  <div class="detail-row">
+                  <div class="detail-row action-row">
                     <span class="label">创建人</span>
                     <span class="value readonly">{{ projectInfo?.createUserName }}</span>
-                    <el-button type="danger" v-if="projectInfo?.createUserId == userInfo?.id" size="small"
-                      @click="deleteProject">删除</el-button>
+                  </div>
+                  <div class="detail-row action-row" v-if="projectInfo?.createUserId == userInfo?.id">
+                    <el-button type="danger" size="small" @click="deleteProject">删除项目</el-button>
                   </div>
 
                   <!-- 权限设置 -->
@@ -87,9 +98,10 @@
                     <div class="config-item config-item-users">
                       <span class="config-label">指定人员[姓名(账号)]</span>
                       <el-select v-model="projectPermission.permissionUserIds" multiple filterable remote
-                        reserve-keyword placeholder="请输入姓名或账号搜索" :remote-method="searchUsers" :loading="userSearchLoading"
-                        @change="saveProject" size="small">
-                        <el-option v-for="item in userOptions" :key="item.id" :label="`${item.name} (${item.account})`" :value="item.id" />
+                        :reserve-keyword="false" placeholder="请输入姓名或账号搜索" :remote-method="searchUsers"
+                        :loading="userSearchLoading" @change="saveProject" size="small">
+                        <el-option v-for="item in userOptions" :key="item.id" :label="`${item.name} (${item.account})`"
+                          :value="item.id" />
                       </el-select>
                     </div>
                     <div class="config-item config-item-type">
@@ -105,14 +117,15 @@
             </template>
           </el-dropdown>
         </div>
-        <el-button class="outlook-btn" :class="{ 'starred': isStarred }" @click="toggleStar" :loading="starring"
-          v-if="userInfo == null || (userInfo && (projectInfo == null || projectInfo.createUserId != userInfo.id))">
-          <el-icon>
-            <StarFilled v-if="isStarred" />
-            <Star v-else />
-          </el-icon>
-          <span>{{ isStarred ? '已收藏' : '收藏' }}</span>
-        </el-button>
+        <el-tooltip :content="isStarred ? '已收藏' : '收藏'" placement="bottom">
+          <el-button class="outlook-btn icon-only" :class="{ 'starred': isStarred }" @click="toggleStar"
+            :loading="starring" v-if="checkShowStarBtn()">
+            <el-icon>
+              <StarFilled v-if="isStarred" />
+              <Star v-else />
+            </el-icon>
+          </el-button>
+        </el-tooltip>
       </div>
 
       <!-- 中间操作区域 -->
@@ -152,6 +165,9 @@
               <el-dropdown-menu>
                 <el-dropdown-item command="copy">📋 复制项目</el-dropdown-item>
               </el-dropdown-menu>
+              <el-dropdown-menu>
+                <el-dropdown-item command="AIGenTask">📋 DeepSeek生成</el-dropdown-item>
+              </el-dropdown-menu>
             </template>
           </el-dropdown>
         </el-button-group>
@@ -163,41 +179,6 @@
           <span>保存</span>
         </el-button>
 
-        <el-dropdown @command="handleMoreCommand">
-          <el-button class="outlook-btn dropdown-btn">
-            <el-icon>
-              <MoreFilled />
-            </el-icon>
-            <span>更多</span>
-            <el-icon class="dropdown-arrow">
-              <ArrowDown />
-            </el-icon>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="export">
-                <el-icon>
-                  <Download />
-                </el-icon>导出
-              </el-dropdown-item>
-              <el-dropdown-item command="setBaseline">
-                <el-icon>
-                  <Aim />
-                </el-icon>设置基线
-              </el-dropdown-item>
-              <el-dropdown-item command="toggleBaseline">
-                <el-icon>
-                  <View />
-                </el-icon>{{ baselineVisible ? '隐藏基线' : '显示基线' }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-
-
-
-        <div class="divider"></div>
-
         <el-button class="outlook-btn primary" @click="addTask">
           <el-icon>
             <Plus />
@@ -205,39 +186,67 @@
           <span>新任务</span>
         </el-button>
 
-        <el-dropdown @command="handleMoreCommand">
-          <el-button class="outlook-btn dropdown-btn">
-            <el-icon>
-              <MoreFilled />
-            </el-icon>
-            <span>更多</span>
-            <el-icon class="dropdown-arrow">
-              <ArrowDown />
-            </el-icon>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="expand">
-                <el-icon>
-                  <Expand />
-                </el-icon>展开全部
-              </el-dropdown-item>
-              <el-dropdown-item command="collapse">
-                <el-icon>
-                  <Fold />
-                </el-icon>折叠全部
-              </el-dropdown-item>
-              <el-dropdown-item command="toggleDragSort" divided>
-                <el-icon>
-                  <Sort />
-                </el-icon>{{ dragSortEnabled ? '禁用拖拽排序' : '启用拖拽排序' }}
-              </el-dropdown-item>
-              <el-dropdown-item disabled v-if="dragSortEnabled">
-                <span style="font-size: 11px; color: #909399;">💡 拖拽表格行可调整任务顺序</span>
-              </el-dropdown-item>
-            </el-dropdown-menu>
+        <el-popover placement="bottom-start" :width="200" trigger="hover" popper-class="more-menu-popover">
+          <template #reference>
+            <el-button class="outlook-btn dropdown-btn">
+              <el-icon>
+                <MoreFilled />
+              </el-icon>
+              <span>更多</span>
+              <el-icon class="dropdown-arrow">
+                <ArrowDown />
+              </el-icon>
+            </el-button>
           </template>
-        </el-dropdown>
+          <el-menu ref="moreMenuRef" @select="handleMoreCommand" class="more-menu">
+            <el-menu-item index="export">
+              <el-icon>
+                <Download />
+              </el-icon>
+              <span>导出</span>
+            </el-menu-item>
+
+            <el-sub-menu index="baseline">
+              <template #title>
+                <el-icon>
+                  <Aim />
+                </el-icon>
+                <span>基线</span>
+              </template>
+              <el-menu-item index="setBaseline">设置</el-menu-item>
+              <el-menu-item index="delBaseline">删除</el-menu-item>
+              <el-menu-item index="toggleBaseline">{{ baselineVisible ? '隐藏' : '显示' }}</el-menu-item>
+            </el-sub-menu>
+
+            <el-menu-item index="expand">
+              <el-icon>
+                <Expand />
+              </el-icon>
+              <span>展开全部</span>
+            </el-menu-item>
+            <el-menu-item index="collapse">
+              <el-icon>
+                <Fold />
+              </el-icon>
+              <span>折叠全部</span>
+            </el-menu-item>
+            <el-menu-item index="toggleTodayLine" divided>
+              <el-icon>
+                <Sort />
+              </el-icon>
+              <span>{{ toggleTodayLineEnabled ? '禁用今日线' : '启用今日线' }}</span>
+            </el-menu-item>
+            <el-menu-item index="toggleDragSort" divided>
+              <el-icon>
+                <Sort />
+              </el-icon>
+              <span>{{ dragSortEnabled ? '禁用拖拽排序' : '启用拖拽排序' }}</span>
+            </el-menu-item>
+            <el-menu-item disabled v-if="dragSortEnabled">
+              <span style="font-size: 11px; color: #909399;">💡 拖拽表格行可调整任务顺序</span>
+            </el-menu-item>
+          </el-menu>
+        </el-popover>
 
         <div class="divider"></div>
 
@@ -314,21 +323,23 @@
 
         <div class="divider"></div>
 
-        <!-- 帮助按钮 -->
-        <el-button class="outlook-btn" @click="openHelp">
-          <el-icon>
-            <QuestionFilled />
-          </el-icon>
-          <span>帮助</span>
-        </el-button>
-
-        <!-- 客服联系按钮 -->
-        <el-button class="outlook-btn" @click="contactService">
-          <el-icon>
-            <ChatDotSquare />
-          </el-icon>
-          <span>客服</span>
-        </el-button>
+        <!-- 帮助和客服按钮组 -->
+        <el-button-group class="help-btn-group">
+          <el-tooltip content="帮助文档" placement="bottom">
+            <el-button class="outlook-btn icon-only" @click="openHelp">
+              <el-icon>
+                <QuestionFilled />
+              </el-icon>
+            </el-button>
+          </el-tooltip>
+          <el-tooltip content="联系客服" placement="bottom">
+            <el-button class="outlook-btn icon-only" @click="contactService">
+              <el-icon>
+                <ChatDotSquare />
+              </el-icon>
+            </el-button>
+          </el-tooltip>
+        </el-button-group>
       </div>
 
       <!-- 右侧用户区域 -->
@@ -407,7 +418,28 @@
       </div>
       <div class="context-menu-divider"></div>
 
+      <!-- 升级/降级菜单项 -->
+      <div class="context-menu-item" :class="{ disabled: !canPromoteTask }" @click="promoteTask">
+        <el-icon>
+          <Back />
+        </el-icon>
+        <span>升级</span>
+      </div>
+      <div class="context-menu-item" :class="{ disabled: !canDemoteTask }" @click="demoteTask">
+        <el-icon>
+          <Right />
+        </el-icon>
+        <span>降级</span>
+      </div>
+      <div class="context-menu-divider"></div>
+
       <!-- 菜单项 -->
+      <div class="context-menu-item" @click="copyTask">
+        <el-icon>
+          <CopyDocument />
+        </el-icon>
+        <span>复制任务</span>
+      </div>
       <div class="context-menu-item" @click="contextMenuOpenEditDialog">
         <el-icon>
           <Edit />
@@ -427,11 +459,24 @@
       style="display: none;" />
 
     <!-- 编辑任务对话框 -->
-    <el-dialog v-model="showEditDialog" title="编辑任务" width="800px">
+    <el-dialog draggable v-model="showEditDialog" title="编辑任务" width="800px">
       <el-form :model="editTask" label-width="100px">
-        <el-form-item label="任务名称">
-          <el-input v-model="editTask.text" placeholder="请输入任务名称" />
-        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="16">
+            <el-form-item label="任务名称">
+              <el-input v-model="editTask.text" placeholder="请输入任务名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="任务类型">
+              <el-select v-model="editTask.type" style="width: 100%">
+                <el-option label="普通任务" value="task" />
+                <el-option label="项目组" value="project" />
+                <el-option label="里程碑" value="milestone" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
 
         <el-row :gutter="16">
           <el-col :span="8">
@@ -456,23 +501,6 @@
 
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="完成进度">
-              <el-slider v-model="editTask.progress" :max="1" :step="0.1" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="任务类型">
-              <el-select v-model="editTask.type" style="width: 100%">
-                <el-option label="普通任务" value="task" />
-                <el-option label="项目组" value="project" />
-                <el-option label="里程碑" value="milestone" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="16">
-          <el-col :span="12">
             <el-form-item label="执行状态">
               <el-select v-model="editTask.status" style="width: 100%">
                 <el-option label="未开始" value="not_started" />
@@ -482,46 +510,56 @@
                 <el-option label="已取消" value="cancelled" />
               </el-select>
             </el-form-item>
+
           </el-col>
           <el-col :span="12">
-            <el-form-item label="负责人">
-              <el-select v-model="editTask.owner" multiple filterable allow-create default-first-option
-                :reserve-keyword="false" placeholder="请选择或输入负责人" style="width: 100%">
-                <el-option v-for="item in projectOwners" :key="item" :label="item" :value="item" />
-              </el-select>
-              <div style="color: #909399; font-size: 12px; margin-top: 4px;">
-                💡 可选择已有负责人或输入新负责人，支持多选
-              </div>
+            <el-form-item label="完成进度">
+              <el-slider v-model="editTask.progress" :max="1" :step="0.1" />
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-row :gutter="16">
-          <el-col :span="12">
+
+          <el-col :span="16">
+            <el-form-item label="负责人">
+              <el-select v-model="editTask.owner" multiple filterable allow-create default-first-option
+                :reserve-keyword="false" placeholder="💡 可选择已有负责人或输入新负责人，可多选" style="width: 100%">
+                <el-option v-for="item in projectOwners" :key="item" :label="item" :value="item" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
             <el-form-item label="相关方">
               <el-input v-model="editTask.stakeholder" placeholder="请输入相关方" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+        </el-row>
+
+        <el-row :gutter="16">
+          <el-col :span="16">
+            <el-form-item label="前置任务">
+              <el-select v-model="editTask.predecessors" multiple placeholder="选择前置任务（可多选）" style="width: 100%">
+                <el-option v-for="task in availableTasksForPredecessors(editTask.id)" :key="task.id"
+                  :label="`${task.id} - ${task.text}`" :value="task.id" />
+              </el-select>
+              <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+                💡 选择前置任务后产生关联关系，调整任务时间会相互影响
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
             <el-form-item label="父任务">
               <el-select v-model="editTask.parent" placeholder="选择父任务（可选）" style="width: 100%">
                 <el-option label="无" :value="0" />
-                <el-option v-for="task in tasks.filter(t => t.id !== editTask.id)" :key="task.id"
-                  :label="task.id + ' - ' + task.text" :value="task.id" />
+                <el-option v-for="task in tasks.filter(t => t.id !== editTask.id).sort((a, b) => a.id - b.id)"
+                  :key="task.id" :label="task.id + ' - ' + task.text" :value="task.id" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-form-item label="前置任务">
-          <el-select v-model="editTask.predecessors" multiple placeholder="选择前置任务（可选）" style="width: 100%">
-            <el-option v-for="task in availableTasksForPredecessors(editTask.id)" :key="task.id"
-              :label="`${task.id} - ${task.text}`" :value="task.id" />
-          </el-select>
-          <div style="color: #909399; font-size: 12px; margin-top: 4px;">
-            💡 选择前置任务后产生关联关系，调整任务时间会相互影响
-          </div>
-        </el-form-item>
+
 
         <el-row :gutter="16">
           <el-col :span="12">
@@ -621,10 +659,34 @@
       </template>
     </el-dialog>
 
+    <!-- AI生成任务对话框 -->
+    <el-dialog v-model="showAIGenDialog" title="AI智能生成项目计划" width="600px" :close-on-click-modal="false">
+      <el-form :model="aiGenForm" label-width="100px">
+        <el-form-item label="项目内容" required>
+          <el-input v-model="aiGenForm.text" type="textarea" :rows="8" 
+            placeholder="请输入项目内容，例如：&#10;开发一个网站项目，包含以下工作：&#10;1. 需求分析，预计3天&#10;2. UI设计，预计5天&#10;3. 前端开发，预计10天&#10;4. 后端开发，预计10天&#10;5. 测试，预计5天&#10;6. 部署上线，预计2天" />
+        </el-form-item>
+        <el-form-item label="开始日期" required>
+          <el-date-picker v-model="aiGenForm.startDate" type="date" placeholder="选择项目开始日期"
+            format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width: 100%;" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showAIGenDialog = false">取消</el-button>
+        <el-button type="primary" @click="generateTasks" :loading="aiGenerating">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: middle;"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12l8-8"/></svg>
+          生成
+        </el-button>
+      </template>
+    </el-dialog>
+
     <!-- 版本更新对话框 -->
     <VersionUpdateDialog v-model="showVersionUpdateDialog"
       :update-message="`检测到新版本 ${versionUpdateInfo.serverVersion}，当前版本 ${versionUpdateInfo.localVersion}`"
       :update-details="versionUpdateInfo.details" :show-cancel-button="false" />
+
+    <!-- 项目历史记录对话框 -->
+    <ProjectHistoryDialog v-model="showHistoryDialog" :project-id="projectInfo?.id" @restore="handleHistoryRestore" />
 
   </div>
 </template>
@@ -638,9 +700,10 @@ import UserCenter from './UserCenter.vue'
 import PaymentDialog from './PaymentDialog.vue'
 import ContactServiceDialog from './ContactServiceDialog.vue'
 import VersionUpdateDialog from './VersionUpdateDialog.vue'
+import ProjectHistoryDialog from './ProjectHistoryDialog.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
-import { ElMessage, ElMessageBox, ElSelect, ElOption } from 'element-plus'
+import { ElMessage, ElMessageBox, ElSelect, ElOption, ElInput } from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import Sortable from 'sortablejs'
 import { exportGanttToExcel } from '../utils/exportExcel.js'
@@ -651,7 +714,8 @@ import { encryptByMd5 } from '../utils/encrypt.js'
 dayjs.locale('zh-cn')
 import {
   Calendar, Plus, Expand, Fold, Download, Document, Link,
-  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort, QuestionFilled, Delete, Aim, View
+  ArrowDown, FolderAdd, Operation, MoreFilled, User, Edit, Star, StarFilled, ChatDotSquare, Sort, QuestionFilled, Delete, Aim, CopyDocument,
+  Right, Back, Clock
 } from '@element-plus/icons-vue'
 import {
   loadGanttData,
@@ -663,6 +727,7 @@ import {
   getAllPredecessors
 } from '../services/ganttDataService.js'
 import { star, unstar, del, copy } from '../api/sysproject.js'
+import { textToGantt } from '../api/ai.js'
 import LoginModal from './LoginModal.vue'
 import { getToken, removeToken } from '../utils/auth.js'
 import { getWebVersion } from '../api/serverConf.js'
@@ -695,10 +760,22 @@ const showLoginModal = ref(false)  // 登录模态框显示状态
 const userCenterVisible = ref(false)  // 个人中心对话框显示状态
 const showContactDialog = ref(false)  // 客服联系对话框显示状态
 const paymentDialogVisible = ref(false)  // 支付对话框显示状态
+const showHistoryDialog = ref(false)  // 历史记录对话框显示状态
 const selectedUpgradeVersion = ref('UserPersonal')  // 选中的升级版本
 const pendingUserCenterOpen = ref(false)  // 待打开个人中心标志
 const saving = ref(false) // 保存按钮加载状态
 
+const toggleTodayLineEnabled = ref(true) //今日线显示开关
+watch(toggleTodayLineEnabled, (enabled) => {
+  if (gantt && gantt.config) {
+    if (enabled) {
+      gantt.config.show_markers = true
+    } else {
+      gantt.config.show_markers = false
+    }
+    gantt.render()
+  }
+})
 // 修改密码相关
 const showChangePasswordDialog = ref(false)  // 修改密码对话框显示状态
 const changingPassword = ref(false)  // 修改密码提交状态
@@ -726,6 +803,14 @@ const passwordRules = {
     }
   ]
 }
+
+// AI生成任务相关
+const showAIGenDialog = ref(false)
+const aiGenerating = ref(false)
+const aiGenForm = ref({
+  text: '',
+  startDate: dayjs().format('YYYY-MM-DD')
+})
 
 // 任务数据 - 从数据服务加载
 const tasks = ref([])
@@ -758,7 +843,7 @@ const starring = ref(false) // 收藏操作加载状态
 
 // 项目权限设置
 const projectPermission = ref({
-  visibilityScope: 0, // 0-仅我自己，1-仅我分享的好友，2-所有人可查看，3-所有人可编辑
+  visibilityScope: 3, // 0-仅我自己，1-仅我分享的好友，2-所有人可查看，3-所有人可编辑
   permissionUserIds: [], // 指定的用户ID列表
   permissionType: 'VIEW' // VIEW-可查看，EDIT-可编辑
 })
@@ -809,7 +894,7 @@ const baselineVisible = ref(true)
 // 背景色标记功能
 const backgroundColors = [
   { name: '红色', css: 'gantt_custom_red', value: '#ffebee', color: '#f44336' },
-  { name: '黄色', css: 'gantt_custom_yellow', value: '#fffde7', color: '#ffeb3b' },
+  { name: '紫色', css: 'gantt_custom_purple', value: '#f3e8ff', color: '#9333EA' },
   { name: '绿色', css: 'gantt_custom_green', value: '#e8f5e8', color: '#4caf50' },
   { name: '蓝色', css: 'gantt_custom_blue', value: '#e3f2fd', color: '#2196f3' },
   { name: '清除', css: '', value: '', color: '#ffffff' }
@@ -1017,8 +1102,8 @@ const checkVersionAndRefresh = async () => {
           serverVersion: serverVersion,
           details: [
             '✅ 全新域名：http://stargantt.cn 你的进度星甘守护',
-            '✅ 新增项目权限控制，可以指定人员查看/编辑项目🛡️',
-            '✅ 优化导出，可以在默认/月/季度视图下导出不同的Excel甘特图'
+            '✅ 重磅功能：AI智能生成项目计划',
+            '            新项目右边向下箭头->DeepSeek生成',
           ]
         }
 
@@ -1071,6 +1156,7 @@ const visibleColumns = ref([...defaultVisibleColumns])
 const customColumns = ref([])
 
 var ownerEditor = { type: "custom_editor", map_to: "owner" };
+var descriptionEditor = { type: "textarea_editor", map_to: "description" };
 // 基础列（不可修改）
 const allColumns = [
   {
@@ -1224,16 +1310,13 @@ const allColumns = [
     name: "description",
     label: "任务描述",
     width: 200,
-    editor: {
-      type: "text",
-      map_to: "description"
-    },
+    editor: descriptionEditor,
     template: function (task) {
       const description = task.description || ''
       if (description) {
         // 如果description长度超过20个字符，显示省略号并在title中显示完整内容
         const displayText = description.length > 20 ? description.substring(0, 20) + '...' : description
-        return `<span title="${description.replace(/"/g, '&quot;')}">${displayText}</span>`
+        return `<span>${displayText}</span>`
       }
       return '<span style="color: #c0c4cc;">-</span>'
     }
@@ -1400,6 +1483,8 @@ onUnmounted(() => {
   }
 })
 
+
+
 const contactService = () => {
   showContactDialog.value = true
 }
@@ -1529,11 +1614,18 @@ const loadInitialData = async (code = null) => {
       visibleColumns.value = [...defaultVisibleColumns]
     }
 
-    document.title = `${projectInfo.value.name} - 星甘StarGantt|开源免费的在线甘特图制作平台|专业的项目进度管理工具`
+    // 恢复视图模式配置
+    if (projectInfo.value.viewMode) {
+      viewMode.value = projectInfo.value.viewMode
+    } else {
+      viewMode.value = 'default'
+    }
+
+    document.title = `${projectInfo.value.name} - 星甘StarGantt | 免费在线甘特图工具 | 项目进度管理软件`
 
     // 初始化权限配置
     projectPermission.value = {
-      visibilityScope: projectInfo.value.visibilityScope || 0,
+      visibilityScope: projectInfo.value.visibilityScope || 3,
       permissionUserIds: projectInfo.value.permissionUserIds || [],
       permissionType: projectInfo.value.permissionType || 'VIEW'
     }
@@ -1634,10 +1726,37 @@ const initGantt = () => {
     gantt.config.fit_tasks = false          // 禁用任务自动适应
     gantt.config.grid_elastic_columns = false // 禁用弹性列宽
 
+    gantt.config.show_markers = true //显示标记
+
     // 禁用内置弹窗，使用自定义编辑对话框
     gantt.config.lightbox = {
       sections: []  // 清空所有内置编辑器配置
     }
+
+    // 跟踪当前悬停的列名
+    let hoveredColumn = null
+    window.addEventListener('mouseover', (e) => {
+      const cell = e.target.closest('[data-column-name]')
+      hoveredColumn = cell ? cell.getAttribute('data-column-name') : null
+    })
+
+    gantt.templates.tooltip_text = (start, end, task) => {
+      // 当有内联编辑框时，不显示tooltip
+      const editorState = gantt.ext.inlineEditors.getState();
+      if (editorState.id) {
+        return '';
+      }
+      // 当光标在Id列时，不显示tooltip
+      if (hoveredColumn === 'id') {
+        return '';
+      }
+      return `<b>任务:</b> ${task.text}
+      <br/><b>开始时间:</b> ${dayjs(task.start_date).format('YYYY-MM-DD')}（${'日一二三四五六'[dayjs(task.start_date).day()]}）
+      <br/><b>结束时间:</b> ${dayjs(task.end_date).format('YYYY-MM-DD')}（${'日一二三四五六'[dayjs(task.end_date).day()]}）
+      <br/><b>进度:</b> ${task.progress * 100}%
+      <br/><b>负责人:</b> ${task.owner}
+      <br/><b>描述:</b> ${(task.description || '').replace(/\n/g, '<br/>')}`;
+    };
 
     // 网格行样式
     gantt.templates.grid_row_class = function (start, end, task) {
@@ -1648,6 +1767,15 @@ const initGantt = () => {
       // 添加背景色样式
       if (task.backgroundColor) {
         css += task.backgroundColor + ' '
+      }
+      return css
+    }
+
+    // 任务条样式 - 根据背景色设置任务条颜色
+    gantt.templates.task_class = function (start, end, task) {
+      let css = ""
+      if (task.backgroundColor) {
+        css += task.backgroundColor + '_bar '
       }
       return css
     }
@@ -1679,7 +1807,9 @@ const initGantt = () => {
 
     gantt.plugins({
       keyboard_navigation: true,
-      undo: true
+      undo: true,
+      tooltip: true,
+      marker: true
     });
 
     // 添加快捷键ctrl+s保存项目
@@ -1700,6 +1830,7 @@ const initGantt = () => {
     gantt.attachEvent("onContextMenu", function (id, linkId, e) {
       // 如果右键点击的是任务（id存在）
       if (id) {
+        console.log('右键点击任务:', id)
         const task = gantt.getTask(id)
         if (task) {
           currentTask.value = task
@@ -1769,6 +1900,10 @@ const initGantt = () => {
 
     // 添加双击事件监听
     gantt.attachEvent("onTaskDblClick", (id, e) => {
+      // 如果存在inline editors扩展，先隐藏编辑器
+      if (gantt.ext && gantt.ext.inlineEditors && typeof gantt.ext.inlineEditors.hide === 'function') {
+        gantt.ext.inlineEditors.hide()
+      }
       const task = gantt.getTask(id)
       openEditDialog(task)
       return false  // 阻止默认行为
@@ -1798,9 +1933,9 @@ const initGantt = () => {
     })
 
     gantt.attachEvent("onRowDragEnd", (id, target) => {
-      console.log('拖动排序完成:', { id, target })
 
-      // 更新本地任务数组的顺序
+
+      // 更新本地任务数组的顺序和 parent
       updateTaskOrderInArray(id, target)
 
       ElMessage.success('任务顺序已调整')
@@ -1841,7 +1976,7 @@ const initGantt = () => {
     })
 
     gantt.attachEvent("onAfterTaskDelete", (id, task) => {
-      ElMessage.success(`删除任务: ${task.text}`)
+      ElMessage.success(`已删除任务: ${task.text}`)
       removeTaskFromArray(id)
     })
 
@@ -1863,7 +1998,6 @@ const initGantt = () => {
     // 内联编辑保存事件
     var inlineEditors = gantt.ext.inlineEditors;
     inlineEditors.attachEvent("onSave", function (state) {
-      console.log(state);
       inlineEditOnSave(state)
     });
 
@@ -1901,6 +2035,14 @@ const initGantt = () => {
           app._context = vm.appContext
         }
         app.mount(container)
+        nextTick(() => {
+          const input = container.querySelector('input')
+          if (input) {
+            input.addEventListener('keydown', (e) => {
+              if (e.key === 'Escape') gantt.ext.inlineEditors.hide()
+            })
+          }
+        })
 
         editorInstances.set(id, { app, container, selectedValues })
       },
@@ -1966,6 +2108,133 @@ const initGantt = () => {
       }
     }
 
+    // 多行文本编辑器（用于description）
+    const textareaInstances = new Map()
+
+    // 强制获取焦点，使用多层保障机制
+    const forceFocusTextarea = (textarea) => {
+      if (!textarea || !document.body.contains(textarea)) return
+
+      textarea.focus({ preventScroll: false })
+
+      // 多次延迟确保焦点不被抢占
+      const delays = [0, 10, 30, 60, 100]
+      delays.forEach(delay => {
+        setTimeout(() => {
+          if (textarea && document.body.contains(textarea) && document.activeElement !== textarea) {
+            textarea.focus({ preventScroll: false })
+          }
+        }, delay)
+      })
+    }
+
+    // 使用 MutationObserver 监听 textarea 出现
+    const observeAndFocusTextarea = (container) => {
+      // 先检查是否已存在
+      const existingTextarea = container.querySelector('textarea')
+      if (existingTextarea) {
+        forceFocusTextarea(existingTextarea)
+        return
+      }
+
+      // 使用 MutationObserver 监听 textarea 的出现
+      const observer = new MutationObserver((mutations, obs) => {
+        const textarea = container.querySelector('textarea')
+        if (textarea) {
+          obs.disconnect()
+          forceFocusTextarea(textarea)
+        }
+      })
+
+      observer.observe(container, {
+        childList: true,
+        subtree: true
+      })
+
+      // 超时后断开观察器
+      setTimeout(() => observer.disconnect(), 500)
+    }
+
+    gantt.config.editor_types.textarea_editor = {
+      show: function (id, column, config, placeholder) {
+        const task = gantt.getTask(id)
+        const currentValue = ref(task.description || '')
+
+        const container = document.createElement('div')
+        container.style.width = '100%'
+        container.setAttribute('data-editor-id', id)
+        placeholder.innerHTML = ''
+        placeholder.appendChild(container)
+
+        const TextareaInput = defineComponent({
+          setup() {
+            return () => h(ElInput, {
+              type: 'textarea',
+              modelValue: currentValue.value,
+              rows: 3,
+              placeholder: '提示:Shift+回车可换行',
+              style: { width: '300px' },
+              'onUpdate:modelValue': (val) => { currentValue.value = val },
+              onKeydown: (e) => {
+                if (e.key === 'Escape') gantt.ext.inlineEditors.hide()
+              }
+            })
+          }
+        })
+
+        const app = createApp(TextareaInput)
+        if (vm && vm.appContext) {
+          app._context = vm.appContext
+        }
+        app.mount(container)
+
+        textareaInstances.set(id, { app, container, currentValue })
+
+        // 使用 MutationObserver 监听并获取焦点
+        observeAndFocusTextarea(container)
+      },
+      hide: function () {
+        gantt.render()
+      },
+      set_value: function (value, id, column, node) {
+        const instance = textareaInstances.get(id)
+        if (!instance) return
+        instance.currentValue.value = value || ''
+      },
+      get_value: function (id, column, node) {
+        const task = gantt.getTask(id)
+        const instance = textareaInstances.get(id)
+        if (!instance) {
+          return task.description || ''
+        }
+        task.description = instance.currentValue.value
+        return task.description
+      },
+      is_changed: function (value, id, column, node) {
+        return true
+      },
+      is_valid: function (value, id, column, node) {
+        return true
+      },
+      save: function (id, column, node) {
+        const instance = textareaInstances.get(id)
+        if (instance) {
+          instance.app.unmount()
+          textareaInstances.delete(id)
+        }
+      },
+      focus: function (node) {
+        const container = node.querySelector ? node.querySelector('[data-editor-id]') : null
+        if (container) {
+          const textarea = container.querySelector('textarea')
+          if (textarea) {
+            forceFocusTextarea(textarea)
+          } else {
+            observeAndFocusTextarea(container)
+          }
+        }
+      }
+    }
 
     // 初始化甘特图
     gantt.init(ganttContainer.value)
@@ -2174,9 +2443,21 @@ const loadData = () => {
     links: links.value
   })
 
+  //设置今日线
+  var todayMarker = gantt.addMarker({  /*!*/
+    start_date: new Date(new Date().setHours(0, 0, 0, 0)), // 设置为当天的0点0分0秒
+    css: "today",
+    text: "今天",
+    title: dayjs(new Date()).format('YYYY-MM-DD')
+  });
+
   // 更新项目负责人列表
   updateProjectOwners()
 
+  // 应用保存的视图模式
+  if (viewMode.value) {
+    setTimeScale(viewMode.value)
+  }
 }
 
 // 同步前置任务和链接
@@ -2457,8 +2738,7 @@ const updateTask = () => {
 const updateCascade = (originalTask, updatedTask) => {
   if (!cascade.value) return;
 
-  console.log('end_date changed:', originalTask.end_date, updatedTask.end_date);
-  console.log('start_date changed:', originalTask.start_date, updatedTask.start_date);
+  const updatedTaskIds = []
 
   //如果改变了结束日期，则更新所有的后续任务开始和结束日期
   if (!dayjs(originalTask.end_date).isSame(updatedTask.end_date)) {
@@ -2470,6 +2750,7 @@ const updateCascade = (originalTask, updatedTask) => {
       if (index !== -1) {
         tasks.value[index].start_date = dayjs(tasks.value[index].start_date).add(dateDiff, 'day').toDate()
         tasks.value[index].end_date = dayjs(tasks.value[index].end_date).add(dateDiff, 'day').toDate()
+        updatedTaskIds.push(successorId)
       }
     })
   }
@@ -2484,9 +2765,18 @@ const updateCascade = (originalTask, updatedTask) => {
       if (index !== -1) {
         tasks.value[index].start_date = dayjs(tasks.value[index].start_date).add(dateDiff, 'day').toDate()
         tasks.value[index].end_date = dayjs(tasks.value[index].end_date).add(dateDiff, 'day').toDate()
+        updatedTaskIds.push(predecessorId)
       }
     })
   }
+
+  // 同步更新到甘特图内部数据
+  updatedTaskIds.forEach(taskId => {
+    const task = tasks.value.find(t => t.id === taskId)
+    if (task && gantt.isTaskExists(taskId)) {
+      gantt.updateTask(taskId, task)
+    }
+  })
 
   setTimeout(() => {
     gantt.render()
@@ -2523,6 +2813,117 @@ const setTaskBackgroundColor = (colorValue) => {
   } catch (error) {
     console.error('设置背景色失败:', error)
     ElMessage.error('设置背景色失败')
+  }
+}
+
+// 判断当前任务是否可以升级（当前任务有parent才能升级）
+const canPromoteTask = computed(() => {
+  if (!currentTask.value) return false
+  return !!currentTask.value.parent && currentTask.value.parent !== 0
+})
+
+// 判断当前任务是否可以降级（同父级下前面有兄弟任务才能降级）
+const canDemoteTask = computed(() => {
+  if (!currentTask.value) return false
+  const currentParent = currentTask.value.parent || 0
+  // 获取同父级下的所有兄弟任务
+  const siblingTasks = tasks.value.filter(t => (t.parent || 0) === currentParent)
+  // 找到当前任务在兄弟任务中的索引
+  const siblingIndex = siblingTasks.findIndex(t => t.id === currentTask.value.id)
+  // 同父级下第一个任务不能降级
+  return siblingIndex > 0
+})
+
+// 升级任务：将当前任务的parent设置为前一个任务的parent
+const promoteTask = () => {
+  if (!currentTask.value || !canPromoteTask.value) {
+    ElMessage.warning('当前任务无法升级')
+    return
+  }
+
+  try {
+    const task = gantt.getTask(currentTask.value.id)
+
+    if (task.parent == 0) {
+      ElMessage.warning('当前任务已经是顶级任务，无法升级')
+      return
+    }
+
+    // 获取父任务
+    const parentTask = gantt.getTask(task.parent)
+
+    // 设置新的parent为前一个任务的parent，如果前一个任务没有parent则设为0
+    const newParent = parentTask ? (parentTask.parent || 0) : 0
+    task.parent = newParent
+
+    // 更新甘特图中的任务
+    gantt.updateTask(currentTask.value.id, task)
+
+    // 更新本地任务数据
+    const taskIndex = tasks.value.findIndex(t => t.id === currentTask.value.id)
+    if (taskIndex !== -1) {
+      tasks.value[taskIndex].parent = newParent
+    }
+
+    // 关闭右键菜单
+    contextMenuVisible.value = false
+
+    // 重新渲染甘特图
+    setTimeout(() => {
+      gantt.render()
+    }, 100)
+
+  } catch (error) {
+    ElMessage.error('升级任务失败: ' + error.message)
+  }
+}
+
+// 降级任务：将当前任务的parent设置为同父级下的前一个兄弟任务
+const demoteTask = () => {
+  if (!currentTask.value || !canDemoteTask.value) {
+    ElMessage.warning('当前任务无法降级')
+    return
+  }
+
+  try {
+    const task = gantt.getTask(currentTask.value.id)
+    const currentParent = task.parent || 0
+
+    // 获取同父级下的所有兄弟任务
+    const siblingTasks = tasks.value.filter(t => (t.parent || 0) === currentParent)
+
+    // 找到当前任务在兄弟任务中的索引
+    const siblingIndex = siblingTasks.findIndex(t => t.id === currentTask.value.id)
+
+    // 获取同父级下的前一个兄弟任务
+    const prevSiblingTask = siblingIndex > 0 ? siblingTasks[siblingIndex - 1] : null
+
+    if (!prevSiblingTask) {
+      ElMessage.warning('没有可作为父级的前置任务')
+      return
+    }
+
+    // 设置新的parent为前一个兄弟任务的id
+    task.parent = prevSiblingTask.id
+
+    // 更新甘特图中的任务
+    gantt.updateTask(currentTask.value.id, task)
+
+    // 更新本地任务数据
+    const taskIndex = tasks.value.findIndex(t => t.id === currentTask.value.id)
+    if (taskIndex !== -1) {
+      tasks.value[taskIndex].parent = prevSiblingTask.id
+    }
+
+    // 关闭右键菜单
+    contextMenuVisible.value = false
+
+    // 重新渲染甘特图
+    setTimeout(() => {
+      gantt.render()
+    }, 100)
+  } catch (error) {
+    ElMessage.error('降级任务失败: ' + error.message)
   }
 }
 
@@ -2566,10 +2967,91 @@ const contextMenuOpenEditDialog = () => {
   openEditDialog(currentTask.value)
 }
 
+// 复制任务（包含子任务）
+const copyTask = () => {
+  contextMenuVisible.value = false
+
+  if (!currentTask.value) {
+    ElMessage.warning('请先选择要复制的任务')
+    return
+  }
+
+  const sourceTask = currentTask.value
+  const idMapping = new Map() // 用于映射旧ID到新ID
+
+  // 递归获取所有子任务
+  const getAllChildren = (parentId) => {
+    const children = []
+    tasks.value.forEach(task => {
+      if (task.parent == parentId) {
+        children.push(task)
+        children.push(...getAllChildren(task.id))
+      }
+    })
+    return children
+  }
+
+  // 获取要复制的所有任务（当前任务 + 子任务）
+  const tasksToCopy = [sourceTask, ...getAllChildren(sourceTask.id)]
+
+  // 为所有任务生成新ID（需要递增，避免重复）
+  let nextId = getNextId()
+  tasksToCopy.forEach(task => {
+    idMapping.set(task.id, nextId++)
+  })
+
+  // 复制任务
+  const copiedTasks = tasksToCopy.map(task => {
+    const newId = idMapping.get(task.id)
+    const newParent = task.id === sourceTask.id
+      ? sourceTask.parent  // 根任务保持原父级
+      : idMapping.get(task.parent) // 子任务使用映射后的父级ID
+
+    return {
+      ...task,
+      id: newId,
+      parent: newParent,
+      text: task.id === sourceTask.id ? `${task.text}(副本)` : task.text,
+      predecessors: [], // 复制的任务不保留前置任务关系
+      start_date: task.start_date,
+      end_date: task.end_date,
+      planned_start: task.planned_start,
+      planned_end: task.planned_end
+    }
+  })
+
+  // 找到原任务在数组中的位置
+  const sourceIndex = tasks.value.findIndex(t => t.id == sourceTask.id)
+
+  // 计算原任务及其子任务占用的位置数
+  const originalTaskCount = tasksToCopy.length
+
+  // 在原任务后面插入复制的任务
+  tasks.value.splice(sourceIndex + originalTaskCount, 0, ...copiedTasks)
+
+  // 重新加载甘特图
+  gantt.clearAll()
+  loadData()
+
+  // 定位到复制的任务
+  setTimeout(() => {
+    gantt.showTask(copiedTasks[0].id)
+    const childCount = tasksToCopy.length - 1
+    const message = childCount > 0
+      ? `已复制任务"${sourceTask.text}"及其${childCount}个子任务`
+      : `已复制任务"${sourceTask.text}"`
+    ElMessage.success(message)
+  }, 100)
+}
+
 // 确认删除任务
 const confirmDeleteTask = () => {
+  if (!currentTask.value) {
+    ElMessage.warning('请先选择一个需要删除的任务')
+    return
+  }
   ElMessageBox.confirm(
-    `确定要删除任务"${editTask.value?.text || currentTask.value?.text}"吗？此操作不可撤销。`,
+    `确定要删除任务"${currentTask.value?.text}"吗？`,
     '删除确认',
     {
       confirmButtonText: '确定删除',
@@ -2577,14 +3059,12 @@ const confirmDeleteTask = () => {
       type: 'warning',
     }
   ).then(() => {
-    const taskId = editTask.value?.id || currentTask.value?.id
+    const taskId = currentTask.value?.id
     gantt.deleteTask(taskId)
     showEditDialog.value = false
     contextMenuVisible.value = false
-    ElMessage.success('任务删除成功')
   }).catch(() => {
     contextMenuVisible.value = false
-    ElMessage.info('已取消删除')
   })
 }
 
@@ -2669,18 +3149,38 @@ const addTaskToArray = (task) => {
 }
 
 const removeTaskFromArray = (id) => {
-  const index = tasks.value.findIndex(t => t.id == id)
-  if (index !== -1) {
-    tasks.value.splice(index, 1)
+  // 递归获取所有子任务ID（包括子任务的子任务）
+  const getAllChildIds = (parentId) => {
+    const childIds = []
+    const directChildren = tasks.value.filter(t => t.parent == parentId)
+    directChildren.forEach(child => {
+      childIds.push(child.id)
+      // 递归获取子任务的子任务
+      childIds.push(...getAllChildIds(child.id))
+    })
+    return childIds
   }
 
-  //删除links里面与id相关的链接
-  links.value = links.value.filter(l => l.source != id && l.target != id)
+  // 获取所有需要删除的任务ID（包括当前任务和所有子孙任务）
+  const allIdsToDelete = [id, ...getAllChildIds(id)]
 
-  //删除前置任务
+  // 删除所有任务
+  allIdsToDelete.forEach(taskId => {
+    const index = tasks.value.findIndex(t => t.id == taskId)
+    if (index !== -1) {
+      tasks.value.splice(index, 1)
+    }
+  })
+
+  // 删除links里面与这些任务相关的链接
+  links.value = links.value.filter(l =>
+    !allIdsToDelete.includes(l.source) && !allIdsToDelete.includes(l.target)
+  )
+
+  // 删除前置任务引用
   tasks.value.forEach(t => {
-    if (t.predecessors && t.predecessors.indexOf(id) !== -1) {
-      t.predecessors = t.predecessors.filter(p => p != id)
+    if (t.predecessors && t.predecessors.length > 0) {
+      t.predecessors = t.predecessors.filter(p => !allIdsToDelete.includes(p))
     }
   })
 }
@@ -2690,12 +3190,17 @@ const updateTaskOrderInArray = (draggedTaskId, targetInfo) => {
   try {
     const draggedTaskIndex = tasks.value.findIndex(t => t.id == draggedTaskId)
     if (draggedTaskIndex === -1) {
-      console.error('未找到被拖动的任务:', draggedTaskId)
       return
     }
 
     // 移除被拖动的任务
     const [draggedTask] = tasks.value.splice(draggedTaskIndex, 1)
+
+    // 从 gantt 获取更新后的任务信息（包含新的 parent）
+    const updatedTask = gantt.getTask(draggedTaskId)
+    if (updatedTask.parent !== undefined) {
+      draggedTask.parent = updatedTask.parent
+    }
 
     let targetIndex = 0
     let isNext = false
@@ -2704,6 +3209,11 @@ const updateTaskOrderInArray = (draggedTaskId, targetInfo) => {
     if (typeof targetInfo === 'string' && targetInfo.startsWith('next:')) {
       // target格式为 "next:targetId"，表示应该插入到目标任务之后
       const targetId = targetInfo.substring(5) // 移除 "next:" 前缀
+      if (targetId == "null") {  //表示没动，放回原位？？
+        tasks.value.splice(draggedTaskIndex, 0, draggedTask)
+        tasks.value = [...tasks.value]
+        return
+      }
       const targetTaskIndex = tasks.value.findIndex(t => t.id == targetId)
       if (targetTaskIndex !== -1) {
         targetIndex = targetTaskIndex + 1
@@ -2723,18 +3233,9 @@ const updateTaskOrderInArray = (draggedTaskId, targetInfo) => {
     // 插入到新位置
     tasks.value.splice(targetIndex, 0, draggedTask)
 
-    console.log('任务顺序已更新:', {
-      draggedTaskId,
-      targetInfo,
-      targetIndex,
-      isNext,
-      totalTasks: tasks.value.length
-    })
-
     // 触发响应式更新
     tasks.value = [...tasks.value]
   } catch (error) {
-    console.error('更新任务顺序失败:', error)
     ElMessage.error('更新任务顺序失败')
   }
 }
@@ -2752,7 +3253,7 @@ const availableTasksForPredecessors = (currentTaskId) => {
     if (task.type === 'project') return false
 
     return true
-  })
+  }).sort((a, b) => a.id - b.id)
 }
 
 // 根据前置任务创建链接
@@ -2819,6 +3320,9 @@ const saveProject = async () => {
     // 保存可见字段配置
     projectInfo.value.visibleColumns = visibleColumns.value
 
+    // 保存视图模式配置
+    projectInfo.value.viewMode = viewMode.value
+
     // 保存权限配置
     projectInfo.value.visibilityScope = projectPermission.value.visibilityScope
     projectInfo.value.permissionUserIds = projectPermission.value.permissionUserIds
@@ -2856,7 +3360,7 @@ const saveProject = async () => {
 
       // 更新页面标题
       if (projectInfo.value.name) {
-        document.title = `${projectInfo.value.name} - 星甘StarGantt|开源免费的在线甘特图制作平台|专业的项目进度管理工具`
+        document.title = `${projectInfo.value.name} - 星甘StarGantt | 免费在线甘特图工具 | 项目进度管理软件`
       }
 
       // 重新检查收藏状态
@@ -2929,8 +3433,14 @@ const switchProject = async (projectCode) => {
   }
 }
 
+// 更多菜单引用
+const moreMenuRef = ref()
+
 // 处理更多操作命令
 const handleMoreCommand = (command) => {
+  // 折叠所有展开的子菜单
+  moreMenuRef.value?.close('baseline')
+
   switch (command) {
     case 'expand':
       expandAll()
@@ -2941,6 +3451,9 @@ const handleMoreCommand = (command) => {
     case 'toggleDragSort':
       dragSortEnabled.value = !dragSortEnabled.value
       break
+    case 'toggleTodayLine':
+      toggleTodayLineEnabled.value = !toggleTodayLineEnabled.value
+      break
     case 'toggleBaseline':
       baselineVisible.value = !baselineVisible.value
       break
@@ -2949,6 +3462,9 @@ const handleMoreCommand = (command) => {
       break
     case 'setBaseline':
       setBaseline()
+      break
+    case 'delBaseline':
+      delBaseline()
       break
   }
 }
@@ -3039,6 +3555,65 @@ const handleProjectCommand = async (command) => {
   if (command === 'copy') {
     await copyProject()
   }
+  else if (command === 'AIGenTask') {
+    await AIGenTask()
+  }
+}
+
+// DeepSeek生成任务
+const AIGenTask = async () => {
+  showAIGenDialog.value = true
+}
+
+// AI生成任务
+const generateTasks = async () => {
+  if (!aiGenForm.value.text || !aiGenForm.value.text.trim()) {
+    ElMessage.warning('请输入项目内容')
+    return
+  }
+  if (!aiGenForm.value.startDate) {
+    ElMessage.warning('请选择开始日期')
+    return
+  }
+
+  try {
+    aiGenerating.value = true
+    
+    const response = await textToGantt({
+      text: aiGenForm.value.text,
+      startDate: aiGenForm.value.startDate
+    })
+    
+    if (response && response.code == 200) {
+      const result = response.data
+      
+      if (result.tasks && result.tasks.length > 0) {
+        // 清除当前甘特图数据
+        gantt.clearAll()
+        
+        // 覆盖当前的 tasks 和 links
+        tasks.value = result.tasks
+        links.value = result.links || []
+        
+        // 重新加载数据
+        loadData()
+        
+        ElMessage.success(`AI生成成功，共生成 ${result.tasks.length} 个任务，${result.links?.length || 0} 条连接线`)
+        showAIGenDialog.value = false
+        
+        // 重置表单
+        aiGenForm.value.text = ''
+      } else {
+        ElMessage.warning('AI未能生成有效的任务数据，请重试或调整描述')
+      }
+    } else {
+      ElMessage.error('AI生成失败，请重试')
+    }
+  } catch (error) {
+    ElMessage.error('AI生成失败：' + (error.message || '未知错误'))
+  } finally {
+    aiGenerating.value = false
+  }
 }
 //复制项目
 const copyProject = async () => {
@@ -3087,7 +3662,15 @@ const createNewProject = () => {
       code: `GANTT_${Date.now()}`,
       name: '未命名项目',
       description: '新建项目',
-      createTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
+      createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+      visibilityScope: 3
+    }
+
+    // 初始化权限配置
+    projectPermission.value = {
+      visibilityScope: 3,
+      permissionUserIds: [],
+      permissionType: 'VIEW'
     }
 
     // 重新加载甘特图
@@ -3101,8 +3684,6 @@ const createNewProject = () => {
     isStarred.value = false
 
     ElMessage.success('新项目创建成功')
-  }).catch(() => {
-    ElMessage.info('已取消创建')
   })
 }
 
@@ -3157,8 +3738,8 @@ const confirmEdit = async (fieldName) => {
     const newUrl = `${window.location.origin}${window.location.pathname}?code=${projectInfo.value.code}`
     window.history.replaceState({}, '', newUrl)
     window.location.reload()
-  } else if (fieldName == 'name') { //如果name变了，需要更新页面标题
-    document.title = `${projectInfo.value.name} - 星甘StarGantt|开源免费的在线甘特图制作平台|专业的项目进度管理工具`
+    } else if (fieldName == 'name') { //如果name变了，需要更新页面标题
+      document.title = `${projectInfo.value.name} - 星甘StarGantt | 免费在线甘特图工具 | 项目进度管理软件`
     loadUserInfo() //重新加载用户信息,用于刷新项目列表
   }
 }
@@ -3308,6 +3889,18 @@ const updateProjectOwners = () => {
   projectOwners.value = Array.from(ownersSet).sort()
 }
 
+//是否显示收藏按钮
+const checkShowStarBtn = () => {
+  if (userInfo.value == null) return true;
+  if (projectInfo.value == null) return true;
+  if (projectInfo.value.createUserId != userInfo.value.id) { //创建人不等于当前登录人
+    if (projectInfo.value.permissionUserIds == null) return true; //没有指定人员
+    if (projectInfo.value.permissionUserIds.length == 0) return true; //指定人员为空
+    if (!projectInfo.value.permissionUserIds.includes(userInfo.value.id)) return true; //指定人员不包含当前登录人
+  }
+  return false; //创建人等于当前登录人或指定人员包含当前登录人
+}
+
 // 检查收藏状态
 const checkStarStatus = () => {
   if (!projectInfo.value?.id || !projectList.value || !userInfo.value) {
@@ -3383,6 +3976,77 @@ const toggleStar = async () => {
 }
 
 
+// 打开历史记录对话框
+const openHistoryDialog = () => {
+  if (!projectInfo.value?.id) {
+    ElMessage.warning('请先保存项目')
+    return
+  }
+  //判断是否登录
+  if (!userInfo.value) {
+    ElMessage.warning('请先登录后查看历史记录')
+    showLoginModal.value = true
+    return
+  }
+  projectDropdownVisible.value = false
+  showHistoryDialog.value = true
+}
+
+// 处理版本恢复
+const handleHistoryRestore = (history) => {
+  var data = JSON.parse(history.content)
+  // projectInfo.value.code = history.code code不能随便回复
+  projectInfo.value.name = history.name
+  projectInfo.value.description = history.description
+
+  tasks.value = data.tasks
+  links.value = data.links
+
+  gantt.parse({
+    data: tasks.value,
+    links: links.value
+  })
+
+  // 设置甘特图高度以支持滚动
+  setTimeout(() => {
+    gantt.setSizes()
+    gantt.render()
+
+    // 初始化完成后，根据可见列调整Grid宽度
+    const initialVisibleCols = allColumns.filter(col => visibleColumns.value.includes(col.name))
+    adjustGridWidthByColumns(initialVisibleCols)
+
+    // 初始渲染自定义图层
+    renderCustomTaskLayer()
+  }, 100)
+
+  // 确保projectInfo有customColumns字段
+  if (!data.customColumns) {
+    projectInfo.value.customColumns = []
+  }
+
+  // 恢复自定义列（需要重新创建template函数）
+  if (data.customColumns.length > 0) {
+    customColumns.value = data.customColumns.map(col => ({
+      ...col,
+      template: function (task) {
+        return task[col.name] || '<span style="color: #c0c4cc;">-</span>'
+      }
+    }))
+  } else {
+    customColumns.value = []
+  }
+
+  // 恢复可见字段配置
+  if (data.visibleColumns && data.visibleColumns.length > 0) {
+    visibleColumns.value = data.visibleColumns
+  } else {
+    // 使用默认配置
+    visibleColumns.value = [...defaultVisibleColumns]
+  }
+
+}
+
 //删除
 const deleteProject = async () => {
   if (projectInfo.value == null || projectInfo.value.id == null) {
@@ -3407,7 +4071,7 @@ const deleteProject = async () => {
 // 基线渲染函数
 const renderCustomTaskLayer = () => {
   // 遍历所有任务，渲染基线
-  gantt.eachTask((task) => {
+  tasks.value.forEach(task => {
     if (!ganttContainer.value || !ganttContainer.value.querySelector) {
       return;
     }
@@ -3475,6 +4139,21 @@ const setBaseline = () => {
   })
 }
 
+// 删除基线
+const delBaseline = () => {
+  ElMessageBox.confirm('确定删除当前基线吗？', '确认删除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    tasks.value.forEach(task => {
+      task.planned_start = null
+      task.planned_end = null
+    })
+    setTimeout(renderCustomTaskLayer, 0);
+    ElMessage.success('删除基线成功')
+  })
+}
 </script>
 
 <style scoped>

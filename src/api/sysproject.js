@@ -2,7 +2,7 @@
  * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
  * @Date: 2024-01-04 09:48:08
  * @Description: 
- * @LastEditTime: 2025-10-25 23:41:09
+ * @LastEditTime: 2025-12-23 17:35:33
  * Copyright (c) 2025 by yubaolee | ahfu~ , All Rights Reserved.  
  */
 import request from '@/utils/request'
@@ -14,6 +14,14 @@ import request from '@/utils/request'
 export function load(params) {
   return request({
     url: '/sysproject/load',
+    method: 'get',
+    params,
+  })
+}
+
+export function loadByProjId(params) {
+  return request({
+    url: '/sysproject/loadByProjId',
     method: 'get',
     params,
   })
@@ -93,5 +101,23 @@ export function update(data) {
     url: '/sysproject/update',
     method: 'post',
     data,
+  })
+}
+
+// 恢复到指定版本
+export function restoreVersion(projectId, versionId) {
+  return request({
+    url: '/sysproject/restoreVersion',
+    method: 'post',
+    data: { projectId, versionId }
+  })
+}
+
+// AI生成甘特图任务
+export function textToGantt(data) {
+  return request({
+    url: '/sysproject/textToGantt',
+    method: 'post',
+    data
   })
 }

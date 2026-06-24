@@ -86,7 +86,13 @@
               <th class="version-column">
                 <div class="version-header">
                   <span class="version-name">本地部署</span>
-                  <span class="version-price">¥5999/套</span>
+                  <span class="version-price">¥999/套</span>
+                </div>
+              </th>
+              <th class="version-column">
+                <div class="version-header">
+                  <span class="version-name">本地部署(全部源代码)</span>
+                  <span class="version-price">¥3999/套</span>
                 </div>
               </th>
             </tr>
@@ -98,6 +104,7 @@
               <td class="feature-value">5</td>
               <td class="feature-value unlimited">无限</td>
               <td class="feature-value unlimited">无限</td>
+              <td class="feature-value unlimited">无限</td>
             </tr>
             <tr>
               <td class="feature-name">收藏数量</td>
@@ -105,9 +112,23 @@
               <td class="feature-value">5</td>
               <td class="feature-value unlimited">无限</td>
               <td class="feature-value unlimited">无限</td>
+              <td class="feature-value unlimited">无限</td>
+            </tr>
+            <tr>
+              <td class="feature-name">单个项目大小</td>
+              <td class="feature-value">50K</td>
+              <td class="feature-value">16M</td>
+              <td class="feature-value unlimited">无限</td>
+              <td class="feature-value unlimited">无限</td>
+              <td class="feature-value unlimited">无限</td>
             </tr>
             <tr>
               <td class="feature-name">数据导出</td>
+              <td class="feature-value">
+                <el-icon class="check-icon">
+                  <Check />
+                </el-icon>
+              </td>
               <td class="feature-value">
                 <el-icon class="check-icon">
                   <Check />
@@ -135,7 +156,8 @@
               <td class="feature-value"></td>
               <td class="feature-value">专属客服</td>
               <td class="feature-value">专属客服</td>
-              <td class="feature-value">全部源码<br></br>二次开发技术支持</td>
+              <td class="feature-value">无源码<br>需提供服务器<br>MySql 5.8或以上</td>
+              <td class="feature-value">全部源码<br>最新版前端vue源码<br>后端:dotNet 9源码 <br>二次开发技术支持</td>
             </tr>
           </tbody>
         </table>
