@@ -12,10 +12,50 @@ const STORAGE_KEY = 'hardware-project-manager'
 const PROJECT_LIST_KEY = 'hardware-project-list'
 
 /**
+ * 清洗 localStorage 中的脏数据
+ * 移除无效的 link（引用不存在的 task ID）
+ */
+const sanitizeLocalData = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return
+    const allData = JSON.parse(raw)
+    let changed = false
+
+    Object.keys(allData).forEach(code => {
+      const proj = allData[code]
+      if (!proj || !proj.tasks) return
+
+      const validIds = new Set(proj.tasks.map(t => t.id))
+      // 补全 text 字段
+      proj.tasks.forEach(t => {
+        if (!t.text && t.name) { t.text = t.name; changed = true }
+        if (!t.text) { t.text = '未命名任务'; changed = true }
+      })
+      // 过滤无效 link
+      const beforeCount = (proj.links || []).length
+      proj.links = (proj.links || []).filter(l =>
+        validIds.has(l.source) && validIds.has(l.target)
+      )
+      if ((proj.links || []).length !== beforeCount) changed = true
+    })
+
+    if (changed) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allData))
+      console.log('[sanitize] 已清洗 localStorage 脏数据')
+    }
+  } catch (e) {
+    console.error('清洗 localStorage 失败:', e)
+  }
+}
+
+/**
  * 获取 LocalStorage 中的数据
  */
 const getLocalData = () => {
   try {
+    // 启动时自动清洗
+    sanitizeLocalData()
     const data = localStorage.getItem(STORAGE_KEY)
     return data ? JSON.parse(data) : null
   } catch (e) {
@@ -87,8 +127,15 @@ export const loadGanttData = async (code = null) => {
       const projectData = allData[code]
       return {
         tasks: ensureTaskText(projectData.tasks),
-        links: projectData.links || [],
-        projectInfo: projectData.projectInfo || null
+        links: (projectData.links || []).filter(l => {
+          // 只保留引用了有效 task ID 的 link
+          const validIds = new Set((projectData.tasks || []).map(t => t.id))
+          return validIds.has(l.source) && validIds.has(l.target)
+        }),
+        projectInfo: {
+          ...projectData.projectInfo,
+          id: projectData.projectInfo?.code || code, // 兼容：id = code
+        } || null
       }
     }
     // 项目不存在，返回空数据
@@ -194,15 +241,17 @@ export const saveGanttDataToProject = async (tasks, links, projectInfo = null) =
       
       saveProjectList(projectList)
       
-      // 返回项目信息对象（Vue 组件期望 result.data 是项目对象）
+      // 返回项目信息对象（Vue 组件期望 result.data 是完整项目对象）
+      const resultData = {
+        code: projectCode,
+        id: projectCode, // 兼容：id = code
+        name: projectInfo.name || '未命名项目',
+        description: projectInfo.description || '',
+        lastUpdateTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
+      }
       return { 
         success: true, 
-        data: {
-          code: projectCode,
-          name: projectInfo.name || '未命名项目',
-          description: projectInfo.description || '',
-          lastUpdateTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
-        } 
+        data: resultData
       }
     } else {
       throw new Error('保存到 LocalStorage 失败')

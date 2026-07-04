@@ -4067,7 +4067,7 @@ const handleHistoryRestore = (history) => {
 
 //删除
 const deleteProject = async () => {
-  if (projectInfo.value == null || projectInfo.value.id == null) {
+  if (projectInfo.value == null || (!projectInfo.value.code && !projectInfo.value.id)) {
     ElMessage.warning('这是个临时项目，不能删除')
     return
   }
@@ -4076,7 +4076,8 @@ const deleteProject = async () => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
-    await del(projectInfo.value.id)
+    const projectCode = projectInfo.value.code || projectInfo.value.id
+    await del(projectCode)
     ElMessage.success('删除成功')
     const newUrl = `${window.location.origin}${window.location.pathname}`
     window.history.replaceState({}, '', newUrl)
