@@ -2,6 +2,23 @@ import ExcelJS from 'exceljs'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
 import { getDayjsWeekOfMonth } from './index.js'
+
+/**
+ * 获取列字母（根据列索引）
+ * @param {Number} columnIndex 列索引（从1开始）
+ * @returns {String} 列字母（如：1->A, 2->B, 27->AA）
+ */
+const getColumnLetter = (columnIndex) => {
+    let letter = ''
+    let index = columnIndex
+    while (index > 0) {
+        const remainder = (index - 1) % 26
+        letter = String.fromCharCode(65 + remainder) + letter
+        index = Math.floor((index - 1) / 26)
+    }
+    return letter
+}
+
 /**
  * 导出甘特图为Excel文件
  * @param {Object} options 导出选项
@@ -102,6 +119,11 @@ export const exportGanttToExcel = async (options) => {
                             col.name === 'progress' ? 8 :
                                 col.name === 'id' || col.name === 'duration' ? 6 : 10
             }))
+
+        // 找到 start_date 和 end_date 列的索引
+        const startDateColIndex = leftColumns.findIndex(col => col.key === 'start_date')
+        const endDateColIndex = leftColumns.findIndex(col => col.key === 'end_date')
+        const idColIndex = leftColumns.findIndex(col => col.key === 'id')
 
         // 添加左侧列和日期列
         const columns = [...leftColumns]
@@ -372,10 +394,19 @@ export const exportGanttToExcel = async (options) => {
             return indexA - indexB
         })
 
+        // 创建任务ID到Excel行号的映射（任务从第3行开始）
+        const taskRowMapping = {}
+        sortedTasks.forEach((task, taskIndex) => {
+            taskRowMapping[task.id] = taskIndex + 3
+        })
+
         // 添加任务数据
         sortedTasks.forEach((task, taskIndex) => {
             const rowIndex = taskIndex + 3
             const row = worksheet.getRow(rowIndex)
+
+            // 判断是否为奇数行（用于相间颜色）
+            const isOddRow = (taskIndex % 2) === 0
 
             // 左侧数据 - 根据列配置动态填充
             leftColumns.forEach((col, colIndex) => {
@@ -391,9 +422,32 @@ export const exportGanttToExcel = async (options) => {
                     const indent = '  '.repeat(level)
                     cell.value = indent + (task.text || '')
                 } else if (fieldName === 'start_date') {
-                    cell.value = dayjs(task.start_date).format('YYYY-MM-DD') || ''
+                    // 如果任务有前置任务，使用公式计算机开始日期
+                    if (task.predecessors && task.predecessors.length > 0) {
+                        // 获取所有前置任务的行号
+                        const predecessorRows = task.predecessors
+                            .map(predId => taskRowMapping[predId])
+                            .filter(row => row !== undefined)
+
+                        if (predecessorRows.length > 0) {
+                            // 构建公式：取所有前置任务结束日期的最大值 + 1天
+                            const endDateColLetter = getColumnLetter(endDateColIndex + 1)
+                            const maxFormula = predecessorRows
+                                .map(row => `${endDateColLetter}${row}`)
+                                .join(',')
+                            // 使用公式：=MAX(C5,C10)+1  (假设C列是结束日期)
+                            cell.value = { formula: `MAX(${maxFormula})+1` }
+                            cell.numFmt = 'yyyy-mm-dd'
+                        } else {
+                            cell.value = dayjs(task.start_date).format('YYYY-MM-DD') || ''
+                        }
+                    } else {
+                        cell.value = dayjs(task.start_date).format('YYYY-MM-DD') || ''
+                    }
                 } else if (fieldName === 'end_date') {
                     cell.value = dayjs(task.end_date).format('YYYY-MM-DD') || ''
+                    // 设置日期格式
+                    cell.numFmt = 'yyyy-mm-dd'
                 } else if (fieldName === 'duration') {
                     cell.value = task.duration || 0
                 } else if (fieldName === 'progress') {
@@ -414,13 +468,22 @@ export const exportGanttToExcel = async (options) => {
                 }
             })
 
-            // 设置左侧单元格样式
+            // 设置左侧单元格样式（相间颜色）
             for (let i = 1; i <= leftColumns.length; i++) {
                 const cell = row.getCell(i)
                 // 判断是否是 text 列（项目名称）
                 const isTextColumn = leftColumns[i - 1]?.key === 'text'
                 cell.alignment = { horizontal: isTextColumn ? 'left' : 'center', vertical: 'middle' }
                 cell.font = { size: 9 }
+
+                // 相间颜色：奇数行浅白色，偶数行浅灰色
+                const fillColor = isOddRow ? 'FFFEFEFE' : 'FFF5F5F5'
+
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: fillColor }
+                }
                 cell.border = {
                     top: { style: 'thin', color: { argb: 'FFDCDCDC' } },
                     left: { style: 'thin', color: { argb: 'FFDCDCDC' } },
@@ -501,6 +564,14 @@ export const exportGanttToExcel = async (options) => {
                             pattern: 'solid',
                             fgColor: { argb: fillColor }
                         }
+                    } else {
+                        // 如果不在任务范围内，也设置相间颜色
+                        const altFillColor = isOddRow ? 'FFFEFEFE' : 'FFF5F5F5'
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: altFillColor }
+                        }
                     }
 
                     cell.border = {
@@ -511,7 +582,7 @@ export const exportGanttToExcel = async (options) => {
                     }
                 })
             } else {
-                // 如果没有日期，也要设置边框
+                // 如果没有日期，也要设置边框和相间颜色
                 dateColumns.forEach((date, dateIndex) => {
                     const cell = row.getCell(leftColumns.length + 1 + dateIndex)
                     cell.border = {
@@ -519,6 +590,13 @@ export const exportGanttToExcel = async (options) => {
                         left: { style: 'thin', color: { argb: 'FFDCDCDC' } },
                         bottom: { style: 'thin', color: { argb: 'FFDCDCDC' } },
                         right: { style: 'thin', color: { argb: 'FFDCDCDC' } }
+                    }
+                    // 添加相间颜色
+                    const altFillColor = isOddRow ? 'FFFEFEFE' : 'FFF5F5F5'
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: altFillColor }
                     }
                 })
             }

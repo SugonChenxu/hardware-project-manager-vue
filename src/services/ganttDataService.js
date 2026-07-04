@@ -120,6 +120,43 @@ export const loadGanttData = async (code = null) => {
     }).filter(Boolean)
   }
 
+  // 调整模板日期，让第一个任务从今天开始
+  const adjustTemplateDates = (tasks, links) => {
+    if (!tasks || tasks.length === 0) return { tasks, links }
+    
+    // 找到最早的任务开始日期
+    const validTasks = tasks.filter(t => t.start_date)
+    if (validTasks.length === 0) return { tasks, links }
+    
+    const earliestDate = dayjs(validTasks.reduce((min, t) => {
+      const d = dayjs(t.start_date)
+      return d.isBefore(min) ? d : min
+    }, dayjs(validTasks[0].start_date)))
+    
+    const today = dayjs().startOf('day')
+    const diffDays = today.diff(earliestDate, 'day')
+    
+    // 调整所有任务的日期
+    const adjustedTasks = tasks.map(task => {
+      const t = { ...task }
+      if (t.start_date) {
+        t.start_date = dayjs(t.start_date).add(diffDays, 'day').format('YYYY-MM-DD')
+      }
+      if (t.end_date) {
+        t.end_date = dayjs(t.end_date).add(diffDays, 'day').format('YYYY-MM-DD')
+      }
+      if (t.planned_start) {
+        t.planned_start = dayjs(t.planned_start).add(diffDays, 'day').format('YYYY-MM-DD')
+      }
+      if (t.planned_end) {
+        t.planned_end = dayjs(t.planned_end).add(diffDays, 'day').format('YYYY-MM-DD')
+      }
+      return t
+    })
+    
+    return { tasks: adjustedTasks, links }
+  }
+
   if (code) {
     // 从 LocalStorage 加载指定项目
     const allData = getLocalData()
@@ -150,9 +187,10 @@ export const loadGanttData = async (code = null) => {
     if (savedTemplate) {
       try {
         const templateData = JSON.parse(savedTemplate)
+        const adjusted = adjustTemplateDates(templateData.tasks, templateData.links)
         return {
-          tasks: ensureTaskText(templateData.tasks),
-          links: templateData.links || [],
+          tasks: ensureTaskText(adjusted.tasks),
+          links: adjusted.links || [],
           projectInfo: {
             code: `PROJECT_${Date.now()}`,
             name: '未命名项目',
@@ -167,10 +205,11 @@ export const loadGanttData = async (code = null) => {
       }
     }
     
-    // 没有保存的模板，加载默认数据
+    // 没有保存的模板，加载默认数据并调整日期
+    const adjusted = adjustTemplateDates(defaultData.tasks, defaultData.links)
     return {
-      tasks: ensureTaskText(defaultData.tasks),
-      links: defaultData.links,
+      tasks: ensureTaskText(adjusted.tasks),
+      links: adjusted.links,
       projectInfo: {
         code: `PROJECT_${Date.now()}`,
         name: '未命名项目',
