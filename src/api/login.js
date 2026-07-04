@@ -1,75 +1,43 @@
-/*
- * @Descripttion:
- * @version:
- * @Date: 2022-05-12 22:06:21
- * @LastEditTime: 2025-09-08 23:40:26
- * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
+/**
+ * 登录 API（Mock 版）
+ * 直接返回模拟用户，跳过登录
  */
-import request from '@/utils/request'
-import { getToken } from '@/utils/auth' // 验权
 
-export function login(data) {
-  return request({
-    url: '/check/login',
-    method: 'post',
+// 获取用户资料（Mock）
+export const getUserProfile = async () => {
+  return {
     data: {
-      Account: data.account,
-      Password: data.password,
-      AppKey: 'openauth',
-    },
-  })
-}
-
-
-export function getInfo(token) {
-  return request({
-    url: '/check/getusername',
-    method: 'get',
-    params: { token },
-  })
-}
-
-export function getUserProfile() {
-  return request({
-    url: '/check/getuserprofile',
-    method: 'get',
-    params: { token: getToken() },
-  })
-}
-
-
-// 获取组织机构列表
-// @param {boolean} ignoreAuth - 是否忽略权限验证，true时获取所有组织，false时获取当前用户有权限的组织
-export function getOrgs(ignoreAuth) {
-  if(ignoreAuth != undefined && ignoreAuth == true){
-    return request({
-      url: '/orgs/loadall',
-      method: 'get',
-      params: { token: getToken() },
-    })
-    
-  }else{
-    return request({
-      url: '/check/getorgs',
-      method: 'get',
-      params: { token: getToken() },
-    })
-
+      id: 1,
+      username: 'chenxu',
+      displayName: '陈旭',
+      email: 'chenxu@example.com',
+      avatar: '',
+      role: 'ADMIN'
+    }
   }
-
 }
 
-export function getSubOrgs(data) {
-  return request({
-    url: '/check/getSubOrgs',
-    method: 'get',
-    params: data,
+// 登录（Mock）
+export const login = async (params) => {
+  return { data: { token: 'mock-token', user: await getUserProfile().then(r => r.data) } }
+}
+
+// 获取验证码图片（Mock）
+export const getCodeImg = async () => {
+  return Promise.resolve({
+    data: {
+      code: 'mock-captcha',
+      img: ''
+    }
   })
 }
 
-export function logout() {
-  return request({
-    url: '/check/logout',
-    method: 'post',
-  })
+// 登出（Mock）
+export const logout = async () => {
+  return { data: { success: true } }
+}
+
+// 注册（Mock）
+export const register = async (params) => {
+  return { data: { success: true, userId: 1 } }
 }

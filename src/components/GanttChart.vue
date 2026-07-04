@@ -3335,9 +3335,15 @@ const saveProject = async () => {
       if (!projectInfo.value) {
         projectInfo.value = {}
       }
-      Object.assign(projectInfo.value, {
-        id: result.data
-      })
+      // 兼容 result.data 为字符串（项目 code）或对象
+      if (typeof result.data === 'string') {
+        projectInfo.value.code = result.data
+        if (!projectInfo.value.id) {
+          projectInfo.value.id = result.data
+        }
+      } else if (result.data && typeof result.data === 'object') {
+        Object.assign(projectInfo.value, result.data)
+      }
 
       // 添加到项目列表中
       if (!projectList.value.find(project =>
@@ -3367,8 +3373,8 @@ const saveProject = async () => {
       checkStarStatus()
     }
 
-    ElMessage.success('项目保存成功')
-    return result.code
+      ElMessage.success('项目保存成功')
+      return 200
   } catch (error) {
     if (error.status === 401 || error.code == '401') {
       ElMessage.error('请登录后保存')
@@ -3647,12 +3653,13 @@ const copyProject = async () => {
   }
 }
 
-const createNewProject = () => {
-  ElMessageBox.confirm('创建新项目前，注意保存当前项目', '确认创建', {
+const createNewProject = async () => {
+  try {
+    await ElMessageBox.confirm('创建新项目前，注意保存当前项目', '确认创建', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
+  })
     // 清空数据
     tasks.value = []
     links.value = []
@@ -3676,6 +3683,12 @@ const createNewProject = () => {
     // 重新加载甘特图
     loadData()
 
+    // 自动保存新项目到 LocalStorage
+    await saveProject()
+
+    // 刷新项目列表
+    await loadUserInfo()
+
     // 清空URL参数
     window.history.replaceState({}, '', window.location.pathname)
     urlParams.value = {}
@@ -3684,7 +3697,9 @@ const createNewProject = () => {
     isStarred.value = false
 
     ElMessage.success('新项目创建成功')
-  })
+  } catch (e) {
+    // 用户取消创建
+  }
 }
 
 // 开始编辑字段

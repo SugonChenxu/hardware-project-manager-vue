@@ -1,26 +1,41 @@
-/*
- * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
- * @Date: 2025-09-15 17:03:24
- * @Description: 
- * @LastEditTime: 2025-09-15 21:11:37
- * Copyright (c) 2025 by yubaolee | ahfu~ , All Rights Reserved.  
+/**
+ * 支付 API（Mock 版）
+ * 个人使用无需支付功能，全部返回 mock 数据
  */
-import request from '@/utils/request'
 
 // 创建支付订单
-export function createPaymentOrder(data) {
-  return request({
-    url: '/WeChatPay/CreateOrder',
-    method: 'post',
-    data,
+export const createPaymentOrder = async (params) => {
+  return Promise.resolve({
+    data: {
+      orderId: 'order_' + Date.now(),
+      payUrl: '',
+      qrcode: '',
+      amount: params.amount || 0,
+      status: 'MOCK'
+    }
   })
 }
 
-
 // 获取订单详情
-export function getOrderDetail(orderId) {
-  return request({
-    url: `/WeChatPay/GetOrder?outTradeNo=${orderId}`,
-    method: 'get',
+export const getOrderDetail = async (orderId) => {
+  return Promise.resolve({
+    data: {
+      orderId,
+      status: 'PAID',
+      amount: 0,
+      payTime: new Date().toISOString()
+    }
+  })
+}
+
+// 查询用户 VIP 状态（供 UserCenter.vue 使用）
+export const getUserVip = async () => {
+  return Promise.resolve({
+    data: {
+      isVip: false,
+      vipType: '',
+      vipExpireTime: '',
+      features: []
+    }
   })
 }

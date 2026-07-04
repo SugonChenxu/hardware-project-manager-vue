@@ -1,16 +1,18 @@
-/*
- * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
- * @Date: 2022-05-13 07:32:55
- * @LastEditTime: 2025-09-17 16:54:05
- * @Description: 系统配置
- * Copyright (c) 2025 by yubaolee | ahfu~ , All Rights Reserved.  
+/**
+ * 服务器配置 API（Mock 版）
+ * 个人使用无需检查更新，直接返回当前版本
  */
-import request from '@/utils/request'
 
-export function getWebVersion() {
-  return request({
-    url: '/sysConf/getWebVersion',
-    method: 'get',
+export const getWebVersion = async () => {
+  return Promise.resolve({
+    data: {
+      version: '1.0.0',
+      features: ['甘特图', '任务管理', '项目历史'],
+      updateUrl: ''
+    }
   })
 }
 
+export const isIdentityAuth = async () => {
+  return Promise.resolve({ data: { identityAuth: false } })
+}

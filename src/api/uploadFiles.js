@@ -1,25 +1,26 @@
-import request from '@/utils/request'
+/**
+ * 文件上传 API（Mock 版）
+ * 个人使用可先跳过，后期接入本地文件存储或 Supabase Storage
+ */
 
-export function getList(params) {
-  return request({
-    url: '/files/load',
-    method: 'get',
-    params,
+export const uploadFile = async (file, onProgress) => {
+  // Mock 上传，返回本地对象 URL
+  const localUrl = URL.createObjectURL(file)
+  return Promise.resolve({
+    data: {
+      success: true,
+      fileId: 'file_' + Date.now(),
+      fileName: file.name,
+      fileUrl: localUrl,
+      fileSize: file.size
+    }
   })
 }
 
-export function add(data) {
-  return request({
-    url: '/files/upload',
-    method: 'post',
-    data,
-  })
+export const deleteFile = async (fileId) => {
+  return Promise.resolve({ data: { success: true } })
 }
 
-export function del(data) {
-  return request({
-    url: '/files/delete',
-    method: 'post',
-    data,
-  })
+export const getFileList = async (params) => {
+  return Promise.resolve({ data: [] })
 }
