@@ -1,0 +1,351 @@
+<!--
+ * @Author: yubaolee <yubaolee@163.com> | ahfu~ <954478625@qq.com>
+ * @Date: 2025-09-05 01:36:59
+ * @LastEditTime: 2026-01-16 22:15:39
+ * @Description: 
+ * Copyright (c) 2025 by yubaolee | ahfu~ , All Rights Reserved.  
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- 基础SEO信息 - 核心关键词前置 -->
+    <title>甘特图在线制作 - 星甘StarGantt | 免费在线甘特图工具 | 项目进度管理软件</title>
+    <meta name="description" content="【甘特图在线制作】星甘StarGantt是免费开源的在线甘特图制作工具，无需下载安装即可使用。支持甘特图绘制、项目进度管理、任务分解、时间规划。具备基线设置、Excel导出、任务标记、项目复制、级联更新等专业功能，是企业项目管理的理想选择。" />
+    <meta name="keywords" content="甘特图,在线甘特图,甘特图制作,甘特图工具,免费甘特图,甘特图软件,项目甘特图,甘特图模板,甘特图怎么做,甘特图在线制作,星甘,StarGantt,项目管理,进度管理,项目计划,任务管理,时间规划,团队协作,项目进度跟踪,工程进度表,施工进度表" />
+    <meta name="author" content="星甘团队 StarGantt Team" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="language" content="zh-CN" />
+    <meta name="revisit-after" content="3 days" />
+    <meta name="copyright" content="星甘 StarGantt" />
+    <meta name="generator" content="StarGantt" />
+    
+    <!-- 规范链接 -->
+    <link rel="canonical" href="http://stargantt.cn/" />
+    <link rel="alternate" hreflang="zh-CN" href="http://stargantt.cn/" />
+    
+    <!-- Open Graph 社交媒体优化 -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="星甘 StarGantt" />
+    <meta property="og:title" content="甘特图在线制作 - 星甘StarGantt | 免费在线甘特图工具" />
+    <meta property="og:description" content="免费开源的在线甘特图制作工具，无需下载安装。支持项目进度管理、任务分解、基线设置、Excel导出等专业功能。" />
+    <meta property="og:url" content="http://stargantt.cn/" />
+    <meta property="og:image" content="http://stargantt.cn/main.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="星甘甘特图在线制作工具界面截图" />
+    <meta property="og:locale" content="zh_CN" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="甘特图在线制作 - 星甘StarGantt" />
+    <meta name="twitter:description" content="免费开源的在线甘特图制作工具，支持项目进度管理、任务分解、Excel导出等功能。" />
+    <meta name="twitter:image" content="http://stargantt.cn/main.png" />
+    
+    <!-- 百度SEO验证 (如有) -->
+    <meta name="baidu-site-verification" content="codeva-yUZWlkNHid" />
+    
+    <!-- 360搜索验证 (如有) -->
+    <!-- <meta name="360-site-verification" content="your-code" /> -->
+    
+    <!-- 搜狗搜索验证 (如有) -->
+    <!-- <meta name="sogou_site_verification" content="your-code" /> -->
+    
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    
+    <!-- PWA清单 -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    
+    <!-- 移动端优化 -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="星甘" />
+    
+    <!-- 浏览器主题色 -->
+    <meta name="theme-color" content="#0078d4" />
+    <meta name="msapplication-TileColor" content="#0078d4" />
+    <meta name="msapplication-navbutton-color" content="#0078d4" />
+    
+    <!-- 禁用自动翻译 -->
+    <meta name="google" content="notranslate" />
+    
+    <!-- DNS预解析和预连接 -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+    <link rel="dns-prefetch" href="//unpkg.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    
+    <!-- 关键资源预加载 -->
+    <link rel="modulepreload" href="data:application/javascript;base64,aW1wb3J0IHsgY3JlYXRlQXBwIH0gZnJvbSAndnVlJw0KaW1wb3J0IEVsZW1lbnRQbHVzIGZyb20gJ2VsZW1lbnQtcGx1cycNCmltcG9ydCAnZWxlbWVudC1wbHVzL2Rpc3QvaW5kZXguY3NzJw0KaW1wb3J0ICdlbGVtZW50LXBsdXMvdGhlbWUtY2hhbGsvZGFyay9jc3MtdmFycy5jc3MnDQppbXBvcnQgJ2RodG1seC1nYW50dC9jb2RlYmFzZS9kaHRtbHhnYW50dC5jc3MnDQppbXBvcnQgJy4vc3R5bGVzL2luZGV4LmNzcycNCmltcG9ydCBBcHAgZnJvbSAnLi9BcHAudnVlJw0KaW1wb3J0IHJvdXRlciBmcm9tICcuL3JvdXRlcicNCmltcG9ydCB6aENuIGZyb20gJ2VsZW1lbnQtcGx1cy9kaXN0L2xvY2FsZS96aC1jbi5tanMnDQoNCmNvbnN0IGFwcCA9IGNyZWF0ZUFwcChBcHApDQphcHAudXNlKEVsZW1lbnRQbHVzLCB7DQogIGxvY2FsZTogemhDbiwNCn0pDQphcHAudXNlKHJvdXRlcikNCmFwcC5tb3VudCgnI2FwcCcpIA==" />
+    <link rel="prefetch" href="/assets/GanttChart-0ea82e2e.vue" />
+    
+    <!-- 结构化数据 - 软件应用 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "星甘 StarGantt",
+      "alternateName": ["StarGantt", "星甘甘特图", "在线甘特图工具"],
+      "applicationCategory": "BusinessApplication",
+      "applicationSubCategory": "ProjectManagement",
+      "operatingSystem": "Web Browser",
+      "description": "免费开源的在线甘特图制作工具，支持项目进度管理、任务分解、时间规划、基线设置、Excel导出等专业功能",
+      "url": "http://stargantt.cn/",
+      "image": "http://stargantt.cn/main.png",
+      "screenshot": "http://stargantt.cn/screenshot-wide.png",
+      "featureList": ["甘特图在线制作", "项目进度管理", "任务分解结构", "基线对比", "Excel导出", "团队协作", "级联时间更新"],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "CNY",
+        "availability": "https://schema.org/InStock"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1200",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "星甘团队"
+      }
+    }
+    </script>
+    
+    <!-- 结构化数据 - 组织信息 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "星甘 StarGantt",
+      "url": "http://stargantt.cn/",
+      "logo": "http://stargantt.cn/favicon-512x512.png",
+      "description": "专业的在线甘特图制作平台",
+      "sameAs": []
+    }
+    </script>
+    
+    <!-- 结构化数据 - 网站信息 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "星甘 StarGantt",
+      "alternateName": "在线甘特图制作工具",
+      "url": "http://stargantt.cn/",
+      "description": "免费开源的在线甘特图制作平台",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "http://stargantt.cn/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
+    <!-- 结构化数据 - FAQ常见问题 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "甘特图是什么？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "甘特图是一种项目管理工具，以图形方式展示项目任务的时间安排。横轴表示时间，纵轴表示任务，通过条形图直观显示每个任务的开始时间、持续时间和结束时间，便于项目进度跟踪和资源分配。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "甘特图怎么做？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "使用星甘在线甘特图工具，您可以轻松创建甘特图：1.打开星甘网站 2.创建新项目 3.添加任务并设置开始结束时间 4.设置任务依赖关系 5.调整进度并导出。无需下载安装，免费使用。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "在线甘特图工具有哪些功能？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "星甘在线甘特图工具提供：任务创建与管理、时间轴视图、任务依赖关系、基线对比、进度跟踪、Excel导出、任务标记、项目复制、级联时间更新、团队协作等专业功能。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "星甘甘特图是免费的吗？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "是的，星甘是一款开源免费的在线甘特图制作工具。您可以免费使用甘特图创建、编辑、导出等核心功能，无需下载安装，直接在浏览器中使用。"
+          }
+        }
+      ]
+    }
+    </script>
+    
+    <!-- 结构化数据 - 面包屑导航 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "首页",
+          "item": "http://stargantt.cn/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "在线甘特图星甘帮助",
+          "item": "http://stargantt.cn/help"
+        }
+      ]
+    }
+    </script>
+
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?ceb5d226b845876c63a64d4f74658b11";
+        var s = document.getElementsByTagName("script")[0]; 
+        s.parentNode.insertBefore(hm, s);
+      })();
+      </script>
+      
+    
+    <style>
+      body {
+        margin: 0;
+        font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      /* 加载动画 */
+      .loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f5f7fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+      }
+      
+      .loading-text {
+        color: #0078d4;
+        font-size: 16px;
+        font-weight: 500;
+        animation: loading-pulse 1.5s ease-in-out infinite;
+      }
+      
+      @keyframes loading-pulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-08334c71.js"></script>
+    <link rel="stylesheet" href="/assets/index-fb970cfc.css">
+  </head>
+  <body>
+    <!-- 无脚本支持 - SEO友好内容 -->
+    <noscript>
+      <div style="font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <header style="text-align: center; padding: 40px 0; border-bottom: 1px solid #eee;">
+          <h1 style="color: #0078d4; font-size: 32px; margin-bottom: 16px;">星甘 StarGantt - 免费在线甘特图制作工具</h1>
+          <p style="color: #606266; font-size: 18px;">专业的项目进度管理平台，让甘特图制作更简单</p>
+        </header>
+        
+        <main style="padding: 40px 0;">
+          <section style="margin-bottom: 40px;">
+            <h2 style="color: #303133; font-size: 24px; margin-bottom: 20px;">什么是甘特图？</h2>
+            <p style="color: #606266; line-height: 1.8;">甘特图（Gantt Chart）是一种项目管理工具，以图形方式展示项目任务的时间安排。横轴表示时间，纵轴表示任务，通过条形图直观显示每个任务的开始时间、持续时间和结束时间。甘特图广泛应用于工程项目、软件开发、市场营销等领域的进度管理。</p>
+          </section>
+          
+          <section style="margin-bottom: 40px;">
+            <h2 style="color: #303133; font-size: 24px; margin-bottom: 20px;">星甘在线甘特图功能特点</h2>
+            <ul style="color: #606266; line-height: 2;">
+              <li><strong>免费在线使用</strong> - 无需下载安装，打开浏览器即可创建甘特图</li>
+              <li><strong>甘特图制作</strong> - 直观的拖拽操作，轻松创建和编辑甘特图</li>
+              <li><strong>任务管理</strong> - 支持任务分解、依赖关系、里程碑设置</li>
+              <li><strong>基线对比</strong> - 设置项目基线，对比计划与实际进度</li>
+              <li><strong>Excel导出</strong> - 一键导出带甘特图的Excel格式报表</li>
+              <li><strong>进度跟踪</strong> - 实时更新任务进度，自动计算完成百分比</li>
+              <li><strong>级联更新</strong> - 调整任务时间时，自动更新关联任务</li>
+              <li><strong>项目复制</strong> - 一键复制已有项目，快速创建类似项目计划</li>
+            </ul>
+          </section>
+          
+          <section style="margin-bottom: 40px;">
+            <h2 style="color: #303133; font-size: 24px; margin-bottom: 20px;">甘特图怎么做？</h2>
+            <ol style="color: #606266; line-height: 2;">
+              <li>打开星甘在线甘特图工具</li>
+              <li>创建新项目或选择模板</li>
+              <li>添加项目任务，设置任务名称</li>
+              <li>设置每个任务的开始时间和结束时间</li>
+              <li>建立任务之间的依赖关系</li>
+              <li>分配资源和设置任务负责人</li>
+              <li>跟踪进度并导出甘特图</li>
+            </ol>
+          </section>
+          
+          <section style="margin-bottom: 40px;">
+            <h2 style="color: #303133; font-size: 24px; margin-bottom: 20px;">适用场景</h2>
+            <p style="color: #606266; line-height: 1.8;">星甘在线甘特图适用于：项目进度管理、工程施工计划、软件开发排期、市场活动策划、产品研发管理、团队任务协作、个人时间规划等多种场景。</p>
+          </section>
+        </main>
+        
+        <footer style="text-align: center; padding: 20px 0; border-top: 1px solid #eee; color: #909399;">
+          <p>© 2026 星甘 StarGantt - 免费开源的在线甘特图制作工具</p>
+          <p style="margin-top: 10px;">
+            <strong style="color: #f56c6c;">提示：</strong>请启用 JavaScript 以获得完整的甘特图制作体验
+          </p>
+        </footer>
+      </div>
+    </noscript>
+    
+    <!-- 加载动画 -->
+    <div class="loading" id="loading-screen">
+      <div class="loading-text">星甘正在加载中...</div>
+    </div>
+    
+    <!-- 应用容器 -->
+    <div id="app"></div>
+    
+    <!-- 主应用脚本 -->
+    
+    
+    <!-- 加载完成后隐藏加载动画 -->
+    <script>
+      window.addEventListener('load', function() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          setTimeout(() => {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+              loadingScreen.style.display = 'none';
+            }, 300);
+          }, 500);
+        }
+      });
+    </script>
+  </body>
+</html> 

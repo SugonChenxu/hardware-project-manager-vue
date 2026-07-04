@@ -145,7 +145,29 @@ export const loadGanttData = async (code = null) => {
       projectInfo: { code, name: '新项目', description: '' }
     }
   } else {
-    // 没有 Code 直接加载默认数据
+    // 没有 Code，优先加载用户保存的默认模板
+    const savedTemplate = localStorage.getItem('hardware-project-default-template')
+    if (savedTemplate) {
+      try {
+        const templateData = JSON.parse(savedTemplate)
+        return {
+          tasks: ensureTaskText(templateData.tasks),
+          links: templateData.links || [],
+          projectInfo: {
+            code: `PROJECT_${Date.now()}`,
+            name: '未命名项目',
+            description: '这是用户自定义的默认模板',
+            createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+            customColumns: [],
+            visibleColumns: []
+          }
+        }
+      } catch (e) {
+        console.error('加载保存的模板失败，使用默认模板:', e)
+      }
+    }
+    
+    // 没有保存的模板，加载默认数据
     return {
       tasks: ensureTaskText(defaultData.tasks),
       links: defaultData.links,

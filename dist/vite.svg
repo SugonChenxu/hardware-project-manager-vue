@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <!-- 背景渐变 -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#ffffff"></stop>
+      <stop offset="100%" stop-color="#e9f0fb"></stop>
+    </radialGradient>
+
+    <!-- 星形渐变 -->
+    <linearGradient id="starGrad" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ffe57f"></stop>
+      <stop offset="100%" stop-color="#ffb300"></stop>
+    </linearGradient>
+
+    <!-- 甘特条渐变 -->
+    <linearGradient id="barBlue" x1="0" x2="1">
+      <stop offset="0%" stop-color="#64b5f6"></stop>
+      <stop offset="100%" stop-color="#1e88e5"></stop>
+    </linearGradient>
+    <linearGradient id="barGreen" x1="0" x2="1">
+      <stop offset="0%" stop-color="#81c784"></stop>
+      <stop offset="100%" stop-color="#388e3c"></stop>
+    </linearGradient>
+    <linearGradient id="barGray" x1="0" x2="1">
+      <stop offset="0%" stop-color="#cfd8dc"></stop>
+      <stop offset="100%" stop-color="#90a4ae"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景圆角矩形 -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#bgGrad)" stroke="#d0dae8" stroke-width="4"></rect>
+
+  <!-- 主体：放大居中 -->
+  <g transform="translate(70,100) scale(1.5)">
+    <!-- 星形（左侧） -->
+    <g transform="translate(40,40)">
+      <path d="M64 0l20 42 46 6-34 30 8 46-40-24-40 24 8-46-34-30 46-6z" fill="url(#starGrad)" stroke="#f57f17" stroke-width="3"></path>
+      <circle cx="64" cy="64" r="12" fill="#fff" opacity="0.9"></circle>
+    </g>
+
+    <!-- 甘特图条（右侧） -->
+    <g transform="translate(160,20)">
+      <rect x="0" y="0" width="120" height="24" rx="6" fill="url(#barBlue)"></rect>
+      <rect x="0" y="50" width="100" height="24" rx="6" fill="url(#barGreen)"></rect>
+      <rect x="0" y="100" width="80" height="24" rx="6" fill="url(#barGray)"></rect>
+      <!-- 进度条叠加 -->
+      <rect x="0" y="0" width="60" height="24" rx="6" fill="#ffffff55"></rect>
+      <rect x="0" y="50" width="50" height="24" rx="6" fill="#ffffff55"></rect>
+    </g>
+  </g>
+
+  <!-- 光泽效果 -->
+  <ellipse cx="256" cy="120" rx="200" ry="70" fill="#ffffff55"></ellipse>
+</svg>

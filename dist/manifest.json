@@ -1,0 +1,39 @@
+{
+  "name": "星甘 StarGantt - 免费在线甘特图制作工具",
+  "short_name": "星甘甘特图",
+  "description": "免费开源的在线甘特图制作工具，支持甘特图绘制、项目进度管理、任务分解、基线设置、Excel导出等专业功能，无需下载安装即可使用",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0078d4",
+  "background_color": "#f5f7fa",
+  "lang": "zh-CN",
+  "scope": "/",
+  "categories": ["productivity", "business", "project management"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+} 

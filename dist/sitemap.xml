@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+  
+  <!-- 首页 - 在线甘特图制作 -->
+  <url>
+    <loc>http://stargantt.cn/</loc>
+    <lastmod>2026-01-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>http://stargantt.cn/main.png</image:loc>
+      <image:title>星甘在线甘特图制作工具主界面</image:title>
+      <image:caption>免费开源的在线甘特图制作平台，支持项目进度管理</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>http://stargantt.cn/screenshot-wide.png</image:loc>
+      <image:title>星甘甘特图功能截图</image:title>
+      <image:caption>甘特图任务管理、基线对比、Excel导出功能展示</image:caption>
+    </image:image>
+  </url>
+  
+  <!-- 帮助文档 - 甘特图使用教程 -->
+  <url>
+    <loc>http://stargantt.cn/help</loc>
+    <lastmod>2026-01-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 关于星甘 - 免费开源的在线甘特图制作工具 -->
+  <url>
+    <loc>http://stargantt.cn/gantt-chart-online</loc>
+    <lastmod>2026-01-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- H5移动端 - 移动甘特图 -->
+  <url>
+    <loc>http://stargantt.cn/h5</loc>
+    <lastmod>2026-01-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>
