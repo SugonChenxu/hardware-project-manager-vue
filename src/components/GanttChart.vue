@@ -2014,13 +2014,14 @@ const initGantt = () => {
     })
 
     gantt.attachEvent("onBeforeTaskChanged", (id, mode, oldTask) => {
-      // 只在日期相关操作时保存快照（drag 模式）
-      // mode: 'move', 'resize', 'progress'
       // 保存修改前的任务快照，供 onAfterTaskUpdate 做级联计算
       if (!taskBeforeUpdate.value) {
         const index = tasks.value.findIndex(t => t.id == id)
         if (index !== -1) {
           taskBeforeUpdate.value = JSON.parse(JSON.stringify(tasks.value[index]))
+          console.log('[onBeforeTaskChanged] 保存快照:', tasks.value[index].text,
+            '结束=', tasks.value[index].end_date,
+            '开始=', tasks.value[index].start_date)
         }
       }
       return true;
@@ -2034,8 +2035,13 @@ const initGantt = () => {
         recalculateParentTaskProgress(task)
         // 用修改前的快照做级联计算（taskBeforeUpdate 在 onBeforeTaskChanged 中保存）
         if (taskBeforeUpdate.value) {
+          console.log('[onAfterTaskUpdate] 触发级联:', taskBeforeUpdate.value.text,
+            '原结束=', taskBeforeUpdate.value.end_date,
+            '新结束=', task.end_date)
           updateCascade(taskBeforeUpdate.value, task)
           taskBeforeUpdate.value = null
+        } else {
+          console.warn('[onAfterTaskUpdate] taskBeforeUpdate 为空，跳过级联', task.text)
         }
         tasks.value[index] = { ...tasks.value[index], ...task }
       }
@@ -2833,19 +2839,34 @@ const updateCascade = (originalTask, updatedTask) => {
 
   const updatedTaskIds = []
 
+  console.log('[updateCascade] 被调用:', originalTask.text,
+    '| 原结束=', originalTask.end_date,
+    '| 新结束=', updatedTask.end_date,
+    '| 原开始=', originalTask.start_date,
+    '| 新开始=', updatedTask.start_date)
+
   //如果改变了结束日期，则更新所有的后续任务开始和结束日期
-  if (!dayjs(originalTask.end_date).isSame(updatedTask.end_date)) {
+  if (originalTask.end_date && updatedTask.end_date &&
+      !dayjs(originalTask.end_date).isSame(updatedTask.end_date)) {
     //计算改变的日期差
     const dateDiff = dayjs(updatedTask.end_date).diff(dayjs(originalTask.end_date), 'day')
+    console.log('[updateCascade] 结束日期变化 dateDiff=', dateDiff,
+      '| 查找', updatedTask.id, '的后继任务, links数量=', links.value.length)
     let successors = getAllSuccessors(updatedTask.id, links.value)
+    console.log('[updateCascade] 找到后继任务 IDs:', successors)
     successors.forEach(successorId => {
       let index = tasks.value.findIndex(t => t.id === successorId)
       if (index !== -1) {
+        console.log('[updateCascade] 平移任务:', tasks.value[index].text,
+          '原开始=', tasks.value[index].start_date,
+          '新开始=', dayjs(tasks.value[index].start_date).add(dateDiff, 'day').format('YYYY-MM-DD'))
         tasks.value[index].start_date = dayjs(tasks.value[index].start_date).add(dateDiff, 'day').toDate()
         tasks.value[index].end_date = dayjs(tasks.value[index].end_date).add(dateDiff, 'day').toDate()
         updatedTaskIds.push(successorId)
       }
     })
+  } else {
+    console.log('[updateCascade] 结束日期无变化，跳过')
   }
 
   //如果改变了开始日期，则更新所有的前置任务开始和结束日期
