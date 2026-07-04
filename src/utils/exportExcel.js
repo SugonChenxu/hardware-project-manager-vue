@@ -422,10 +422,16 @@ export const exportGanttToExcel = async (options) => {
                     const indent = '  '.repeat(level)
                     cell.value = indent + (task.text || '')
                 } else if (fieldName === 'start_date') {
+                    // 解析前置任务（可能是数组或逗号分隔的字符串）
+                    let predecessorIds = task.predecessors || []
+                    if (typeof predecessorIds === 'string') {
+                        predecessorIds = predecessorIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
+                    }
+
                     // 如果任务有前置任务，使用公式计算机开始日期
-                    if (task.predecessors && task.predecessors.length > 0) {
+                    if (predecessorIds.length > 0) {
                         // 获取所有前置任务的行号
-                        const predecessorRows = task.predecessors
+                        const predecessorRows = predecessorIds
                             .map(predId => taskRowMapping[predId])
                             .filter(row => row !== undefined)
 
@@ -461,7 +467,15 @@ export const exportGanttToExcel = async (options) => {
                 } else if (fieldName === 'stakeholder') {
                     cell.value = task.stakeholder || ''
                 } else if (fieldName === 'predecessors') {
-                    cell.value = task.predecessors?.join(', ') || ''
+                    // 处理前置任务（可能是数组或字符串）
+                    let predValue = task.predecessors || ''
+                    if (Array.isArray(predValue)) {
+                        cell.value = predValue.join(', ')
+                    } else if (typeof predValue === 'string') {
+                        cell.value = predValue
+                    } else {
+                        cell.value = ''
+                    }
                 } else {
                     // 自定义列
                     cell.value = task[fieldName] || ''
