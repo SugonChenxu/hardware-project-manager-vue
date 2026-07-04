@@ -657,7 +657,7 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        21
+        34
       ],
       "description": "",
       "planned_start": "2027-04-28",
@@ -669,12 +669,6 @@
       "id": 13,
       "source": 13,
       "target": 20,
-      "type": "0"
-    },
-    {
-      "id": 24,
-      "source": 21,
-      "target": 35,
       "type": "0"
     },
     {
@@ -819,6 +813,12 @@
       "id": 50,
       "source": 31,
       "target": 32,
+      "type": "0"
+    },
+    {
+      "id": 51,
+      "source": 34,
+      "target": 35,
       "type": "0"
     }
   ]
