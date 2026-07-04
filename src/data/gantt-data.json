@@ -2,398 +2,806 @@
   "tasks": [
     {
       "id": 1,
-      "text": "硬件项目开发计划",
+      "text": "M1 预研阶段",
       "start_date": "2026-07-04",
-      "duration": 200,
-      "planned_start": "2026-07-04",
-      "planned_end": "2027-01-20",
+      "end_date": "2026-07-05",
+      "duration": 1,
       "progress": 0,
       "type": "project",
       "parent": 0,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "标准硬件项目开发流程模板"
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2026-07-04",
+      "planned_end": "2026-07-05"
     },
     {
       "id": 2,
-      "text": "M1 预研阶段",
+      "text": "L1 预研",
       "start_date": "2026-07-04",
-      "duration": 2,
-      "planned_start": "2026-07-04",
-      "planned_end": "2026-07-06",
+      "end_date": "2026-07-05",
+      "duration": 1,
       "progress": 0,
-      "type": "project",
+      "type": "task",
       "parent": 1,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "项目立项前的概念论证和需求分析"
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2026-07-04",
+      "planned_end": "2026-07-05"
     },
     {
       "id": 3,
-      "text": "L1 预研",
+      "text": "L2 详细需求",
       "start_date": "2026-07-04",
+      "end_date": "2026-07-05",
       "duration": 1,
-      "planned_start": "2026-07-04",
-      "planned_end": "2026-07-05",
       "progress": 0,
       "type": "task",
-      "parent": 2,
+      "parent": 1,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "市场调研、竞品分析、技术可行性研究",
-      "predecessors": []
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2026-07-04",
+      "planned_end": "2026-07-05"
     },
     {
       "id": 4,
-      "text": "L2 详细需求",
-      "start_date": "2026-07-05",
+      "text": "L3 立项筹备",
+      "start_date": "2026-07-04",
+      "end_date": "2026-07-05",
       "duration": 1,
-      "planned_start": "2026-07-05",
-      "planned_end": "2026-07-06",
       "progress": 0,
       "type": "task",
-      "parent": 2,
+      "parent": 1,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "需求文档编写、需求评审",
-      "predecessors": [3]
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2026-07-04",
+      "planned_end": "2026-07-05"
     },
     {
       "id": 5,
-      "text": "L3 立项筹备",
+      "text": "M2 计划阶段",
       "start_date": "2026-07-06",
-      "duration": 1,
-      "planned_start": "2026-07-06",
-      "planned_end": "2026-07-07",
+      "end_date": "2026-07-24",
+      "duration": 18,
       "progress": 0,
-      "type": "task",
-      "parent": 2,
+      "type": "project",
+      "parent": 0,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "立项报告、资源评估、立项评审",
-      "predecessors": [4]
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2026-07-06",
+      "planned_end": "2026-07-24"
     },
     {
       "id": 6,
-      "text": "M2 计划阶段",
-      "start_date": "2026-07-07",
-      "duration": 19,
-      "planned_start": "2026-07-07",
-      "planned_end": "2026-07-26",
+      "text": "L4 概要设计",
+      "start_date": "2026-07-06",
+      "end_date": "2026-07-13",
+      "duration": 7,
       "progress": 0,
-      "type": "project",
-      "parent": 1,
+      "type": "task",
+      "parent": 5,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "项目计划制定和资源分配"
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2026-07-06",
+      "planned_end": "2026-07-13"
     },
     {
       "id": 7,
-      "text": "L4 概要设计",
-      "start_date": "2026-07-07",
-      "duration": 8,
-      "planned_start": "2026-07-07",
-      "planned_end": "2026-07-15",
+      "text": "L5 开发计划",
+      "start_date": "2026-07-17",
+      "end_date": "2026-07-24",
+      "duration": 7,
       "progress": 0,
       "type": "task",
-      "parent": 6,
+      "parent": 5,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "系统架构设计、模块划分、接口定义",
-      "predecessors": [5]
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2026-07-17",
+      "planned_end": "2026-07-24"
     },
     {
       "id": 8,
-      "text": "L5 开发计划",
-      "start_date": "2026-07-15",
-      "duration": 8,
-      "planned_start": "2026-07-15",
-      "planned_end": "2026-07-23",
+      "text": "M3 研发测试阶段",
+      "start_date": "2026-07-25",
+      "end_date": "2027-02-27",
+      "duration": 217,
       "progress": 0,
-      "type": "task",
-      "parent": 6,
+      "type": "project",
+      "parent": 0,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "详细开发计划、任务分解、资源分配",
-      "predecessors": [7]
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2026-07-25",
+      "planned_end": "2027-02-27"
     },
     {
       "id": 9,
-      "text": "L6 风险计划",
-      "start_date": "2026-07-23",
-      "duration": 3,
-      "planned_start": "2026-07-23",
-      "planned_end": "2026-07-26",
+      "text": "L6 详细设计",
+      "start_date": "2026-07-25",
+      "end_date": "2026-11-01",
+      "duration": 99,
       "progress": 0,
       "type": "task",
-      "parent": 6,
+      "parent": 8,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "风险识别、风险评估、风险应对计划",
-      "predecessors": [8]
+      "predecessors": [
+        9
+      ],
+      "description": "",
+      "planned_start": "2026-07-25",
+      "planned_end": "2026-11-01"
     },
     {
       "id": 10,
-      "text": "M3 开发阶段",
-      "start_date": "2026-07-26",
-      "duration": 60,
-      "planned_start": "2026-07-26",
-      "planned_end": "2026-09-24",
+      "text": "板卡详设",
+      "start_date": "2026-07-25",
+      "end_date": "2026-11-01",
+      "duration": 99,
       "progress": 0,
-      "type": "project",
-      "parent": 1,
+      "type": "task",
+      "parent": 9,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "硬件设计和软件开发"
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2026-07-25",
+      "planned_end": "2026-11-01"
     },
     {
       "id": 11,
-      "text": "L7 硬件设计",
-      "start_date": "2026-07-26",
-      "duration": 30,
-      "planned_start": "2026-07-26",
-      "planned_end": "2026-08-25",
+      "text": "原理图",
+      "start_date": "2026-07-25",
+      "end_date": "2026-08-15",
+      "duration": 21,
       "progress": 0,
       "type": "task",
       "parent": 10,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "原理图设计、PCB设计、BOM制作",
-      "predecessors": [9]
+      "predecessors": [
+        9
+      ],
+      "description": "",
+      "planned_start": "2026-07-25",
+      "planned_end": "2026-08-15"
     },
     {
       "id": 12,
-      "text": "L8 软件开发",
-      "start_date": "2026-08-25",
+      "text": "Layout",
+      "start_date": "2026-08-16",
+      "end_date": "2026-09-15",
       "duration": 30,
-      "planned_start": "2026-08-25",
-      "planned_end": "2026-09-24",
       "progress": 0,
       "type": "task",
       "parent": 10,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "驱动开发、应用开发、接口开发",
-      "predecessors": [11]
+      "predecessors": [
+        26
+      ],
+      "description": "",
+      "planned_start": "2026-08-16",
+      "planned_end": "2026-09-15"
     },
     {
       "id": 13,
-      "text": "M4 验证阶段",
-      "start_date": "2026-09-24",
-      "duration": 30,
-      "planned_start": "2026-09-24",
-      "planned_end": "2026-10-24",
+      "text": "基材备料",
+      "start_date": "2026-07-25",
+      "end_date": "2026-09-23",
+      "duration": 60,
       "progress": 0,
-      "type": "project",
-      "parent": 1,
+      "type": "task",
+      "parent": 10,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "功能验证和性能测试"
+      "predecessors": [
+        9
+      ],
+      "description": "",
+      "planned_start": "2026-07-25",
+      "planned_end": "2026-09-23"
     },
     {
       "id": 14,
-      "text": "L9 单元测试",
-      "start_date": "2026-09-24",
-      "duration": 10,
-      "planned_start": "2026-09-24",
-      "planned_end": "2026-10-04",
+      "text": "BOM备料",
+      "start_date": "2026-08-01",
+      "end_date": "2026-09-30",
+      "duration": 60,
       "progress": 0,
       "type": "task",
-      "parent": 13,
+      "parent": 10,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "模块级测试、接口测试",
-      "predecessors": [12]
+      "predecessors": [
+        26
+      ],
+      "description": "",
+      "planned_start": "2026-08-01",
+      "planned_end": "2026-09-30"
     },
     {
       "id": 15,
-      "text": "L10 集成测试",
-      "start_date": "2026-10-04",
-      "duration": 10,
-      "planned_start": "2026-10-04",
-      "planned_end": "2026-10-14",
+      "text": "PCB洗板",
+      "start_date": "2026-09-23",
+      "end_date": "2026-10-21",
+      "duration": 28,
       "progress": 0,
       "type": "task",
-      "parent": 13,
+      "parent": 10,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "系统级测试、端到端测试",
-      "predecessors": [14]
+      "predecessors": [
+        29,
+        28
+      ],
+      "description": "",
+      "planned_start": "2026-09-23",
+      "planned_end": "2026-10-21"
     },
     {
       "id": 16,
-      "text": "L11 性能测试",
-      "start_date": "2026-10-14",
+      "text": "PCBA打板",
+      "start_date": "2026-10-22",
+      "end_date": "2026-11-01",
       "duration": 10,
-      "planned_start": "2026-10-14",
-      "planned_end": "2026-10-24",
       "progress": 0,
       "type": "task",
-      "parent": 13,
+      "parent": 10,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "压力测试、稳定性测试、兼容性测试",
-      "predecessors": [15]
+      "predecessors": [
+        31,
+        30
+      ],
+      "description": "",
+      "planned_start": "2026-10-22",
+      "planned_end": "2026-11-01"
     },
     {
       "id": 17,
-      "text": "M5 试产阶段",
-      "start_date": "2026-10-24",
-      "duration": 30,
-      "planned_start": "2026-10-24",
-      "planned_end": "2026-11-23",
+      "text": "结构打样",
+      "start_date": "2026-07-25",
+      "end_date": "2026-09-03",
+      "duration": 40,
       "progress": 0,
-      "type": "project",
-      "parent": 1,
+      "type": "task",
+      "parent": 9,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "小批量试产和问题修复"
+      "predecessors": [
+        9
+      ],
+      "description": "",
+      "planned_start": "2026-07-25",
+      "planned_end": "2026-09-03"
     },
     {
       "id": 18,
-      "text": "L12 试产准备",
-      "start_date": "2026-10-24",
-      "duration": 10,
-      "planned_start": "2026-10-24",
-      "planned_end": "2026-11-03",
+      "text": "散热打样",
+      "start_date": "2026-07-25",
+      "end_date": "2026-09-03",
+      "duration": 40,
       "progress": 0,
       "type": "task",
-      "parent": 17,
+      "parent": 9,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "试产工艺文件、测试工装、产线培训",
-      "predecessors": [16]
+      "predecessors": [
+        9
+      ],
+      "description": "",
+      "planned_start": "2026-07-25",
+      "planned_end": "2026-09-03"
     },
     {
       "id": 19,
-      "text": "L13 小批量试产",
-      "start_date": "2026-11-03",
-      "duration": 10,
-      "planned_start": "2026-11-03",
-      "planned_end": "2026-11-13",
+      "text": "L7 Power On",
+      "start_date": "2026-11-02",
+      "end_date": "2026-11-22",
+      "duration": 20,
       "progress": 0,
       "type": "task",
-      "parent": 17,
+      "parent": 8,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "50-200台小批量生产",
-      "predecessors": [18]
+      "predecessors": [
+        27
+      ],
+      "description": "",
+      "planned_start": "2026-11-02",
+      "planned_end": "2026-11-22"
     },
     {
       "id": 20,
-      "text": "L14 试产问题修复",
-      "start_date": "2026-11-13",
-      "duration": 10,
-      "planned_start": "2026-11-13",
-      "planned_end": "2026-11-23",
+      "text": "L9 DVT",
+      "start_date": "2026-11-23",
+      "end_date": "2027-02-27",
+      "duration": 96,
       "progress": 0,
       "type": "task",
-      "parent": 17,
+      "parent": 8,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "试产问题分析和设计优化",
-      "predecessors": [19]
+      "predecessors": [
+        13
+      ],
+      "description": "",
+      "planned_start": "2026-11-23",
+      "planned_end": "2027-02-27"
     },
     {
       "id": 21,
-      "text": "M6 量产阶段",
+      "text": "组装评审",
       "start_date": "2026-11-23",
-      "duration": 30,
-      "planned_start": "2026-11-23",
-      "planned_end": "2026-12-23",
+      "end_date": "2026-11-25",
+      "duration": 2,
       "progress": 0,
-      "type": "project",
-      "parent": 1,
+      "type": "task",
+      "parent": 20,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "批量生产和市场投放"
+      "predecessors": [
+        13
+      ],
+      "description": "",
+      "planned_start": "2026-11-23",
+      "planned_end": "2026-11-25"
     },
     {
       "id": 22,
-      "text": "L15 量产准备",
+      "text": "改版项测试",
       "start_date": "2026-11-23",
-      "duration": 10,
-      "planned_start": "2026-11-23",
-      "planned_end": "2026-12-03",
+      "end_date": "2026-12-07",
+      "duration": 14,
       "progress": 0,
       "type": "task",
-      "parent": 21,
+      "parent": 20,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "量产工艺最终确认、供应链确认",
-      "predecessors": [20]
+      "predecessors": [
+        13
+      ],
+      "description": "",
+      "planned_start": "2026-11-23",
+      "planned_end": "2026-12-07"
     },
     {
       "id": 23,
-      "text": "L16 批量生产",
-      "start_date": "2026-12-03",
-      "duration": 10,
-      "planned_start": "2026-12-03",
-      "planned_end": "2026-12-13",
+      "text": "非改版项测试",
+      "start_date": "2026-12-08",
+      "end_date": "2027-01-27",
+      "duration": 50,
       "progress": 0,
       "type": "task",
-      "parent": 21,
+      "parent": 20,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "首次批量生产（1000台以上）",
-      "predecessors": [22]
+      "predecessors": [
+        33
+      ],
+      "description": "",
+      "planned_start": "2026-12-08",
+      "planned_end": "2027-01-27"
     },
     {
       "id": 24,
-      "text": "L17 市场投放",
-      "start_date": "2026-12-13",
-      "duration": 10,
-      "planned_start": "2026-12-13",
-      "planned_end": "2026-12-23",
+      "text": "Debug",
+      "start_date": "2027-01-28",
+      "end_date": "2027-02-27",
+      "duration": 30,
       "progress": 0,
       "type": "task",
-      "parent": 21,
+      "parent": 20,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "description": "产品发布、市场推广、销售渠道准备",
-      "predecessors": [23]
+      "predecessors": [
+        35
+      ],
+      "description": "",
+      "planned_start": "2027-01-28",
+      "planned_end": "2027-02-27"
+    },
+    {
+      "id": 25,
+      "text": "改版",
+      "start_date": "2026-12-08",
+      "end_date": "2027-02-06",
+      "duration": 60,
+      "progress": 0,
+      "type": "task",
+      "parent": 20,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [
+        33
+      ],
+      "description": "",
+      "planned_start": "2026-12-08",
+      "planned_end": "2027-02-06"
+    },
+    {
+      "id": 26,
+      "text": "A02改版",
+      "start_date": "2026-12-08",
+      "end_date": "2026-12-29",
+      "duration": 21,
+      "progress": 0,
+      "type": "task",
+      "parent": 25,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [
+        33
+      ],
+      "description": "",
+      "planned_start": "2026-12-08",
+      "planned_end": "2026-12-29"
+    },
+    {
+      "id": 27,
+      "text": "A02洗板",
+      "start_date": "2026-12-30",
+      "end_date": "2027-01-29",
+      "duration": 30,
+      "progress": 0,
+      "type": "task",
+      "parent": 25,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [
+        36
+      ],
+      "description": "",
+      "planned_start": "2026-12-30",
+      "planned_end": "2027-01-29"
+    },
+    {
+      "id": 28,
+      "text": "A02打板",
+      "start_date": "2027-01-30",
+      "end_date": "2027-02-06",
+      "duration": 7,
+      "progress": 0,
+      "type": "task",
+      "parent": 25,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [
+        37
+      ],
+      "description": "",
+      "planned_start": "2027-01-30",
+      "planned_end": "2027-02-06"
+    },
+    {
+      "id": 29,
+      "text": "M4试制阶段（批量测试）",
+      "start_date": "2027-02-28",
+      "end_date": "2027-04-19",
+      "duration": 50,
+      "progress": 0,
+      "type": "project",
+      "parent": 0,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2027-02-28",
+      "planned_end": "2027-04-19"
+    },
+    {
+      "id": 30,
+      "text": "L12 批量测试",
+      "start_date": "2027-02-28",
+      "end_date": "2027-03-20",
+      "duration": 20,
+      "progress": 0,
+      "type": "task",
+      "parent": 29,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [
+        39
+      ],
+      "description": "",
+      "planned_start": "2027-02-28",
+      "planned_end": "2027-03-20"
+    },
+    {
+      "id": 31,
+      "text": "Debug",
+      "start_date": "2027-03-21",
+      "end_date": "2027-04-04",
+      "duration": 14,
+      "progress": 0,
+      "type": "task",
+      "parent": 29,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [
+        19
+      ],
+      "description": "",
+      "planned_start": "2027-03-21",
+      "planned_end": "2027-04-04"
+    },
+    {
+      "id": 32,
+      "text": "质量抽测&质量评审",
+      "start_date": "2027-04-05",
+      "end_date": "2027-04-19",
+      "duration": 14,
+      "progress": 0,
+      "type": "task",
+      "parent": 29,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [
+        40
+      ],
+      "description": "",
+      "planned_start": "2027-04-05",
+      "planned_end": "2027-04-19"
+    },
+    {
+      "id": 33,
+      "text": "M5 新品导入阶段",
+      "start_date": "2027-04-20",
+      "end_date": "2027-07-27",
+      "duration": 98,
+      "progress": 0,
+      "type": "project",
+      "parent": 0,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [],
+      "description": "",
+      "planned_start": "2027-04-20",
+      "planned_end": "2027-07-27"
+    },
+    {
+      "id": 34,
+      "text": "L13 NPI导入",
+      "start_date": "2027-04-20",
+      "end_date": "2027-04-27",
+      "duration": 7,
+      "progress": 0,
+      "type": "task",
+      "parent": 33,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [
+        41
+      ],
+      "description": "",
+      "planned_start": "2027-04-20",
+      "planned_end": "2027-04-27"
+    },
+    {
+      "id": 35,
+      "text": "L14 直通率爬坡",
+      "start_date": "2027-04-28",
+      "end_date": "2027-07-27",
+      "duration": 90,
+      "progress": 0,
+      "type": "task",
+      "parent": 33,
+      "status": "not_started",
+      "owner": "",
+      "stakeholder": "",
+      "predecessors": [
+        21
+      ],
+      "description": "",
+      "planned_start": "2027-04-28",
+      "planned_end": "2027-07-27"
     }
   ],
   "links": [
-    {"id": 1, "source": 3, "target": 4, "type": "0"},
-    {"id": 2, "source": 4, "target": 5, "type": "0"},
-    {"id": 3, "source": 5, "target": 7, "type": "0"},
-    {"id": 4, "source": 7, "target": 8, "type": "0"},
-    {"id": 5, "source": 8, "target": 9, "type": "0"},
-    {"id": 6, "source": 9, "target": 11, "type": "0"},
-    {"id": 7, "source": 11, "target": 12, "type": "0"},
-    {"id": 8, "source": 12, "target": 14, "type": "0"},
-    {"id": 9, "source": 14, "target": 15, "type": "0"},
-    {"id": 10, "source": 15, "target": 16, "type": "0"},
-    {"id": 11, "source": 16, "target": 18, "type": "0"},
-    {"id": 12, "source": 18, "target": 19, "type": "0"},
-    {"id": 13, "source": 19, "target": 20, "type": "0"},
-    {"id": 14, "source": 20, "target": 22, "type": "0"},
-    {"id": 15, "source": 22, "target": 23, "type": "0"},
-    {"id": 16, "source": 23, "target": 24, "type": "0"}
+    {
+      "id": 1,
+      "source": 9,
+      "target": 9,
+      "type": "0"
+    },
+    {
+      "id": 2,
+      "source": 9,
+      "target": 11,
+      "type": "0"
+    },
+    {
+      "id": 3,
+      "source": 26,
+      "target": 12,
+      "type": "0"
+    },
+    {
+      "id": 4,
+      "source": 9,
+      "target": 13,
+      "type": "0"
+    },
+    {
+      "id": 5,
+      "source": 26,
+      "target": 14,
+      "type": "0"
+    },
+    {
+      "id": 6,
+      "source": 29,
+      "target": 15,
+      "type": "0"
+    },
+    {
+      "id": 7,
+      "source": 28,
+      "target": 15,
+      "type": "0"
+    },
+    {
+      "id": 8,
+      "source": 31,
+      "target": 16,
+      "type": "0"
+    },
+    {
+      "id": 9,
+      "source": 30,
+      "target": 16,
+      "type": "0"
+    },
+    {
+      "id": 10,
+      "source": 9,
+      "target": 17,
+      "type": "0"
+    },
+    {
+      "id": 11,
+      "source": 9,
+      "target": 18,
+      "type": "0"
+    },
+    {
+      "id": 12,
+      "source": 27,
+      "target": 19,
+      "type": "0"
+    },
+    {
+      "id": 13,
+      "source": 13,
+      "target": 20,
+      "type": "0"
+    },
+    {
+      "id": 14,
+      "source": 13,
+      "target": 21,
+      "type": "0"
+    },
+    {
+      "id": 15,
+      "source": 13,
+      "target": 22,
+      "type": "0"
+    },
+    {
+      "id": 16,
+      "source": 33,
+      "target": 23,
+      "type": "0"
+    },
+    {
+      "id": 17,
+      "source": 35,
+      "target": 24,
+      "type": "0"
+    },
+    {
+      "id": 18,
+      "source": 33,
+      "target": 25,
+      "type": "0"
+    },
+    {
+      "id": 19,
+      "source": 33,
+      "target": 26,
+      "type": "0"
+    },
+    {
+      "id": 20,
+      "source": 36,
+      "target": 27,
+      "type": "0"
+    },
+    {
+      "id": 21,
+      "source": 37,
+      "target": 28,
+      "type": "0"
+    },
+    {
+      "id": 22,
+      "source": 39,
+      "target": 30,
+      "type": "0"
+    },
+    {
+      "id": 23,
+      "source": 19,
+      "target": 31,
+      "type": "0"
+    },
+    {
+      "id": 24,
+      "source": 40,
+      "target": 32,
+      "type": "0"
+    },
+    {
+      "id": 25,
+      "source": 41,
+      "target": 34,
+      "type": "0"
+    },
+    {
+      "id": 26,
+      "source": 21,
+      "target": 35,
+      "type": "0"
+    }
   ]
 }
