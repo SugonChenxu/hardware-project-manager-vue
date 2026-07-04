@@ -2038,6 +2038,16 @@ const initGantt = () => {
           updateCascade(taskBeforeUpdate.value, task)
           taskBeforeUpdate.value = null
         }
+        // 进度/状态联动
+        if (task.progress > 0 && task.status == 'not_started') {
+          task.status = 'in_progress'
+        }
+        if (task.progress == 1) {
+          task.status = 'completed'
+        }
+        if (task.status == 'completed' && task.progress < 1) {
+          task.progress = 1
+        }
         tasks.value[index] = { ...tasks.value[index], ...task }
       }
     })
@@ -2390,52 +2400,14 @@ const syncTaskProgressAndStatus = (oldtask, task) => {
 
 /**
  * 内联编辑保存时触发
- * @param {Object} params - 包含任务ID、列名、旧值、新值的对象
+ * 仅做必要处理，级联更新统一由 onAfterTaskUpdate 处理
  */
 const inlineEditOnSave = (state) => {
   const { id, columnName, oldValue, newValue } = state
-  var task = tasks.value.find(t => t.id == id)
   if (oldValue == newValue) {
     return;
   }
-
-  // 构造修改前的任务快照（Gantt 已更新内部数据，需手动还原旧值）
-  const originalTask = { ...task }
-
-  if (columnName === "start_date") {
-    originalTask.start_date = oldValue
-  }
-  if (columnName === "end_date") {
-    originalTask.end_date = oldValue
-  }
-  if (columnName === "duration") {
-    // 旧 end_date = start_date + 旧工期 - 1（日期包含当天）
-    const oldDur = parseInt(oldValue)
-    originalTask.end_date = dayjs(task.start_date).add(oldDur - 1, 'day').toDate()
-    originalTask.duration = oldDur
-  }
-
-  // 触发级联
-  updateCascade(originalTask, task)
-
-  if (columnName === "progress") {
-    if (task.progress > 0 && task.status == 'not_started') {
-      task.status = 'in_progress'
-    }
-    if (task.progress == 1) { //直接进度调整为100%，则状态调整为完成
-      task.status = 'completed'
-    }
-  }
-  if (columnName === "status") {
-    if (task.progress < 1 && task.status == 'completed') { //调整进度为完成，则百分比调整为100%
-      task.progress = 1
-    }
-  }
-
-  gantt.updateTask(id, task)
-  setTimeout(() => {
-    gantt.render()
-  }, 100)
+  // 内联编辑保存后，Gantt 内部已更新数据，无需额外操作
 }
 
 // 设置时间刻度
@@ -2808,7 +2780,6 @@ const updateTask = () => {
     // 更新前置任务链接
     updateTaskLinks(editTask.value.id, newPredecessors)
 
-    updateCascade(originalTask, updatedTask)
     syncTaskProgressAndStatus(originalTask, updatedTask)
 
     // 更新甘特图中的任务
