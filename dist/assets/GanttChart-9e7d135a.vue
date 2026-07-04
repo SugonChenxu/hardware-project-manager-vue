@@ -2070,7 +2070,7 @@ const initGantt = () => {
     // 内联编辑保存事件
     var inlineEditors = gantt.ext.inlineEditors;
     inlineEditors.attachEvent("onSave", function (state) {
-      console.log('[inlineEditOnSave] state:', state.id, state.column, state.oldValue, '->', state.newValue)
+      console.log('[inlineEditOnSave] 完整 state 对象:', JSON.stringify(state))
       inlineEditOnSave(state)
     });
 
@@ -2841,10 +2841,15 @@ const updateCascade = (originalTask, updatedTask) => {
     '| 新开始=', updatedTask.start_date)
 
   //如果改变了结束日期，则更新所有的后续任务开始和结束日期
-  if (originalTask.end_date && updatedTask.end_date &&
-        !dayjs(originalTask.end_date).startOf('day').isSame(dayjs(updatedTask.end_date).startOf('day'))) {
+  // 统一转成 YYYY-MM-DD 字符串比较，避免时区问题
+  const origEndDateStr = originalTask.end_date ? dayjs(originalTask.end_date).format('YYYY-MM-DD') : null
+  const updatedEndDateStr = updatedTask.end_date ? dayjs(updatedTask.end_date).format('YYYY-MM-DD') : null
+  if (origEndDateStr && updatedEndDateStr && origEndDateStr !== updatedEndDateStr) {
     // 用 startOf('day') 对齐，避免时区导致 diff 多算一天
-    const dateDiff = dayjs(updatedTask.end_date).startOf('day').diff(dayjs(originalTask.end_date).startOf('day'), 'day')
+    // 统一用 YYYY-MM-DD 字符串计算 dateDiff，避免时区偏移
+    const oldDateStr = dayjs(originalTask.end_date).format('YYYY-MM-DD')
+    const newDateStr = dayjs(updatedTask.end_date).format('YYYY-MM-DD')
+    const dateDiff = dayjs(newDateStr).diff(dayjs(oldDateStr), 'day')
     console.log('[updateCascade] 结束日期变化 dateDiff=', dateDiff,
       '| 查找', updatedTask.id, '的后继任务, links数量=', links.value.length)
     let successors = getAllSuccessors(updatedTask.id, links.value)
@@ -2864,9 +2869,15 @@ const updateCascade = (originalTask, updatedTask) => {
     console.log('[updateCascade] 结束日期无变化，跳过')
   }
 
-  if (!dayjs(originalTask.start_date).startOf('day').isSame(dayjs(updatedTask.start_date).startOf('day'))) {
-    // 用 startOf('day') 对齐，避免时区导致 diff 多算一天
-    const dateDiff = dayjs(updatedTask.start_date).startOf('day').diff(dayjs(originalTask.start_date).startOf('day'), 'day')
+  // 如果改变了开始日期，则更新所有的前置任务开始和结束日期
+  // 统一转成 YYYY-MM-DD 字符串比较，避免时区问题
+  const origStartDateStr = originalTask.start_date ? dayjs(originalTask.start_date).format('YYYY-MM-DD') : null
+  const updatedStartDateStr = updatedTask.start_date ? dayjs(updatedTask.start_date).format('YYYY-MM-DD') : null
+  if (origStartDateStr && updatedStartDateStr && origStartDateStr !== updatedStartDateStr) {
+    // 统一用 YYYY-MM-DD 字符串计算 dateDiff，避免时区偏移
+    const oldDateStr = dayjs(originalTask.start_date).format('YYYY-MM-DD')
+    const newDateStr = dayjs(updatedTask.start_date).format('YYYY-MM-DD')
+    const dateDiff = dayjs(newDateStr).diff(dayjs(oldDateStr), 'day')
     let predecessors = getAllPredecessors(updatedTask.id, links.value)
     predecessors.forEach(predecessorId => {
       let index = tasks.value.findIndex(t => t.id === predecessorId)
