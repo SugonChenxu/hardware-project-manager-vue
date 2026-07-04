@@ -2070,6 +2070,7 @@ const initGantt = () => {
     // 内联编辑保存事件
     var inlineEditors = gantt.ext.inlineEditors;
     inlineEditors.attachEvent("onSave", function (state) {
+      console.log('[inlineEditOnSave] state:', state.id, state.column, state.oldValue, '->', state.newValue)
       inlineEditOnSave(state)
     });
 
@@ -2423,7 +2424,7 @@ const inlineEditOnSave = ({ id, column, oldValue, newValue }) => {
       task.status = 'completed'
     }
   }
-  if (columnName == "status") {
+  if (column === "status") {
     if (task.progress < 1 && task.status == 'completed') { //调整进度为完成，则百分比调整为100%
       task.progress = 1
     }
