@@ -455,44 +455,12 @@ export const exportGanttToExcel = async (options) => {
                     const indent = '  '.repeat(level)
                     cell.value = indent + (task.text || '')
                 } else if (fieldName === 'start_date') {
-                    // 解析前置任务（可能是数组或逗号分隔的字符串）
-                    let predecessorIds = task.predecessors || []
-                    if (typeof predecessorIds === 'string') {
-                        predecessorIds = predecessorIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
-                    }
-
-                    // 如果任务有前置任务，使用公式计算开始日期
-                    if (predecessorIds.length > 0) {
-                        // 获取所有前置任务的行号
-                        const predecessorRows = predecessorIds
-                            .map(predId => taskRowMapping[predId])
-                            .filter(row => row !== undefined)
-
-                        if (predecessorRows.length > 0) {
-                            // 构建公式：取所有前置任务结束日期的最大值 + 1天
-                            const endDateColLetter = getColumnLetter(endDateColIndex + 1)
-                            const maxFormula = predecessorRows
-                                .map(row => `${endDateColLetter}${row}`)
-                                .join(',')
-                            // 使用公式：=MAX(结束日期列5,结束日期列10)+1
-                            cell.value = { formula: `MAX(${maxFormula})+1` }
-                        } else {
-                            // 没有有效的前置任务，使用任务本身的开始日期（中午12点避免时区跨天）
-                            cell.value = dateToExcelDate(task.start_date)
-                        }
-                    } else {
-                        // 没有前置任务，使用任务本身的开始日期（中午12点避免时区跨天）
-                        cell.value = dateToExcelDate(task.start_date)
-                    }
-                    // 设置日期格式为 yyyy/mm/dd
+                    // 直接输出日期值，不写公式（避免任务增删后行号变化导致bug）
+                    cell.value = dateToExcelDate(task.start_date)
                     cell.numFmt = 'yyyy/mm/dd'
                 } else if (fieldName === 'end_date') {
-                    // 完成时间 = 开始时间 + 工期（Excel 日期直接相加，无需减1）
-                    const startColLetter = getColumnLetter(startDateColIndex + 1)
-                    const durationColLetter = getColumnLetter(durationColIndex + 1)
-                    // 公式：=开始日期 + 工期
-                    cell.value = { formula: `${startColLetter}${rowIndex}+${durationColLetter}${rowIndex}` }
-                    // 设置日期格式为 yyyy/mm/dd
+                    // 直接输出日期值，不写公式
+                    cell.value = dateToExcelDate(task.end_date)
                     cell.numFmt = 'yyyy/mm/dd'
                 } else if (fieldName === 'duration') {
                     cell.value = task.duration || 0
