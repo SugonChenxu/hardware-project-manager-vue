@@ -82,6 +82,11 @@
                       保存为默认模板
                     </el-button>
                   </div>
+                  <div class="detail-row action-row">
+                    <el-button type="info" size="small" @click="debugLocalStorage">
+                      调试：查看本地数据
+                    </el-button>
+                  </div>
 
                   <!-- 权限设置 -->
                   <div class="detail-row permission-row" v-if="projectInfo?.createUserId == userInfo?.id">
