@@ -3,9 +3,9 @@
     {
       "id": 1,
       "text": "M1 预研阶段",
-      "start_date": "2026-07-04",
-      "end_date": "2026-07-05",
-      "duration": 1,
+      "start_date": "2026-07-09",
+      "end_date": "2026-07-16",
+      "duration": 7,
       "progress": 0,
       "type": "project",
       "parent": 0,
@@ -18,45 +18,11 @@
       "planned_end": "2026-07-05"
     },
     {
-      "id": 2,
-      "text": "L1 预研",
-      "start_date": "2026-07-04",
-      "end_date": "2026-07-05",
-      "duration": 1,
-      "progress": 0,
-      "type": "task",
-      "parent": 1,
-      "status": "not_started",
-      "owner": "",
-      "stakeholder": "",
-      "predecessors": [],
-      "description": "",
-      "planned_start": "2026-07-04",
-      "planned_end": "2026-07-05"
-    },
-    {
-      "id": 3,
-      "text": "L2 详细需求",
-      "start_date": "2026-07-04",
-      "end_date": "2026-07-05",
-      "duration": 1,
-      "progress": 0,
-      "type": "task",
-      "parent": 1,
-      "status": "not_started",
-      "owner": "",
-      "stakeholder": "",
-      "predecessors": [],
-      "description": "",
-      "planned_start": "2026-07-04",
-      "planned_end": "2026-07-05"
-    },
-    {
       "id": 4,
       "text": "L3 立项筹备",
-      "start_date": "2026-07-04",
-      "end_date": "2026-07-05",
-      "duration": 1,
+      "start_date": "2026-07-09",
+      "end_date": "2026-07-16",
+      "duration": 7,
       "progress": 0,
       "type": "task",
       "parent": 1,
@@ -71,9 +37,9 @@
     {
       "id": 5,
       "text": "M2 计划阶段",
-      "start_date": "2026-07-06",
+      "start_date": "2026-07-17",
       "end_date": "2026-07-24",
-      "duration": 18,
+      "duration": 7,
       "progress": 0,
       "type": "project",
       "parent": 0,
@@ -88,8 +54,8 @@
     {
       "id": 6,
       "text": "L4 概要设计",
-      "start_date": "2026-07-06",
-      "end_date": "2026-07-13",
+      "start_date": "2026-07-17",
+      "end_date": "2026-07-24",
       "duration": 7,
       "progress": 0,
       "type": "task",
@@ -97,10 +63,14 @@
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "predecessors": [],
+      "predecessors": [
+        4
+      ],
       "description": "",
       "planned_start": "2026-07-06",
-      "planned_end": "2026-07-13"
+      "planned_end": "2026-07-13",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 7,
@@ -114,10 +84,14 @@
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "predecessors": [],
+      "predecessors": [
+        4
+      ],
       "description": "",
       "planned_start": "2026-07-17",
-      "planned_end": "2026-07-24"
+      "planned_end": "2026-07-24",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 8,
@@ -143,17 +117,17 @@
       "end_date": "2026-11-01",
       "duration": 99,
       "progress": 0,
-      "type": "task",
+      "type": "project",
       "parent": 8,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "predecessors": [
-        9
-      ],
+      "predecessors": [],
       "description": "",
       "planned_start": "2026-07-25",
-      "planned_end": "2026-11-01"
+      "planned_end": "2026-11-01",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 10,
@@ -162,7 +136,7 @@
       "end_date": "2026-11-01",
       "duration": 99,
       "progress": 0,
-      "type": "task",
+      "type": "project",
       "parent": 9,
       "status": "not_started",
       "owner": "",
@@ -170,7 +144,9 @@
       "predecessors": [],
       "description": "",
       "planned_start": "2026-07-25",
-      "planned_end": "2026-11-01"
+      "planned_end": "2026-11-01",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 11,
@@ -185,11 +161,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        9
+        7
       ],
       "description": "",
       "planned_start": "2026-07-25",
-      "planned_end": "2026-08-15"
+      "planned_end": "2026-08-15",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 12,
@@ -204,11 +182,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        26
+        11
       ],
       "description": "",
       "planned_start": "2026-08-16",
-      "planned_end": "2026-09-15"
+      "planned_end": "2026-09-15",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 13,
@@ -223,11 +203,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        9
+        7
       ],
       "description": "",
       "planned_start": "2026-07-25",
-      "planned_end": "2026-09-23"
+      "planned_end": "2026-09-23",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 14,
@@ -242,11 +224,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        26
+        11
       ],
       "description": "",
       "planned_start": "2026-08-01",
-      "planned_end": "2026-09-30"
+      "planned_end": "2026-09-30",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 15,
@@ -261,12 +245,14 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        29,
-        28
+        13,
+        12
       ],
       "description": "",
       "planned_start": "2026-09-23",
-      "planned_end": "2026-10-21"
+      "planned_end": "2026-10-21",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 16,
@@ -281,12 +267,14 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        31,
-        30
+        14,
+        15
       ],
       "description": "",
       "planned_start": "2026-10-22",
-      "planned_end": "2026-11-01"
+      "planned_end": "2026-11-01",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 17,
@@ -301,11 +289,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        9
+        7
       ],
       "description": "",
       "planned_start": "2026-07-25",
-      "planned_end": "2026-09-03"
+      "planned_end": "2026-09-03",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 18,
@@ -320,11 +310,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        9
+        7
       ],
       "description": "",
       "planned_start": "2026-07-25",
-      "planned_end": "2026-09-03"
+      "planned_end": "2026-09-03",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 19,
@@ -339,11 +331,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        27
+        16
       ],
       "description": "",
       "planned_start": "2026-11-02",
-      "planned_end": "2026-11-22"
+      "planned_end": "2026-11-22",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 20,
@@ -352,7 +346,7 @@
       "end_date": "2027-02-27",
       "duration": 96,
       "progress": 0,
-      "type": "task",
+      "type": "project",
       "parent": 8,
       "status": "not_started",
       "owner": "",
@@ -362,7 +356,9 @@
       ],
       "description": "",
       "planned_start": "2026-11-23",
-      "planned_end": "2027-02-27"
+      "planned_end": "2027-02-27",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 21,
@@ -377,11 +373,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        13
+        19
       ],
       "description": "",
       "planned_start": "2026-11-23",
-      "planned_end": "2026-11-25"
+      "planned_end": "2026-11-25",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 22,
@@ -396,11 +394,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        13
+        19
       ],
       "description": "",
       "planned_start": "2026-11-23",
-      "planned_end": "2026-12-07"
+      "planned_end": "2026-12-07",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 23,
@@ -415,11 +415,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        33
+        22
       ],
       "description": "",
       "planned_start": "2026-12-08",
-      "planned_end": "2027-01-27"
+      "planned_end": "2027-01-27",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 24,
@@ -434,11 +436,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        35
+        23
       ],
       "description": "",
       "planned_start": "2027-01-28",
-      "planned_end": "2027-02-27"
+      "planned_end": "2027-02-27",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 25,
@@ -447,17 +451,17 @@
       "end_date": "2027-02-06",
       "duration": 60,
       "progress": 0,
-      "type": "task",
+      "type": "project",
       "parent": 20,
       "status": "not_started",
       "owner": "",
       "stakeholder": "",
-      "predecessors": [
-        33
-      ],
+      "predecessors": [],
       "description": "",
       "planned_start": "2026-12-08",
-      "planned_end": "2027-02-06"
+      "planned_end": "2027-02-06",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 26,
@@ -472,11 +476,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        33
+        22
       ],
       "description": "",
       "planned_start": "2026-12-08",
-      "planned_end": "2026-12-29"
+      "planned_end": "2026-12-29",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 27,
@@ -491,11 +497,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        36
+        26
       ],
       "description": "",
       "planned_start": "2026-12-30",
-      "planned_end": "2027-01-29"
+      "planned_end": "2027-01-29",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 28,
@@ -510,11 +518,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        37
+        27
       ],
       "description": "",
       "planned_start": "2027-01-30",
-      "planned_end": "2027-02-06"
+      "planned_end": "2027-02-06",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 29,
@@ -546,11 +556,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        39
+        24
       ],
       "description": "",
       "planned_start": "2027-02-28",
-      "planned_end": "2027-03-20"
+      "planned_end": "2027-03-20",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 31,
@@ -565,11 +577,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        19
+        30
       ],
       "description": "",
       "planned_start": "2027-03-21",
-      "planned_end": "2027-04-04"
+      "planned_end": "2027-04-04",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 32,
@@ -584,11 +598,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        40
+        31
       ],
       "description": "",
       "planned_start": "2027-04-05",
-      "planned_end": "2027-04-19"
+      "planned_end": "2027-04-19",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 33,
@@ -620,11 +636,13 @@
       "owner": "",
       "stakeholder": "",
       "predecessors": [
-        41
+        32
       ],
       "description": "",
       "planned_start": "2027-04-20",
-      "planned_end": "2027-04-27"
+      "planned_end": "2027-04-27",
+      "backgroundColor": "",
+      "stage": ""
     },
     {
       "id": 35,
@@ -648,159 +666,159 @@
   ],
   "links": [
     {
-      "id": 1,
-      "source": 9,
-      "target": 9,
-      "type": "0"
-    },
-    {
-      "id": 2,
-      "source": 9,
-      "target": 11,
-      "type": "0"
-    },
-    {
-      "id": 3,
-      "source": 26,
-      "target": 12,
-      "type": "0"
-    },
-    {
-      "id": 4,
-      "source": 9,
-      "target": 13,
-      "type": "0"
-    },
-    {
-      "id": 5,
-      "source": 26,
-      "target": 14,
-      "type": "0"
-    },
-    {
-      "id": 6,
-      "source": 29,
-      "target": 15,
-      "type": "0"
-    },
-    {
-      "id": 7,
-      "source": 28,
-      "target": 15,
-      "type": "0"
-    },
-    {
-      "id": 8,
-      "source": 31,
-      "target": 16,
-      "type": "0"
-    },
-    {
-      "id": 9,
-      "source": 30,
-      "target": 16,
-      "type": "0"
-    },
-    {
-      "id": 10,
-      "source": 9,
-      "target": 17,
-      "type": "0"
-    },
-    {
-      "id": 11,
-      "source": 9,
-      "target": 18,
-      "type": "0"
-    },
-    {
-      "id": 12,
-      "source": 27,
-      "target": 19,
-      "type": "0"
-    },
-    {
       "id": 13,
       "source": 13,
       "target": 20,
       "type": "0"
     },
     {
-      "id": 14,
-      "source": 13,
-      "target": 21,
-      "type": "0"
-    },
-    {
-      "id": 15,
-      "source": 13,
-      "target": 22,
-      "type": "0"
-    },
-    {
-      "id": 16,
-      "source": 33,
-      "target": 23,
-      "type": "0"
-    },
-    {
-      "id": 17,
-      "source": 35,
-      "target": 24,
-      "type": "0"
-    },
-    {
-      "id": 18,
-      "source": 33,
-      "target": 25,
-      "type": "0"
-    },
-    {
-      "id": 19,
-      "source": 33,
-      "target": 26,
-      "type": "0"
-    },
-    {
-      "id": 20,
-      "source": 36,
-      "target": 27,
-      "type": "0"
-    },
-    {
-      "id": 21,
-      "source": 37,
-      "target": 28,
-      "type": "0"
-    },
-    {
-      "id": 22,
-      "source": 39,
-      "target": 30,
-      "type": "0"
-    },
-    {
-      "id": 23,
-      "source": 19,
-      "target": 31,
-      "type": "0"
-    },
-    {
       "id": 24,
-      "source": 40,
-      "target": 32,
-      "type": "0"
-    },
-    {
-      "id": 25,
-      "source": 41,
-      "target": 34,
+      "source": 21,
+      "target": 35,
       "type": "0"
     },
     {
       "id": 26,
-      "source": 21,
-      "target": 35,
+      "source": 32,
+      "target": 34,
+      "type": "0"
+    },
+    {
+      "id": 28,
+      "source": 4,
+      "target": 6,
+      "type": "0"
+    },
+    {
+      "id": 29,
+      "source": 4,
+      "target": 7,
+      "type": "0"
+    },
+    {
+      "id": 30,
+      "source": 7,
+      "target": 11,
+      "type": "0"
+    },
+    {
+      "id": 31,
+      "source": 11,
+      "target": 12,
+      "type": "0"
+    },
+    {
+      "id": 32,
+      "source": 7,
+      "target": 13,
+      "type": "0"
+    },
+    {
+      "id": 33,
+      "source": 11,
+      "target": 14,
+      "type": "0"
+    },
+    {
+      "id": 34,
+      "source": 13,
+      "target": 15,
+      "type": "0"
+    },
+    {
+      "id": 35,
+      "source": 12,
+      "target": 15,
+      "type": "0"
+    },
+    {
+      "id": 36,
+      "source": 14,
+      "target": 16,
+      "type": "0"
+    },
+    {
+      "id": 37,
+      "source": 15,
+      "target": 16,
+      "type": "0"
+    },
+    {
+      "id": 38,
+      "source": 7,
+      "target": 17,
+      "type": "0"
+    },
+    {
+      "id": 39,
+      "source": 7,
+      "target": 18,
+      "type": "0"
+    },
+    {
+      "id": 40,
+      "source": 16,
+      "target": 19,
+      "type": "0"
+    },
+    {
+      "id": 41,
+      "source": 19,
+      "target": 21,
+      "type": "0"
+    },
+    {
+      "id": 42,
+      "source": 19,
+      "target": 22,
+      "type": "0"
+    },
+    {
+      "id": 43,
+      "source": 22,
+      "target": 23,
+      "type": "0"
+    },
+    {
+      "id": 44,
+      "source": 23,
+      "target": 24,
+      "type": "0"
+    },
+    {
+      "id": 45,
+      "source": 22,
+      "target": 26,
+      "type": "0"
+    },
+    {
+      "id": 46,
+      "source": 26,
+      "target": 27,
+      "type": "0"
+    },
+    {
+      "id": 47,
+      "source": 27,
+      "target": 28,
+      "type": "0"
+    },
+    {
+      "id": 48,
+      "source": 24,
+      "target": 30,
+      "type": "0"
+    },
+    {
+      "id": 49,
+      "source": 30,
+      "target": 31,
+      "type": "0"
+    },
+    {
+      "id": 50,
+      "source": 31,
+      "target": 32,
       "type": "0"
     }
   ]
