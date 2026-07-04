@@ -3663,13 +3663,16 @@ const createNewProject = async () => {
     cancelButtonText: '取消',
     type: 'warning'
   })
-    // 清空数据
-    tasks.value = []
-    links.value = []
-    currentTask.value = null
-    gantt.clearAll()
+
+    // 加载默认模板
+    const defaultData = await loadGanttData()
+    
+    // 生成新项目 code
+    const newCode = `GANTT_${Date.now()}`
+    
+    // 初始化项目信息
     projectInfo.value = {
-      code: `GANTT_${Date.now()}`,
+      code: newCode,
       name: '未命名项目',
       description: '新建项目',
       createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
@@ -3683,6 +3686,12 @@ const createNewProject = async () => {
       permissionType: 'VIEW'
     }
 
+    // 使用默认模板数据
+    tasks.value = defaultData.tasks || []
+    links.value = defaultData.links || []
+    currentTask.value = null
+    gantt.clearAll()
+    
     // 重新加载甘特图
     loadData()
 
