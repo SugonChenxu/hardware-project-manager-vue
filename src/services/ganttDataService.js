@@ -68,13 +68,25 @@ const saveProjectList = (list) => {
  * @returns {Promise<{tasks: Array, links: Array, projectInfo?: Object}>}
  */
 export const loadGanttData = async (code = null) => {
+  // 确保任务有 text 字段（DHTMLX Gantt 必须）
+  const ensureTaskText = (tasks) => {
+    return (tasks || []).map(task => {
+      if (!task) return null
+      const t = { ...task }
+      // DHTMLX Gantt 必须用 text 字段显示任务名
+      if (!t.text && t.name) t.text = t.name
+      if (!t.text) t.text = '未命名任务'
+      return t
+    }).filter(Boolean)
+  }
+
   if (code) {
     // 从 LocalStorage 加载指定项目
     const allData = getLocalData()
     if (allData && allData[code]) {
       const projectData = allData[code]
       return {
-        tasks: projectData.tasks || [],
+        tasks: ensureTaskText(projectData.tasks),
         links: projectData.links || [],
         projectInfo: projectData.projectInfo || null
       }
@@ -88,7 +100,7 @@ export const loadGanttData = async (code = null) => {
   } else {
     // 没有 Code 直接加载默认数据
     return {
-      tasks: defaultData.tasks,
+      tasks: ensureTaskText(defaultData.tasks),
       links: defaultData.links,
       projectInfo: {
         code: `PROJECT_${Date.now()}`,

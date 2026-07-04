@@ -2466,11 +2466,14 @@ const syncPredecessorsWithLinks = () => {
   const newLinks = []
   let linkId = 1
 
-  tasks.value.forEach(task => {
-    if (task.predecessors && task.predecessors.length > 0) {
+  // 过滤掉无效任务
+  const validTasks = tasks.value.filter(t => t && t.id)
+  
+  validTasks.forEach(task => {
+    if (task.predecessors && Array.isArray(task.predecessors) && task.predecessors.length > 0) {
       task.predecessors.forEach(predId => {
         // 检查前置任务是否存在
-        const predTask = tasks.value.find(t => t.id === predId)
+        const predTask = validTasks.find(t => t.id === predId)
         if (predTask) {
           newLinks.push({
             id: linkId++,
