@@ -121,8 +121,9 @@ export const exportGanttToExcel = async (options) => {
             }))
 
         // 找到 start_date 和 end_date 列的索引
-        const startDateColIndex = leftColumns.findIndex(col => col.key === 'start_date')
-        const endDateColIndex = leftColumns.findIndex(col => col.key === 'end_date')
+        let startDateColIndex = leftColumns.findIndex(col => col.key === 'start_date')
+        let endDateColIndex = leftColumns.findIndex(col => col.key === 'end_date')
+        let durationColIndex = -1 // 将在后面赋值
         const idColIndex = leftColumns.findIndex(col => col.key === 'id')
 
         // 添加左侧列和日期列
@@ -367,11 +368,6 @@ export const exportGanttToExcel = async (options) => {
             })
         }
 
-        // 记录开始时间列和工期列的索引
-        let startDateColIndex = -1
-        let endDateColIndex = -1
-        let durationColIndex = -1
-
         // 设置左侧表头（合并1-2行）
         leftColumns.forEach((col, index) => {
             worksheet.mergeCells(1, index + 1, 2, index + 1)
@@ -392,11 +388,7 @@ export const exportGanttToExcel = async (options) => {
             }
 
             // 记录列索引
-            if (col.key === 'start_date') {
-                startDateColIndex = index
-            } else if (col.key === 'end_date') {
-                endDateColIndex = index
-            } else if (col.key === 'duration') {
+            if (col.key === 'duration') {
                 durationColIndex = index
             }
         })

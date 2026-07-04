@@ -403,6 +403,28 @@
       </div>
       <div class="context-menu-divider"></div>
 
+      <!-- 阶段选择 -->
+      <div class="context-menu-section">
+        <div class="context-menu-title">设置阶段</div>
+        <div class="stage-quick-select">
+          <div v-for="stage in projectStages" :key="stage.name"
+            class="stage-quick-option" :title="stage.name" @click="setTaskStage(stage)">
+            <div class="stage-indicator" :style="{ backgroundColor: stage.color }"></div>
+            <span class="stage-name">{{ stage.name }}</span>
+          </div>
+          <div class="stage-quick-option" title="清除阶段" @click="setTaskStage({ name: '', backgroundColor: '' })">
+            <el-icon class="clear-quick-icon">
+              <svg viewBox="0 0 1024 1024" width="1em" height="1em">
+                <path fill="currentColor"
+                  d="M512 64a448 448 0 1 1 0 896 448 448 0 0 1 0-896zM288 312v-48a24 24 0 0 1 24-24h400a24 24 0 0 1 24 24v48a24 24 0 0 1-24 24H312a24 24 0 0 1-24-24z" />
+              </svg>
+            </el-icon>
+            <span class="stage-name">清除</span>
+          </div>
+        </div>
+      </div>
+      <div class="context-menu-divider"></div>
+
       <!-- 任务类型选择 -->
       <div class="context-menu-item" @click.stop>
         <el-dropdown @command="setTaskType" :hide-on-click="true" placement="right-start">
@@ -505,7 +527,7 @@
         </el-row>
 
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="8">
             <el-form-item label="执行状态">
               <el-select v-model="editTask.status" style="width: 100%">
                 <el-option label="未开始" value="not_started" />
@@ -517,9 +539,21 @@
             </el-form-item>
 
           </el-col>
-          <el-col :span="12">
+          <el-col :span="8">
             <el-form-item label="完成进度">
               <el-slider v-model="editTask.progress" :max="1" :step="0.1" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="项目阶段">
+              <el-select v-model="editTask.stage" placeholder="选择阶段（可选）" style="width: 100%" clearable>
+                <el-option v-for="stage in projectStages" :key="stage.name" :label="stage.name" :value="stage.name">
+                  <div style="display: flex; align-items: center;">
+                    <div style="width: 12px; height: 12px; border-radius: 2px; margin-right: 8px;" :style="{ backgroundColor: stage.color }"></div>
+                    {{ stage.name }}
+                  </div>
+                </el-option>
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -903,6 +937,16 @@ const backgroundColors = [
   { name: '绿色', css: 'gantt_custom_green', value: '#e8f5e8', color: '#4caf50' },
   { name: '蓝色', css: 'gantt_custom_blue', value: '#e3f2fd', color: '#2196f3' },
   { name: '清除', css: '', value: '', color: '#ffffff' }
+]
+
+// 项目阶段定义（不同阶段用不同背景色标记）
+const projectStages = [
+  { name: '需求分析', backgroundColor: 'gantt_custom_blue', color: '#2196f3' },
+  { name: '设计阶段', backgroundColor: 'gantt_custom_purple', value: '#f3e8ff', color: '#9333EA' },
+  { name: '开发阶段', backgroundColor: 'gantt_custom_green', value: '#e8f5e8', color: '#4caf50' },
+  { name: '测试阶段', backgroundColor: 'gantt_custom_orange', value: '#fff3e0', color: '#ff9800' },
+  { name: '上线部署', backgroundColor: 'gantt_custom_red', value: '#ffebee', color: '#f44336' },
+  { name: '运维支持', backgroundColor: 'gantt_custom_teal', value: '#e0f2f1', color: '#009688' }
 ]
 
 // 右键菜单状态
@@ -2663,7 +2707,8 @@ const openEditDialog = (task) => {
     stakeholder: task.stakeholder || '',
     description: task.description || '',
     predecessors: task.predecessors || [],
-    backgroundColor: task.backgroundColor || ''
+    backgroundColor: task.backgroundColor || '',
+    stage: task.stage || ''
   }
 
   //将自定义列字段复制到编辑任务表单
@@ -2703,7 +2748,16 @@ const updateTask = () => {
     stakeholder: editTask.value.stakeholder,
     description: editTask.value.description,
     predecessors: editTask.value.predecessors || [],
-    backgroundColor: editTask.value.backgroundColor || ''
+    backgroundColor: editTask.value.backgroundColor || '',
+    stage: editTask.value.stage || ''
+  }
+
+  // 如果选择了阶段，自动设置对应的背景色
+  if (updatedTask.stage) {
+    const stageConfig = projectStages.find(s => s.name === updatedTask.stage)
+    if (stageConfig) {
+      updatedTask.backgroundColor = stageConfig.backgroundColor
+    }
   }
 
   //将自定义列字段复制到更新任务表单
@@ -2821,6 +2875,39 @@ const setTaskBackgroundColor = (colorValue) => {
   } catch (error) {
     console.error('设置背景色失败:', error)
     ElMessage.error('设置背景色失败')
+  }
+}
+
+// 设置任务阶段（不同阶段用不同背景色标记）
+const setTaskStage = (stage) => {
+  if (!currentTask.value) {
+    ElMessage.warning('请先选择一个任务')
+    return
+  }
+
+  try {
+    // 更新任务的阶段属性
+    const task = gantt.getTask(currentTask.value.id)
+    task.stage = stage.name
+    task.backgroundColor = stage.backgroundColor
+
+    // 更新甘特图中的任务
+    gantt.updateTask(currentTask.value.id, task)
+
+    // 更新本地任务数据
+    const taskIndex = tasks.value.findIndex(t => t.id === currentTask.value.id)
+    if (taskIndex !== -1) {
+      tasks.value[taskIndex].stage = stage.name
+      tasks.value[taskIndex].backgroundColor = stage.backgroundColor
+    }
+
+    // 关闭所有菜单
+    contextMenuVisible.value = false
+
+    ElMessage.success(`已设置任务阶段为：${stage.name}`)
+  } catch (error) {
+    console.error('设置任务阶段失败:', error)
+    ElMessage.error('设置任务阶段失败')
   }
 }
 
