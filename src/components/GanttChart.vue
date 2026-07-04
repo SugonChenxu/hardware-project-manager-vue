@@ -867,6 +867,7 @@ const links = ref([])
 const loading = ref(true)
 const cascade = ref(true)  //级联
 const taskBeforeUpdate = ref(null)  // 保存任务更新前的快照，供级联计算使用
+const skipCascade = ref(false)  // 内联编辑时跳过 onAfterTaskUpdate 中的级联，防止重复调用
 
 // 项目信息
 const projectInfo = ref(null)
@@ -2015,14 +2016,11 @@ const initGantt = () => {
 
     gantt.attachEvent("onBeforeTaskChanged", (id, mode, oldTask) => {
       // 保存修改前的任务快照，供 onAfterTaskUpdate 做级联计算
-      if (!taskBeforeUpdate.value) {
-        const index = tasks.value.findIndex(t => t.id == id)
-        if (index !== -1) {
-          taskBeforeUpdate.value = JSON.parse(JSON.stringify(tasks.value[index]))
-          console.log('[onBeforeTaskChanged] 保存快照:', tasks.value[index].text,
-            '结束=', tasks.value[index].end_date,
-            '开始=', tasks.value[index].start_date)
-        }
+      if (!skipCascade.value && !taskBeforeUpdate.value) {
+        taskBeforeUpdate.value = JSON.parse(JSON.stringify(oldTask))
+        console.log('[onBeforeTaskChanged] 保存快照:', oldTask.text,
+          '结束=', oldTask.end_date,
+          '开始=', oldTask.start_date)
       }
       return true;
     })
@@ -2034,10 +2032,11 @@ const initGantt = () => {
         //重新计算父级任务的progress
         recalculateParentTaskProgress(task)
         // 用修改前的快照做级联计算（taskBeforeUpdate 在 onBeforeTaskChanged 中保存）
-        if (taskBeforeUpdate.value) {
+        if (taskBeforeUpdate.value && !skipCascade.value) {
           updateCascade(taskBeforeUpdate.value, task)
           taskBeforeUpdate.value = null
         }
+        skipCascade.value = false
         // 进度/状态联动
         if (task.progress > 0 && task.status == 'not_started') {
           task.status = 'in_progress'
@@ -2400,14 +2399,54 @@ const syncTaskProgressAndStatus = (oldtask, task) => {
 
 /**
  * 内联编辑保存时触发
- * 仅做必要处理，级联更新统一由 onAfterTaskUpdate 处理
+ * 在此处执行级联，并通过 skipCascade 标志防止 onAfterTaskUpdate 重复级联
  */
 const inlineEditOnSave = (state) => {
   const { id, columnName, oldValue, newValue } = state
   if (oldValue == newValue) {
     return;
   }
-  // 内联编辑保存后，Gantt 内部已更新数据，无需额外操作
+  
+  const task = tasks.value.find(t => t.id == id)
+  if (!task) return
+  
+  // 构造修改前的任务快照（用 oldValue 还原）
+  const originalTask = { ...task }
+  if (columnName === "start_date") {
+    originalTask.start_date = oldValue
+  }
+  if (columnName === "end_date") {
+    originalTask.end_date = oldValue
+  }
+  if (columnName === "duration") {
+    // 旧 end_date = start_date + 旧工期 - 1（日期包含当天）
+    const oldDur = parseInt(oldValue)
+    originalTask.end_date = dayjs(task.start_date).add(oldDur - 1, 'day').toDate()
+    originalTask.duration = oldDur
+    // 更新当前任务的工期和结束日期
+    task.duration = parseInt(newValue)
+    task.end_date = dayjs(task.start_date).add(task.duration - 1, 'day').toDate()
+  }
+  
+  // 标记跳过 onAfterTaskUpdate 中的级联，防止重复调用
+  skipCascade.value = true
+  
+  // 触发级联
+  updateCascade(originalTask, task)
+  
+  // 同步到 Gantt 内部数据
+  gantt.updateTask(id, task)
+  
+  // 更新本地响应式数组
+  const index = tasks.value.findIndex(t => t.id == id)
+  if (index !== -1) {
+    tasks.value[index] = { ...task }
+  }
+  
+  setTimeout(() => {
+    gantt.render()
+    skipCascade.value = false
+  }, 100)
 }
 
 // 设置时间刻度
