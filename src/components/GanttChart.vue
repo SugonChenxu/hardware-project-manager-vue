@@ -2403,12 +2403,26 @@ const inlineEditOnSave = ({ id, columnName, oldValue, newValue }) => {
   }
 
   // 用 oldValue 构造 originalTask，而不是直接读 tasks.value（已被 Gantt 修改）
-  const originalTask = { ...task, start_date: task.start_date, end_date: task.end_date }
+  const originalTask = { ...task, start_date: task.start_date, end_date: task.end_date, duration: task.duration }
   if (columnName == "start_date") {
     originalTask.start_date = oldValue
   }
   if (columnName == "end_date") {
     originalTask.end_date = oldValue
+  }
+  if (columnName == "duration") {
+    // duration 变化会导致 end_date 自动重算，需要算出旧的 end_date 让级联能检测到变化
+    // 旧逻辑：end_date = start_date + 旧 duration - 1天
+    originalTask.end_date = dayjs(task.start_date).add(oldValue - 1, 'day').toDate()
+    originalTask.duration = oldValue
+  }
+
+  if (columnName == "duration") {
+    // 工期变化会导致 end_date 自动重算，需要触发级联
+    // oldValue: 原工期, newValue: 新工期
+    // 构造 originalTask 时用旧的 end_date，updatedTask 用新的 end_date
+    updateCascade(originalTask, task)
+    return
   }
 
   if (columnName == "start_date") {
