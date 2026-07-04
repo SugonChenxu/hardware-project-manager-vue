@@ -394,6 +394,20 @@ export const exportGanttToExcel = async (options) => {
             return indexA - indexB
         })
 
+        // 标准化所有任务的 predecessors 字段（确保是数组格式）
+        sortedTasks.forEach(task => {
+            if (typeof task.predecessors === 'string') {
+                // 如果是字符串，按逗号分割并转成数字数组
+                task.predecessors = task.predecessors
+                    .split(',')
+                    .map(id => parseInt(id.trim()))
+                    .filter(id => !isNaN(id))
+            } else if (!Array.isArray(task.predecessors)) {
+                // 如果不是数组，设置为空数组
+                task.predecessors = []
+            }
+        })
+
         // 创建任务ID到Excel行号的映射（任务从第3行开始）
         const taskRowMapping = {}
         sortedTasks.forEach((task, taskIndex) => {
