@@ -2392,31 +2392,33 @@ const syncTaskProgressAndStatus = (oldtask, task) => {
  * 内联编辑保存时触发
  * @param {Object} params - 包含任务ID、列名、旧值、新值的对象
  */
-const inlineEditOnSave = ({ id, column, oldValue, newValue }) => {
+const inlineEditOnSave = (state) => {
+  const { id, columnName, oldValue, newValue } = state
   var task = tasks.value.find(t => t.id == id)
   if (oldValue == newValue) {
     return;
   }
 
-  // 保存修改前快照（在 Gantt 内部更新之前，tasks.value 还是旧值）
-  const snapshot = JSON.parse(JSON.stringify(task))
-  // 根据当前编辑的列，还原对应的旧值
-  if (column === "start_date") {
-    snapshot.start_date = oldValue
+  // 构造修改前的任务快照（Gantt 已更新内部数据，需手动还原旧值）
+  const originalTask = { ...task }
+
+  if (columnName === "start_date") {
+    originalTask.start_date = oldValue
   }
-  if (column === "end_date") {
-    snapshot.end_date = oldValue
+  if (columnName === "end_date") {
+    originalTask.end_date = oldValue
   }
-  if (column === "duration") {
-    // 旧 end_date = start_date + 旧 duration - 1
-    snapshot.end_date = dayjs(task.start_date).add(oldValue - 1, 'day').toDate()
-    snapshot.duration = oldValue
+  if (columnName === "duration") {
+    // 旧 end_date = start_date + 旧工期 - 1（日期包含当天）
+    const oldDur = parseInt(oldValue)
+    originalTask.end_date = dayjs(task.start_date).add(oldDur - 1, 'day').toDate()
+    originalTask.duration = oldDur
   }
 
-  // 触发级联（用快照作为 originalTask）
-  updateCascade(snapshot, task)
+  // 触发级联
+  updateCascade(originalTask, task)
 
-  if (column === "progress") {
+  if (columnName === "progress") {
     if (task.progress > 0 && task.status == 'not_started') {
       task.status = 'in_progress'
     }
@@ -2424,7 +2426,7 @@ const inlineEditOnSave = ({ id, column, oldValue, newValue }) => {
       task.status = 'completed'
     }
   }
-  if (column === "status") {
+  if (columnName === "status") {
     if (task.progress < 1 && task.status == 'completed') { //调整进度为完成，则百分比调整为100%
       task.progress = 1
     }
