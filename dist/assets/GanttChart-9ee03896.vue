@@ -82,6 +82,16 @@
                       保存为默认模板
                     </el-button>
                   </div>
+                  <div class="detail-row action-row">
+                    <el-button type="info" size="small" @click="debugLocalStorage">
+                      调试：查看本地数据
+                    </el-button>
+                  </div>
+                  <div class="detail-row action-row">
+                    <el-button type="success" size="small" @click="exportTemplateJSON">
+                      导出模板JSON
+                    </el-button>
+                  </div>
 
                   <!-- 权限设置 -->
                   <div class="detail-row permission-row" v-if="projectInfo?.createUserId == userInfo?.id">
@@ -3833,6 +3843,35 @@ const saveAsTemplate = async () => {
     ElMessage.success('默认模板已保存！新建项目时将自动使用此模板')
   } catch (e) {
     // 用户取消保存
+  }
+}
+
+// 导出模板JSON（从 localStorage 下载）
+const exportTemplateJSON = () => {
+  try {
+    // 优先读取 localStorage 中的默认模板
+    const templateStr = localStorage.getItem('hardware-project-default-template')
+    if (!templateStr) {
+      ElMessage.warning('localStorage 中没有默认模板，请先点击"保存为默认模板"')
+      return
+    }
+
+    const templateData = JSON.parse(templateStr)
+    const jsonStr = JSON.stringify(templateData, null, 2)
+    const blob = new Blob([jsonStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `项目模板-${dayjs().format('YYYY-MM-DD')}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+
+    ElMessage.success('模板 JSON 已导出，请发给我以固化到代码中')
+  } catch (e) {
+    console.error('导出模板 JSON 失败:', e)
+    ElMessage.error('导出失败：' + e.message)
   }
 }
 

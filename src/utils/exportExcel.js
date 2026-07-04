@@ -20,6 +20,19 @@ const getColumnLetter = (columnIndex) => {
 }
 
 /**
+ * 将日期字符串转换为 ExcelJS 可正确识别的 Date 对象
+ * 使用中午 12:00 避免时区跨天问题
+ * @param {string} dateStr - 日期字符串，如 '2026-07-09'
+ * @returns {Date} Date 对象
+ */
+const dateToExcelDate = (dateStr) => {
+    if (!dateStr) return null
+    const d = dayjs(dateStr)
+    // 设置为中午12点（UTC+8），避免午夜0点在UTC转换后跨天
+    return new Date(d.year(), d.month(), d.date(), 12, 0, 0)
+}
+
+/**
  * 导出甘特图为Excel文件
  * @param {Object} options 导出选项
  * @param {Array} options.tasks 任务列表
@@ -464,14 +477,12 @@ export const exportGanttToExcel = async (options) => {
                             // 使用公式：=MAX(结束日期列5,结束日期列10)+1
                             cell.value = { formula: `MAX(${maxFormula})+1` }
                         } else {
-                            // 没有有效的前置任务，使用任务本身的开始日期
-                            const startDate = dayjs(task.start_date).toDate()
-                            cell.value = startDate
+                            // 没有有效的前置任务，使用任务本身的开始日期（中午12点避免时区跨天）
+                            cell.value = dateToExcelDate(task.start_date)
                         }
                     } else {
-                        // 没有前置任务，使用任务本身的开始日期
-                        const startDate = dayjs(task.start_date).toDate()
-                        cell.value = startDate
+                        // 没有前置任务，使用任务本身的开始日期（中午12点避免时区跨天）
+                        cell.value = dateToExcelDate(task.start_date)
                     }
                     // 设置日期格式为 yyyy/mm/dd
                     cell.numFmt = 'yyyy/mm/dd'
