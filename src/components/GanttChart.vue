@@ -2035,13 +2035,8 @@ const initGantt = () => {
         recalculateParentTaskProgress(task)
         // 用修改前的快照做级联计算（taskBeforeUpdate 在 onBeforeTaskChanged 中保存）
         if (taskBeforeUpdate.value) {
-          console.log('[onAfterTaskUpdate] 触发级联:', taskBeforeUpdate.value.text,
-            '原结束=', taskBeforeUpdate.value.end_date,
-            '新结束=', task.end_date)
           updateCascade(taskBeforeUpdate.value, task)
           taskBeforeUpdate.value = null
-        } else {
-          console.warn('[onAfterTaskUpdate] taskBeforeUpdate 为空，跳过级联', task.text)
         }
         tasks.value[index] = { ...tasks.value[index], ...task }
       }
@@ -2396,46 +2391,31 @@ const syncTaskProgressAndStatus = (oldtask, task) => {
  * 内联编辑保存时触发
  * @param {Object} params - 包含任务ID、列名、旧值、新值的对象
  */
-const inlineEditOnSave = ({ id, columnName, oldValue, newValue }) => {
+const inlineEditOnSave = ({ id, column, oldValue, newValue }) => {
   var task = tasks.value.find(t => t.id == id)
   if (oldValue == newValue) {
     return;
   }
 
-  // 用 oldValue 构造 originalTask，而不是直接读 tasks.value（已被 Gantt 修改）
-  const originalTask = { ...task, start_date: task.start_date, end_date: task.end_date, duration: task.duration }
-  if (columnName == "start_date") {
-    originalTask.start_date = oldValue
+  // 保存修改前快照（在 Gantt 内部更新之前，tasks.value 还是旧值）
+  const snapshot = JSON.parse(JSON.stringify(task))
+  // 根据当前编辑的列，还原对应的旧值
+  if (column === "start_date") {
+    snapshot.start_date = oldValue
   }
-  if (columnName == "end_date") {
-    originalTask.end_date = oldValue
+  if (column === "end_date") {
+    snapshot.end_date = oldValue
   }
-  if (columnName == "duration") {
-    // duration 变化会导致 end_date 自动重算，需要算出旧的 end_date 让级联能检测到变化
-    // 旧逻辑：end_date = start_date + 旧 duration - 1天
-    originalTask.end_date = dayjs(task.start_date).add(oldValue - 1, 'day').toDate()
-    originalTask.duration = oldValue
-  }
-
-  if (columnName == "duration") {
-    // 工期变化会导致 end_date 自动重算，需要触发级联
-    // oldValue: 原工期, newValue: 新工期
-    // 构造 originalTask 时用旧的 end_date，updatedTask 用新的 end_date
-    updateCascade(originalTask, task)
-    return
+  if (column === "duration") {
+    // 旧 end_date = start_date + 旧 duration - 1
+    snapshot.end_date = dayjs(task.start_date).add(oldValue - 1, 'day').toDate()
+    snapshot.duration = oldValue
   }
 
-  if (columnName == "start_date") {
-    updateCascade(originalTask, task)
-    return
-  }
+  // 触发级联（用快照作为 originalTask）
+  updateCascade(snapshot, task)
 
-  if (columnName == "end_date") {
-    updateCascade(originalTask, task)
-    return
-  }
-
-  if (columnName == "progress") {
+  if (column === "progress") {
     if (task.progress > 0 && task.status == 'not_started') {
       task.status = 'in_progress'
     }
@@ -2861,9 +2841,9 @@ const updateCascade = (originalTask, updatedTask) => {
 
   //如果改变了结束日期，则更新所有的后续任务开始和结束日期
   if (originalTask.end_date && updatedTask.end_date &&
-      !dayjs(originalTask.end_date).isSame(updatedTask.end_date)) {
-    //计算改变的日期差
-    const dateDiff = dayjs(updatedTask.end_date).diff(dayjs(originalTask.end_date), 'day')
+        !dayjs(originalTask.end_date).startOf('day').isSame(dayjs(updatedTask.end_date).startOf('day'))) {
+    // 用 startOf('day') 对齐，避免时区导致 diff 多算一天
+    const dateDiff = dayjs(updatedTask.end_date).startOf('day').diff(dayjs(originalTask.end_date).startOf('day'), 'day')
     console.log('[updateCascade] 结束日期变化 dateDiff=', dateDiff,
       '| 查找', updatedTask.id, '的后继任务, links数量=', links.value.length)
     let successors = getAllSuccessors(updatedTask.id, links.value)
@@ -2883,10 +2863,9 @@ const updateCascade = (originalTask, updatedTask) => {
     console.log('[updateCascade] 结束日期无变化，跳过')
   }
 
-  //如果改变了开始日期，则更新所有的前置任务开始和结束日期
-  if (!dayjs(originalTask.start_date).isSame(updatedTask.start_date)) {
-    //计算改变的日期差
-    const dateDiff = dayjs(updatedTask.start_date).diff(dayjs(originalTask.start_date), 'day')
+  if (!dayjs(originalTask.start_date).startOf('day').isSame(dayjs(updatedTask.start_date).startOf('day'))) {
+    // 用 startOf('day') 对齐，避免时区导致 diff 多算一天
+    const dateDiff = dayjs(updatedTask.start_date).startOf('day').diff(dayjs(originalTask.start_date).startOf('day'), 'day')
     let predecessors = getAllPredecessors(updatedTask.id, links.value)
     predecessors.forEach(predecessorId => {
       let index = tasks.value.findIndex(t => t.id === predecessorId)
