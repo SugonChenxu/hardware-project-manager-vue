@@ -367,6 +367,11 @@ export const exportGanttToExcel = async (options) => {
             })
         }
 
+        // 记录开始时间列和工期列的索引
+        let startDateColIndex = -1
+        let endDateColIndex = -1
+        let durationColIndex = -1
+
         // 设置左侧表头（合并1-2行）
         leftColumns.forEach((col, index) => {
             worksheet.mergeCells(1, index + 1, 2, index + 1)
@@ -384,6 +389,15 @@ export const exportGanttToExcel = async (options) => {
                 left: { style: 'thin', color: { argb: 'FF000000' } },
                 bottom: { style: 'thin', color: { argb: 'FF000000' } },
                 right: { style: 'thin', color: { argb: 'FF000000' } }
+            }
+
+            // 记录列索引
+            if (col.key === 'start_date') {
+                startDateColIndex = index
+            } else if (col.key === 'end_date') {
+                endDateColIndex = index
+            } else if (col.key === 'duration') {
+                durationColIndex = index
             }
         })
 
@@ -442,7 +456,7 @@ export const exportGanttToExcel = async (options) => {
                         predecessorIds = predecessorIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
                     }
 
-                    // 如果任务有前置任务，使用公式计算机开始日期
+                    // 如果任务有前置任务，使用公式计算开始日期
                     if (predecessorIds.length > 0) {
                         // 获取所有前置任务的行号
                         const predecessorRows = predecessorIds
@@ -455,19 +469,28 @@ export const exportGanttToExcel = async (options) => {
                             const maxFormula = predecessorRows
                                 .map(row => `${endDateColLetter}${row}`)
                                 .join(',')
-                            // 使用公式：=MAX(C5,C10)+1  (假设C列是结束日期)
+                            // 使用公式：=MAX(结束日期列5,结束日期列10)+1
                             cell.value = { formula: `MAX(${maxFormula})+1` }
-                            cell.numFmt = 'yyyy-mm-dd'
                         } else {
-                            cell.value = dayjs(task.start_date).format('YYYY-MM-DD') || ''
+                            // 没有有效的前置任务，使用任务本身的开始日期
+                            const startDate = dayjs(task.start_date).toDate()
+                            cell.value = startDate
                         }
                     } else {
-                        cell.value = dayjs(task.start_date).format('YYYY-MM-DD') || ''
+                        // 没有前置任务，使用任务本身的开始日期
+                        const startDate = dayjs(task.start_date).toDate()
+                        cell.value = startDate
                     }
+                    // 设置日期格式为 yyyy/mm/dd
+                    cell.numFmt = 'yyyy/mm/dd'
                 } else if (fieldName === 'end_date') {
-                    cell.value = dayjs(task.end_date).format('YYYY-MM-DD') || ''
-                    // 设置日期格式
-                    cell.numFmt = 'yyyy-mm-dd'
+                    // 完成时间 = 开始时间 + 工期 - 1
+                    const startColLetter = getColumnLetter(startDateColIndex + 1)
+                    const durationColLetter = getColumnLetter(durationColIndex + 1)
+                    // 公式：=开始日期 + 工期 - 1
+                    cell.value = { formula: `${startColLetter}${rowIndex}+${durationColLetter}${rowIndex}-1` }
+                    // 设置日期格式为 yyyy/mm/dd
+                    cell.numFmt = 'yyyy/mm/dd'
                 } else if (fieldName === 'duration') {
                     cell.value = task.duration || 0
                 } else if (fieldName === 'progress') {
