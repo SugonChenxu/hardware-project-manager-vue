@@ -487,11 +487,11 @@ export const exportGanttToExcel = async (options) => {
                     // 设置日期格式为 yyyy/mm/dd
                     cell.numFmt = 'yyyy/mm/dd'
                 } else if (fieldName === 'end_date') {
-                    // 完成时间 = 开始时间 + 工期 - 1
+                    // 完成时间 = 开始时间 + 工期（Excel 日期直接相加，无需减1）
                     const startColLetter = getColumnLetter(startDateColIndex + 1)
                     const durationColLetter = getColumnLetter(durationColIndex + 1)
-                    // 公式：=开始日期 + 工期 - 1
-                    cell.value = { formula: `${startColLetter}${rowIndex}+${durationColLetter}${rowIndex}-1` }
+                    // 公式：=开始日期 + 工期
+                    cell.value = { formula: `${startColLetter}${rowIndex}+${durationColLetter}${rowIndex}` }
                     // 设置日期格式为 yyyy/mm/dd
                     cell.numFmt = 'yyyy/mm/dd'
                 } else if (fieldName === 'duration') {
