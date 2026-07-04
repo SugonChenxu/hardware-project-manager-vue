@@ -866,6 +866,7 @@ const tasks = ref([])
 const links = ref([])
 const loading = ref(true)
 const cascade = ref(true)  //级联
+const taskBeforeUpdate = ref(null)  // 保存任务更新前的快照，供级联计算使用
 
 // 项目信息
 const projectInfo = ref(null)
@@ -2013,18 +2014,29 @@ const initGantt = () => {
     })
 
     gantt.attachEvent("onBeforeTaskChanged", (id, mode, oldTask) => {
-      let newTaskObj = tasks.value.find(t => t.id == oldTask.id)
-      updateCascade(oldTask, newTaskObj)
+      // 只在日期相关操作时保存快照（drag 模式）
+      // mode: 'move', 'resize', 'progress'
+      // 保存修改前的任务快照，供 onAfterTaskUpdate 做级联计算
+      if (!taskBeforeUpdate.value) {
+        const index = tasks.value.findIndex(t => t.id == id)
+        if (index !== -1) {
+          taskBeforeUpdate.value = JSON.parse(JSON.stringify(tasks.value[index]))
+        }
+      }
       return true;
     })
 
     gantt.attachEvent("onAfterTaskUpdate", (id, task) => {
-      // 甘特图里面更新后，更新响应式数组中的任务 
+      // 甘特图里面更新后，更新响应式数组中的任务
       const index = tasks.value.findIndex(t => t.id == id)
       if (index !== -1) {
         //重新计算父级任务的progress
         recalculateParentTaskProgress(task)
-        updateCascade(tasks.value[index], task)
+        // 用修改前的快照做级联计算（taskBeforeUpdate 在 onBeforeTaskChanged 中保存）
+        if (taskBeforeUpdate.value) {
+          updateCascade(taskBeforeUpdate.value, task)
+          taskBeforeUpdate.value = null
+        }
         tasks.value[index] = { ...tasks.value[index], ...task }
       }
     })
@@ -2384,13 +2396,22 @@ const inlineEditOnSave = ({ id, columnName, oldValue, newValue }) => {
     return;
   }
 
+  // 用 oldValue 构造 originalTask，而不是直接读 tasks.value（已被 Gantt 修改）
+  const originalTask = { ...task, start_date: task.start_date, end_date: task.end_date }
   if (columnName == "start_date") {
-    updateCascade({ start_date: oldValue, end_date: task.end_date }, { id: id, start_date: newValue, end_date: task.end_date })
+    originalTask.start_date = oldValue
+  }
+  if (columnName == "end_date") {
+    originalTask.end_date = oldValue
+  }
+
+  if (columnName == "start_date") {
+    updateCascade(originalTask, task)
     return
   }
 
   if (columnName == "end_date") {
-    updateCascade({ end_date: oldValue, start_date: task.start_date }, { id: id, end_date: newValue, start_date: task.start_date })
+    updateCascade(originalTask, task)
     return
   }
 
